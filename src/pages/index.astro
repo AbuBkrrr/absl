@@ -1,0 +1,230 @@
+---
+import ProductMarquee from '../components/ProductMarquee.astro';
+import HarvestChart from '../components/HarvestChart.astro';
+import Layout from '../layouts/Layout.astro';
+import PostCard from '../components/PostCard.astro';
+import { supabase } from '../lib/supabase';
+
+const nowISO = new Date().toISOString();
+
+// Fetch latest community posts
+const { data: communityPosts } = await supabase
+  .from('qm_posts')
+  .select('id,title,body,media_thumbnail_url,media_type,created_at,published_at,user_id')
+  .or(`status.eq.published,status.is.null`)
+  .or(`published_at.lte.${nowISO},published_at.is.null`)
+  .order('created_at', { ascending: false })
+  .limit(9);
+
+const userIds = [...new Set((communityPosts ?? []).map(p => p.user_id))];
+const profileMap: Record<string, string> = {};
+if (userIds.length > 0) {
+  const { data: profiles } = await supabase
+    .from('profiles')
+    .select('id,display_name,business_name,owner_name')
+    .in('id', userIds);
+  if (profiles) for (const p of profiles) {
+    profileMap[p.id] = p.business_name || p.owner_name || p.display_name || 'Member';
+  }
+}
+
+// Fetch latest news
+const { data: newsPosts } = await supabase
+  .from('qm_news')
+  .select('id,slug,title,description,source_name,published_at')
+  .order('published_at', { ascending: false })
+  .limit(9);
+
+// Comment counts
+const postIds = (communityPosts ?? []).map((p) => p.id);
+const newsIds = (newsPosts ?? []).map((n) => n.id);
+
+const commentCounts: Record<string, number> = {};
+if (postIds.length > 0) {
+  const { data: counts } = await supabase
+    .from('qm_comments')
+    .select('post_id')
+    .in('post_id', postIds);
+  if (counts) for (const c of counts) commentCounts[c.post_id] = (commentCounts[c.post_id] ?? 0) + 1;
+}
+if (newsIds.length > 0) {
+  const { data: counts } = await supabase
+    .from('qm_news_comments')
+    .select('news_id')
+    .in('news_id', newsIds);
+  if (counts) for (const c of counts) commentCounts[c.news_id] = (commentCounts[c.news_id] ?? 0) + 1;
+}
+
+interface FeedItem {
+  type: 'community' | 'news';
+  id: string;
+  title: string;
+  description: string;
+  thumbnailUrl: string | null;
+  mediaType: 'image' | 'audio' | 'video' | 'none';
+  authorName?: string;
+  sourceName?: string;
+  publishedAt: string;
+  commentCount: number;
+  href: string;
+}
+
+const feed: FeedItem[] = [];
+
+(communityPosts ?? []).forEach((p) => {
+  feed.push({
+    type: 'community',
+    id: p.id,
+    title: p.title,
+    description: p.body ?? '',
+    thumbnailUrl: p.media_thumbnail_url ?? null,
+    mediaType: (p.media_type ?? 'none') as any,
+    authorName: profileMap[p.user_id] || 'Member',
+    publishedAt: p.published_at || p.created_at,
+    commentCount: commentCounts[p.id] ?? 0,
+    href: `/post/${p.id}`
+  });
+});
+
+(newsPosts ?? []).forEach((n) => {
+  feed.push({
+    type: 'news',
+    id: n.id,
+    title: n.title,
+    description: n.description ?? '',
+    thumbnailUrl: null,
+    mediaType: 'none',
+    sourceName: n.source_name || 'News',
+    publishedAt: n.published_at,
+    commentCount: commentCounts[n.id] ?? 0,
+    href: `/news/${n.slug}`
+  });
+});
+
+feed.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+---
+
+<Layout title="Qaraye Marchants - The pulse of Nigerian finance">
+  <div class="container" style="padding: 40px 24px;">
+
+    <!-- Hero -->
+    <div style="text-align: center; padding: 20px 0 40px;">
+      <span style="display: inline-block; font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: 0.1em; color: var(--cyan); background: var(--cyan-soft); padding: 6px 14px; border-radius: var(--r-full); margin-bottom: 16px;"></span>
+      <h1 style="font-family: var(--display); font-size: 2.6rem; margin: 0 0 12px 0; color: var(--ink); font-weight: 800; line-height: 1.15;">Qaraye Marchants.</h1>
+      <p style="font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em; color: var(--ink-muted); margin: 0 0 24px 0;"><span data-i18n="tagline">NIGERIA&#39;S AGRICULTURAL MARKETPLACE</span></p>
+      <p data-i18n="subtitle" style="max-width: 560px; margin: 0 auto; color: var(--ink-muted); font-size: 0.95rem; line-height: 1.6;">
+        Buy and sell agricultural products directly from verified merchants across Nigeria. Rice, grains, tubers, livestock and more — all in one trusted marketplace.
+      </p>
+    </div>
+
+    <ProductMarquee />
+
+    <HarvestChart />
+
+    <!-- Feed Controls -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px;">
+      <div id="feed-tabs" style="display: flex; gap: 4px; background: var(--bg-850); padding: 4px; border-radius: var(--r-full);">
+        <button class="feed-tab active" data-filter="all" style="font-family: var(--body); font-size: 13px; font-weight: 600; padding: 8px 20px; border-radius: var(--r-full); border: none; cursor: pointer; background: var(--cyan); color: var(--bg-950);"><span data-i18n="tabAll">All</span></button>
+        <button class="feed-tab" data-filter="community" style="font-family: var(--body); font-size: 13px; font-weight: 600; padding: 8px 20px; border-radius: var(--r-full); border: none; cursor: pointer; background: transparent; color: var(--ink-muted);"><span data-i18n="tabCommunity">Community</span></button>
+        <button class="feed-tab" data-filter="news" style="font-family: var(--body); font-size: 13px; font-weight: 600; padding: 8px 20px; border-radius: var(--r-full); border: none; cursor: pointer; background: transparent; color: var(--ink-muted);"><span data-i18n="tabNews">News</span></button>
+      </div>
+
+      <div id="view-toggle" style="display: flex; gap: 4px; background: var(--bg-850); padding: 4px; border-radius: var(--r-full);">
+        <button class="view-btn active" data-view="card" aria-label="Card view" style="display: flex; align-items: center; justify-content: center; width: 36px; height: 32px; border-radius: var(--r-full); border: none; cursor: pointer; background: var(--cyan); color: var(--bg-950);">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        </button>
+        <button class="view-btn" data-view="list" aria-label="List view" style="display: flex; align-items: center; justify-content: center; width: 36px; height: 32px; border-radius: var(--r-full); border: none; cursor: pointer; background: transparent; color: var(--ink-muted);">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Feed -->
+    <div id="feed-container" class="feed-layout-card">
+      {feed.length === 0 ? (
+        <div style="text-align: center; padding: 60px 20px; color: var(--ink-muted);">
+          <p>No content yet. Check back soon.</p>
+        </div>
+      ) : (
+        feed.map((item) => <PostCard item={item} layout="card" />)
+      )}
+    </div>
+  </div>
+</Layout>
+
+<style is:global>
+  #feed-container.feed-layout-card {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+  }
+  #feed-container.feed-layout-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  #feed-container.feed-layout-list .post-card {
+    border-radius: var(--r-md);
+  }
+</style>
+
+<script>
+  const container = document.getElementById('feed-container')!;
+  const viewButtons = document.querySelectorAll('.view-btn');
+  const feedTabs = document.querySelectorAll('.feed-tab');
+
+  // --- View toggle ---
+  const savedView = localStorage.getItem('qm-feed-view') || 'card';
+  applyView(savedView);
+
+  viewButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const view = (btn as HTMLElement).dataset.view || 'card';
+      applyView(view);
+      localStorage.setItem('qm-feed-view', view);
+    });
+  });
+
+  function applyView(view: string) {
+    container.classList.remove('feed-layout-card', 'feed-layout-list');
+    container.classList.add('feed-layout-' + view);
+
+    viewButtons.forEach(b => {
+      const isActive = (b as HTMLElement).dataset.view === view;
+      (b as HTMLElement).style.background = isActive ? 'var(--cyan)' : 'transparent';
+      (b as HTMLElement).style.color = isActive ? 'var(--bg-950)' : 'var(--ink-muted)';
+    });
+
+    // Re-render cards with the right layout class
+    document.querySelectorAll('.post-card').forEach(card => {
+      card.classList.remove('layout-card', 'layout-list');
+      card.classList.add('layout-' + view);
+    });
+  }
+
+  // --- Filter tabs ---
+  feedTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const filter = (tab as HTMLElement).dataset.filter;
+      feedTabs.forEach(t => {
+        (t as HTMLElement).style.background = 'transparent';
+        (t as HTMLElement).style.color = 'var(--ink-muted)';
+      });
+      (tab as HTMLElement).style.background = 'var(--cyan)';
+      (tab as HTMLElement).style.color = 'var(--bg-950)';
+
+      const cards = document.querySelectorAll('.post-card');
+      cards.forEach(card => {
+        const wrapper = card as HTMLElement;
+        const badge = wrapper.querySelector('.badge-community, .badge-news');
+        const isCommunity = badge?.classList.contains('badge-community');
+        const type = isCommunity ? 'community' : 'news';
+        if (filter === 'all' || filter === type) {
+          wrapper.style.display = '';
+        } else {
+          wrapper.style.display = 'none';
+        }
+      });
+    });
+  });
+</script>
