@@ -1,7 +1,6 @@
 ---
 import Analytics from '@vercel/analytics/astro';
 
-
 interface Props {
   title?: string;
   description?: string;
@@ -28,19 +27,20 @@ const year = new Date().getFullYear();
             --bg-main: #0A1128;
             --bg-surface: #121C3E;
             --bg-card: #0F1731;
-            --gold: #1E5F9E; /* Changed to Logo Royal Blue */
+            --gold: #1E5F9E; 
             --gold-hover: #2A73BD;
             --gold-soft: rgba(30, 95, 158, 0.15);
             --white: #FFFFFF;
             --text-muted: #9CA3AF;
             --text-light: #E5E7EB;
-            --line: rgba(197, 160, 89, 0.2);
+            --line: rgba(30, 95, 158, 0.2);
             --line-light: rgba(255, 255, 255, 0.08);
             --font-display: 'Playfair Display', serif;
             --font-body: 'Inter', sans-serif;
             --r-sharp: 2px;
             --r-sm: 4px;
             --r-md: 6px;
+            --green: #0F7B4A;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         html { scroll-behavior: smooth; }
@@ -56,8 +56,8 @@ const year = new Date().getFullYear();
         .container { max-width: 1280px; margin: 0 auto; padding: 0 32px; }
         
         .btn { display: inline-flex; align-items: center; justify-content: center; padding: 14px 32px; font-family: var(--font-body); font-weight: 500; font-size: 0.95rem; letter-spacing: 0.5px; cursor: pointer; border-radius: var(--r-sharp); transition: 0.3s; border: none; }
-        .btn-primary { background: var(--gold); color: var(--bg-main); text-transform: uppercase; font-weight: 600; font-size: 0.85rem; letter-spacing: 1px; }
-        .btn-primary:hover { background: var(--gold-hover); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(197, 160, 89, 0.2); }
+        .btn-primary { background: var(--gold); color: var(--white); text-transform: uppercase; font-weight: 600; font-size: 0.85rem; letter-spacing: 1px; }
+        .btn-primary:hover { background: var(--gold-hover); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(30, 95, 158, 0.2); }
         .btn-outline { background: transparent; color: var(--white); border: 1px solid var(--gold); }
         .btn-outline:hover { background: var(--gold-soft); }
 
@@ -67,16 +67,17 @@ const year = new Date().getFullYear();
         
         /* Navbar */
         .navbar { position: sticky; top: 0; z-index: 100; background: rgba(10, 17, 40, 0.95); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line-light); padding: 20px 0; }
-        .nav-inner { display: flex; justify-content: space-between; align-items: center; }
-        .logo { display: flex; align-items: center; text-decoration: none; }`n        .logo img { height: 48px; width: auto; object-fit: contain; }
-        .logo span { color: var(--gold); }
+        .nav-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; }
         
-        .nav-links { display: flex; gap: 32px; align-items: center; font-size: 0.9rem; font-weight: 500; }
+        .logo { display: flex; align-items: center; text-decoration: none; flex-shrink: 0; }
+        .logo img { height: 45px; width: auto; object-fit: contain; }
+        
+        .nav-links { display: flex; gap: 24px; align-items: center; font-size: 0.9rem; font-weight: 500; }
         .nav-links a { color: var(--text-light); text-transform: uppercase; letter-spacing: 1px; font-size: 0.8rem; white-space: nowrap; }
         .nav-links a:hover { color: var(--gold); }
         
-        .cart-icon { position: relative; display: flex; align-items: center; gap: 8px; color: var(--gold); font-weight: 600; font-size: 0.9rem; }
-        .cart-badge { background: var(--gold); color: var(--bg-main); width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; }
+        .cart-icon { position: relative; display: flex; align-items: center; gap: 8px; color: var(--gold); font-weight: 600; font-size: 0.9rem; white-space: nowrap; flex-shrink: 0; }
+        .cart-badge { background: var(--gold); color: var(--white); width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; }
 
         /* Footer */
         .footer { background: #050914; border-top: 1px solid var(--line-light); padding: 60px 0 30px; margin-top: 80px; }
@@ -87,10 +88,10 @@ const year = new Date().getFullYear();
         .footer-bottom { border-top: 1px solid var(--line-light); padding-top: 24px; text-align: center; color: var(--text-muted); font-size: 0.8rem; }
         
         @media (max-width: 768px) {
-            .logo img { height: 32px !important; }
             .nav-links { display: none; }
-            .logo img { height: 36px; }
             .footer-grid { grid-template-columns: 1fr; }
+            .logo img { height: 36px; }
+            .top-bar .container { flex-direction: column; text-align: center; gap: 8px; }
         }
     </style>
 </head>
@@ -104,14 +105,17 @@ const year = new Date().getFullYear();
 
     <nav class="navbar">
         <div class="container nav-inner">
-            <a href="/" class="logo"><img src="/absl-logo.png" alt="ABSL Logo" style="height: 45px; width: auto; object-fit: contain;" /></a>
+            <a href="/" class="logo">
+                <img src="/absl-logo.png" alt="ABSL Logo" />
+            </a>
             <div class="nav-links">
                 <a href="/">Home</a>
                 <a href="/travel">Travel & Tours</a>
                 <a href="/logistics">Logistics</a>
                 <a href="/construction">Construction</a>
                 <a href="/rewards" style="color: var(--gold);">MileageMall</a>
-                <a href="/admin" style="color: var(--gold);">Admin</a>`n                <a href="/contact">Contact</a>
+                <a href="/admin" style="color: var(--gold);">Admin</a>
+                <a href="/contact">Contact</a>
             </div>
             <a href="/checkout" class="cart-icon">
                 🛒 My Cart
@@ -126,7 +130,7 @@ const year = new Date().getFullYear();
         <div class="container">
             <div class="footer-grid">
                 <div>
-                    <img src="/absl-logo.png" alt="ABSL Logo" style="height: 60px; width: auto; object-fit: contain; margin-bottom: 16px;" />
+                    <img src="/absl-logo.png" alt="ABSL Logo" style="height: 60px; width: auto; object-fit: contain; margin-bottom: 16px; border-radius: 4px;" />
                     <p style="margin-top:16px; max-width:300px;">Allstates Business Solutions and Logistics Ltd. Delivering excellence in global travel, secure freight, and infrastructure development.</p>
                 </div>
                 <div>
@@ -150,9 +154,7 @@ const year = new Date().getFullYear();
     </footer>
 
     <script>
-        import '../scripts/i18n-widget.ts';
         import { cartCount } from '../scripts/cart';
-
         function updateBadge() {
             const b = document.getElementById('cart-badge');
             if (!b) return;
@@ -160,12 +162,8 @@ const year = new Date().getFullYear();
             b.textContent = n;
             b.style.display = n > 0 ? 'flex' : 'none';
         }
-        
-        // Only run in the browser
-        if (typeof window !== 'undefined') {
-            updateBadge();
-            window.addEventListener('absl-cart-updated', updateBadge);
-        }
+        updateBadge();
+        window.addEventListener('absl-cart-updated', updateBadge);
     </script>
     <Analytics />
 </body>
