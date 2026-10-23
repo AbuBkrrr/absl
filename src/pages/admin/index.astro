@@ -1,7 +1,9 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import AdminGuard from '../../components/AdminGuard.astro';
 ---
 <Layout title="Admin Dashboard - ABSL">
+  <AdminGuard />
   <div style="background: var(--bg-surface); padding: 80px 0; border-bottom: 1px solid var(--line-light);">
     <div class="container">
       <h1 style="font-size:3rem; margin-bottom:16px;">Admin Control Center</h1>

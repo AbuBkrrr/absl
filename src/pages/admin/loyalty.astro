@@ -1,5 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import AdminGuard from '../../components/AdminGuard.astro';
 import { supabase } from '../../lib/supabase';
 
 // Fetch profiles and loyalty separately to avoid complex join errors
@@ -8,6 +9,7 @@ const { data: loyalty } = await supabase.from('absl_rewards_loyalty').select('*'
 ---
 
 <Layout title="Loyalty Manager - ABSL Admin">
+  <AdminGuard />
   <div class="container" style="padding: 80px 24px;">
     <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:32px;">
       <div>

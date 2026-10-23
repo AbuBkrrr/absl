@@ -1,0 +1,12 @@
+<script>
+  import { supabase } from '../lib/supabase';
+  (async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { window.location.href = '/login'; return; }
+    const { data: profile } = await supabase.from('absl_profiles').select('is_admin').eq('id', user.id).single();
+    if (!profile?.is_admin) { 
+      alert('Access Denied: You are not an admin.');
+      window.location.href = '/'; 
+    }
+  })();
+</script>

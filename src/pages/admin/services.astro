@@ -1,23 +1,37 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import AdminGuard from '../../components/AdminGuard.astro';
 import { supabase } from '../../lib/supabase';
 
-const { data: packages } = await supabase
-  .from('absl_packages')
-  .select('*')
-  .order('created_at', { ascending: false });
-
+const { data: packages } = await supabase.from('absl_packages').select('*').order('created_at', { ascending: false });
 const rows = packages || [];
 ---
 
-<Layout title="Services - ABSL Admin">
+<Layout title="Manage Services - ABSL Admin">
+  <AdminGuard />
   <div class="container" style="padding: 80px 24px;">
     <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:32px;">
       <div>
         <h1 style="font-size:2.5rem; color:var(--white); margin:0;">Manage Services</h1>
-        <p style="color:var(--text-muted); margin-top:8px;">Manage travel, logistics, and construction packages.</p>
+        <p style="color:var(--text-muted); margin-top:8px;">Add or remove travel, logistics, and construction packages.</p>
       </div>
       <a href="/admin" class="btn btn-outline" style="padding:10px 24px;">&larr; Back to Admin</a>
+    </div>
+
+    <!-- Add Service Form -->
+    <div style="background:var(--bg-surface); border:1px solid var(--line-light); border-radius:var(--r-md); padding:32px; margin-bottom:32px;">
+      <h2 style="font-size:1.2rem; color:var(--gold); margin-bottom:16px;">Add New Package</h2>
+      <div style="display:grid; grid-template-columns: 1fr 2fr 1fr 1fr; gap:16px;">
+        <select id="f-category" style="padding:10px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;">
+          <option value="travel">Travel & Tours</option>
+          <option value="logistics">Logistics & Freight</option>
+          <option value="construction">Construction</option>
+        </select>
+        <input id="f-title" type="text" placeholder="Package Title (e.g. Dubai Visa)" style="padding:10px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
+        <input id="f-price" type="number" placeholder="Price (₦)" style="padding:10px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
+        <button id="save-btn" class="btn btn-primary">Add Package</button>
+      </div>
+      <textarea id="f-desc" placeholder="Package Description" style="width:100%; margin-top:16px; padding:10px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;"></textarea>
     </div>
 
     <div style="background:var(--bg-card); border:1px solid var(--line-light); border-radius:var(--r-md); overflow:hidden;">
@@ -27,28 +41,54 @@ const rows = packages || [];
             <th style="padding:16px; color:var(--gold);">Category</th>
             <th style="padding:16px; color:var(--gold);">Title</th>
             <th style="padding:16px; color:var(--gold); text-align:right;">Price (₦)</th>
-            <th style="padding:16px; color:var(--gold);">Status</th>
+            <th style="padding:16px; color:var(--gold); text-align:right;">Action</th>
           </tr>
         </thead>
         <tbody>
-          {rows.length === 0 ? (
-            <tr><td colspan="4" style="padding:32px; text-align:center; color:var(--text-muted);">No services found.</td></tr>
-          ) : (
-            rows.map(p => (
-              <tr style="border-top:1px solid var(--line-light);">
-                <td style="padding:16px; color:var(--gold); text-transform:uppercase; font-size:10px;">{p.category}</td>
-                <td style="padding:16px; color:var(--white); font-weight:600;">{p.title}</td>
-                <td style="padding:16px; text-align:right; color:var(--white); font-weight:700;">{Number(p.price).toLocaleString()}</td>
-                <td style="padding:16px;">
-                  <span style="font-size:10px; padding:4px 10px; border-radius:4px; background:var(--bg-surface); color:var(--text-muted); text-transform:uppercase;">
-                    {p.status}
-                  </span>
-                </td>
-              </tr>
-            ))
-          )}
+          {rows.map(p => (
+            <tr style="border-top:1px solid var(--line-light);">
+              <td style="padding:16px; color:var(--gold); text-transform:uppercase; font-size:10px;">{p.category}</td>
+              <td style="padding:16px; color:var(--white); font-weight:600;">{p.title}</td>
+              <td style="padding:16px; text-align:right; color:var(--white); font-weight:700;">{Number(p.price).toLocaleString()}</td>
+              <td style="padding:16px; text-align:right;">
+                <button data-del="${p.id}" style="background:transparent; border:1px solid #ef4444; color:#ef4444; padding:4px 10px; border-radius:4px; cursor:pointer;">Delete</button>
+              </td>
+            </tr>
+          ))}
         </tbody>
       </table>
     </div>
   </div>
+
+  <script>
+    import { supabase } from '../../lib/supabase';
+    import { getToken } from '../../scripts/auth'; // We will create this next
+
+    document.getElementById('save-btn').addEventListener('click', async () => {
+      const category = document.getElementById('f-category').value;
+      const title = document.getElementById('f-title').value;
+      const price = Number(document.getElementById('f-price').value);
+      const description = document.getElementById('f-desc').value;
+
+      if (!title || !price) return alert('Title and Price are required.');
+
+      const { error } = await supabase.from('absl_packages').insert({ category, title, price, description, status: 'active' });
+      if (error) alert(error.message);
+      else window.location.reload();
+    });
+
+    document.addEventListener('click', async (e) => {
+      const t = e.target;
+      if (t.dataset.del) {
+        if (!confirm('Delete this package?')) return;
+        const res = await fetch('/api/services/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: t.dataset.del })
+        });
+        if (res.ok) window.location.reload();
+        else alert('Failed to delete.');
+      }
+    });
+  </script>
 </Layout>

@@ -1,16 +1,14 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import AdminGuard from '../../components/AdminGuard.astro';
 import { supabase } from '../../lib/supabase';
 
-const { data: bookings } = await supabase
-  .from('absl_bookings')
-  .select('*')
-  .order('created_at', { ascending: false });
-
+const { data: bookings } = await supabase.from('absl_bookings').select('*').order('created_at', { ascending: false });
 const rows = bookings || [];
 ---
 
 <Layout title="Bookings - ABSL Admin">
+  <AdminGuard />
   <div class="container" style="padding: 80px 24px;">
     <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:32px;">
       <div>
@@ -39,15 +37,15 @@ const rows = bookings || [];
               <tr style="border-top:1px solid var(--line-light);">
                 <td style="padding:16px; color:var(--text-muted);">{new Date(b.created_at).toLocaleDateString()}</td>
                 <td style="padding:16px; color:var(--white); font-weight:600;">{b.client_name}</td>
-                <td style="padding:16px; color:var(--text-muted);">
-                  {b.client_phone}<br/>
-                  <span style="font-size:10.5px;">{b.client_email || 'No email'}</span>
-                </td>
+                <td style="padding:16px; color:var(--text-muted);">{b.client_phone}</td>
                 <td style="padding:16px; text-align:right; color:var(--gold); font-weight:700;">{Number(b.total_amount).toLocaleString()}</td>
                 <td style="padding:16px;">
-                  <span style="font-size:10px; padding:4px 10px; border-radius:4px; background:rgba(197,160,89,0.15); color:var(--gold); text-transform:uppercase; font-weight:700;">
-                    {b.booking_status}
-                  </span>
+                  <select data-id="${b.id}" class="status-select" style="padding:6px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;">
+                    <option value="pending" selected={b.booking_status === 'pending'}>Pending</option>
+                    <option value="confirmed" selected={b.booking_status === 'confirmed'}>Confirmed</option>
+                    <option value="completed" selected={b.booking_status === 'completed'}>Completed</option>
+                    <option value="cancelled" selected={b.booking_status === 'cancelled'}>Cancelled</option>
+                  </select>
                 </td>
               </tr>
             ))
@@ -56,4 +54,24 @@ const rows = bookings || [];
       </table>
     </div>
   </div>
+
+  <script>
+    document.querySelectorAll('.status-select').forEach(select => {
+      select.addEventListener('change', async (e) => {
+        const id = e.target.dataset.id;
+        const status = e.target.value;
+        const res = await fetch('/api/bookings/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, status })
+        });
+        if (res.ok) {
+          e.target.style.borderColor = 'var(--green)';
+          setTimeout(() => e.target.style.borderColor = 'var(--line-light)', 1000);
+        } else {
+          alert('Failed to update status.');
+        }
+      });
+    });
+  </script>
 </Layout>
