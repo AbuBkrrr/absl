@@ -8,7 +8,7 @@ import AdminGuard from '../../components/AdminGuard.astro';
     <div class="container" style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:16px;">
       <div>
         <h1 style="font-size:2.5rem; margin:0;">Admin Control Center</h1>
-        <p style="color:var(--text-muted); margin-top:8px;">Manage ABSL bookings, services, loyalty, and platform data.</p>
+        <p style="color:var(--text-muted); margin-top:8px;">Manage ABSL bookings, services, loyalty, and analytics.</p>
       </div>
       <a href="/" class="btn btn-outline" style="padding:10px 24px;">&larr; View Site</a>
     </div>
@@ -16,6 +16,13 @@ import AdminGuard from '../../components/AdminGuard.astro';
 
   <div class="container" style="padding: 60px 24px;">
     <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:24px;">
+
+      <a href="/admin/analytics" style="background: var(--bg-card); border: 1px solid var(--gold); border-radius: var(--r-md); padding: 40px; text-decoration: none; transition: 0.2s;" onmouseover="this.style.borderColor='var(--gold-hover)'" onmouseout="this.style.borderColor='var(--gold)'">
+        <div style="font-size: 32px; margin-bottom: 16px;">📊</div>
+        <h2 style="font-size: 1.5rem; color: var(--white); margin-bottom: 8px;">Analytics</h2>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">Global report of services rendered: revenue, service mix, status breakdown, top sellers.</p>
+        <span style="display:inline-block; margin-top:16px; font-size:0.8rem; color:var(--gold); font-weight:700; text-transform:uppercase; letter-spacing:1px;">View Report &rarr;</span>
+      </a>
 
       <a href="/admin/bookings" style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 40px; text-decoration: none; transition: 0.2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--line-light)'">
         <div style="font-size: 32px; margin-bottom: 16px;">📦</div>
@@ -34,12 +41,6 @@ import AdminGuard from '../../components/AdminGuard.astro';
         <h2 style="font-size: 1.5rem; color: var(--white); margin-bottom: 8px;">Loyalty Manager</h2>
         <p style="color: var(--text-muted); font-size: 0.95rem;">Manually add airline miles for clients by email address. View all reward records.</p>
       </a>
-
-      <div style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 40px; opacity: 0.5;">
-        <div style="font-size: 32px; margin-bottom: 16px;">📊</div>
-        <h2 style="font-size: 1.5rem; color: var(--white); margin-bottom: 8px;">Analytics</h2>
-        <p style="color: var(--text-muted); font-size: 0.95rem;">Revenue charts and traffic insights. <em>Coming soon.</em></p>
-      </div>
 
     </div>
   </div>
