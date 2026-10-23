@@ -1,230 +1,200 @@
 ---
-import ProductMarquee from '../components/ProductMarquee.astro';
-import HarvestChart from '../components/HarvestChart.astro';
 import Layout from '../layouts/Layout.astro';
-import PostCard from '../components/PostCard.astro';
 import { supabase } from '../lib/supabase';
 
-const nowISO = new Date().toISOString();
-
-// Fetch latest community posts
-const { data: communityPosts } = await supabase
-  .from('qm_posts')
-  .select('id,title,body,media_thumbnail_url,media_type,created_at,published_at,user_id')
-  .or(`status.eq.published,status.is.null`)
-  .or(`published_at.lte.${nowISO},published_at.is.null`)
-  .order('created_at', { ascending: false })
-  .limit(9);
-
-const userIds = [...new Set((communityPosts ?? []).map(p => p.user_id))];
-const profileMap: Record<string, string> = {};
-if (userIds.length > 0) {
-  const { data: profiles } = await supabase
-    .from('profiles')
-    .select('id,display_name,business_name,owner_name')
-    .in('id', userIds);
-  if (profiles) for (const p of profiles) {
-    profileMap[p.id] = p.business_name || p.owner_name || p.display_name || 'Member';
-  }
-}
-
-// Fetch latest news
-const { data: newsPosts } = await supabase
-  .from('qm_news')
-  .select('id,slug,title,description,source_name,published_at')
-  .order('published_at', { ascending: false })
-  .limit(9);
-
-// Comment counts
-const postIds = (communityPosts ?? []).map((p) => p.id);
-const newsIds = (newsPosts ?? []).map((n) => n.id);
-
-const commentCounts: Record<string, number> = {};
-if (postIds.length > 0) {
-  const { data: counts } = await supabase
-    .from('qm_comments')
-    .select('post_id')
-    .in('post_id', postIds);
-  if (counts) for (const c of counts) commentCounts[c.post_id] = (commentCounts[c.post_id] ?? 0) + 1;
-}
-if (newsIds.length > 0) {
-  const { data: counts } = await supabase
-    .from('qm_news_comments')
-    .select('news_id')
-    .in('news_id', newsIds);
-  if (counts) for (const c of counts) commentCounts[c.news_id] = (commentCounts[c.news_id] ?? 0) + 1;
-}
-
-interface FeedItem {
-  type: 'community' | 'news';
-  id: string;
-  title: string;
-  description: string;
-  thumbnailUrl: string | null;
-  mediaType: 'image' | 'audio' | 'video' | 'none';
-  authorName?: string;
-  sourceName?: string;
-  publishedAt: string;
-  commentCount: number;
-  href: string;
-}
-
-const feed: FeedItem[] = [];
-
-(communityPosts ?? []).forEach((p) => {
-  feed.push({
-    type: 'community',
-    id: p.id,
-    title: p.title,
-    description: p.body ?? '',
-    thumbnailUrl: p.media_thumbnail_url ?? null,
-    mediaType: (p.media_type ?? 'none') as any,
-    authorName: profileMap[p.user_id] || 'Member',
-    publishedAt: p.published_at || p.created_at,
-    commentCount: commentCounts[p.id] ?? 0,
-    href: `/post/${p.id}`
-  });
-});
-
-(newsPosts ?? []).forEach((n) => {
-  feed.push({
-    type: 'news',
-    id: n.id,
-    title: n.title,
-    description: n.description ?? '',
-    thumbnailUrl: null,
-    mediaType: 'none',
-    sourceName: n.source_name || 'News',
-    publishedAt: n.published_at,
-    commentCount: commentCounts[n.id] ?? 0,
-    href: `/news/${n.slug}`
-  });
-});
-
-feed.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+const { data: packages } = await supabase
+  .from('absl_packages')
+  .select('*')
+  .eq('status', 'active')
+  .limit(6);
 ---
 
-<Layout title="Qaraye Marchants - The pulse of Nigerian finance">
-  <div class="container" style="padding: 40px 24px;">
-
-    <!-- Hero -->
-    <div style="text-align: center; padding: 20px 0 40px;">
-      <span style="display: inline-block; font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: 0.1em; color: var(--cyan); background: var(--cyan-soft); padding: 6px 14px; border-radius: var(--r-full); margin-bottom: 16px;"></span>
-      <h1 style="font-family: var(--display); font-size: 2.6rem; margin: 0 0 12px 0; color: var(--ink); font-weight: 800; line-height: 1.15;">Qaraye Marchants.</h1>
-      <p style="font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em; color: var(--ink-muted); margin: 0 0 24px 0;"><span data-i18n="tagline">NIGERIA&#39;S AGRICULTURAL MARKETPLACE</span></p>
-      <p data-i18n="subtitle" style="max-width: 560px; margin: 0 auto; color: var(--ink-muted); font-size: 0.95rem; line-height: 1.6;">
-        Buy and sell agricultural products directly from verified merchants across Nigeria. Rice, grains, tubers, livestock and more — all in one trusted marketplace.
-      </p>
-    </div>
-
-    <ProductMarquee />
-
-    <HarvestChart />
-
-    <!-- Feed Controls -->
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px;">
-      <div id="feed-tabs" style="display: flex; gap: 4px; background: var(--bg-850); padding: 4px; border-radius: var(--r-full);">
-        <button class="feed-tab active" data-filter="all" style="font-family: var(--body); font-size: 13px; font-weight: 600; padding: 8px 20px; border-radius: var(--r-full); border: none; cursor: pointer; background: var(--cyan); color: var(--bg-950);"><span data-i18n="tabAll">All</span></button>
-        <button class="feed-tab" data-filter="community" style="font-family: var(--body); font-size: 13px; font-weight: 600; padding: 8px 20px; border-radius: var(--r-full); border: none; cursor: pointer; background: transparent; color: var(--ink-muted);"><span data-i18n="tabCommunity">Community</span></button>
-        <button class="feed-tab" data-filter="news" style="font-family: var(--body); font-size: 13px; font-weight: 600; padding: 8px 20px; border-radius: var(--r-full); border: none; cursor: pointer; background: transparent; color: var(--ink-muted);"><span data-i18n="tabNews">News</span></button>
-      </div>
-
-      <div id="view-toggle" style="display: flex; gap: 4px; background: var(--bg-850); padding: 4px; border-radius: var(--r-full);">
-        <button class="view-btn active" data-view="card" aria-label="Card view" style="display: flex; align-items: center; justify-content: center; width: 36px; height: 32px; border-radius: var(--r-full); border: none; cursor: pointer; background: var(--cyan); color: var(--bg-950);">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-        </button>
-        <button class="view-btn" data-view="list" aria-label="List view" style="display: flex; align-items: center; justify-content: center; width: 36px; height: 32px; border-radius: var(--r-full); border: none; cursor: pointer; background: transparent; color: var(--ink-muted);">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-        </button>
-      </div>
-    </div>
-
-    <!-- Feed -->
-    <div id="feed-container" class="feed-layout-card">
-      {feed.length === 0 ? (
-        <div style="text-align: center; padding: 60px 20px; color: var(--ink-muted);">
-          <p>No content yet. Check back soon.</p>
+<Layout title="ABSL | Executive Travel, Logistics & Construction">
+  
+  <!-- HERO WITH AIRBNB-STYLE SEARCH -->
+  <section style="position:relative; padding: 120px 0 80px; background: linear-gradient(rgba(10, 17, 40, 0.85), rgba(10, 17, 40, 0.95)), url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=2074&auto=format&fit=crop'); background-size: cover; background-position: center; border-bottom: 1px solid var(--line);">
+    <div class="container" style="position:relative; z-index:2;">
+      <div style="max-width: 800px; margin-bottom: 48px;">
+        <div style="display:flex; align-items:center; gap:16px; margin-bottom: 24px;">
+          <div style="width: 60px; height: 1px; background: var(--gold);"></div>
+          <span style="font-size: 0.85rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--gold);">Global Business Travel & Infrastructure</span>
         </div>
-      ) : (
-        feed.map((item) => <PostCard item={item} layout="card" />)
-      )}
+        <h1 style="font-size: 4rem; line-height: 1.1; margin-bottom: 24px;">
+          One Partner. <br> Every Journey. Every Build.
+        </h1>
+        <p style="font-size: 1.15rem; color: var(--text-muted); max-width: 600px;">
+          Allstates Business Solutions and Logistics Ltd provides corporate travel management, global freight forwarding, and premium construction services — trusted by businesses and executives worldwide.
+        </p>
+      </div>
+
+      <!-- Search Bar (Airbnb style) -->
+      <div style="background: rgba(255,255,255,0.05); backdrop-filter: blur(12px); border: 1px solid var(--line); border-radius: var(--r-md); padding: 8px; display: flex; flex-wrap: wrap; gap: 8px; max-width: 900px;">
+        <div style="flex:1; min-width:200px; padding: 12px 16px; border-right: 1px solid var(--line-light);">
+          <div style="font-size:0.7rem; text-transform:uppercase; letter-spacing:1px; color:var(--gold); margin-bottom:4px;">Service Type</div>
+          <select style="width:100%; background:transparent; border:none; color:var(--white); font-family:var(--font-body); font-size:0.95rem; outline:none;">
+            <option style="color:#000;">Travel & Tours</option>
+            <option style="color:#000;">Logistics & Freight</option>
+            <option style="color:#000;">Construction</option>
+          </select>
+        </div>
+        <div style="flex:1; min-width:180px; padding: 12px 16px; border-right: 1px solid var(--line-light);">
+          <div style="font-size:0.7rem; text-transform:uppercase; letter-spacing:1px; color:var(--gold); margin-bottom:4px;">Destination / Location</div>
+          <input type="text" placeholder="Dubai, London, Lagos..." style="width:100%; background:transparent; border:none; color:var(--white); font-family:var(--font-body); font-size:0.95rem; outline:none;">
+        </div>
+        <div style="flex:1; min-width:140px; padding: 12px 16px; border-right: 1px solid var(--line-light);">
+          <div style="font-size:0.7rem; text-transform:uppercase; letter-spacing:1px; color:var(--gold); margin-bottom:4px;">Date</div>
+          <input type="date" style="width:100%; background:transparent; border:none; color:var(--text-light); font-family:var(--font-body); font-size:0.9rem; outline:none;">
+        </div>
+        <a href="/services" class="btn btn-primary" style="display:flex; align-items:center; justify-content:center; padding: 0 32px; border-radius: var(--r-sm);">Search</a>
+      </div>
     </div>
-  </div>
+  </section>
+
+  <!-- TRUST STATS -->
+  <section style="background: var(--bg-surface); border-bottom: 1px solid var(--line-light); padding: 32px 0;">
+    <div class="container" style="display:flex; justify-content:space-around; flex-wrap:wrap; gap:24px; text-align:center;">
+      <div><div style="font-family:var(--font-display); font-size:2.2rem; color:var(--gold);">170+</div><div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted);">Destinations</div></div>
+      <div><div style="font-family:var(--font-display); font-size:2.2rem; color:var(--gold);">500+</div><div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted);">Corporate Clients</div></div>
+      <div><div style="font-family:var(--font-display); font-size:2.2rem; color:var(--gold);">12+</div><div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted);">Years Experience</div></div>
+      <div><div style="font-family:var(--font-display); font-size:2.2rem; color:var(--gold);">50+</div><div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted);">Projects Delivered</div></div>
+    </div>
+  </section>
+
+  <!-- SERVICE PILLARS -->
+  <section style="padding: 100px 0; background: var(--bg-main);">
+    <div class="container">
+      <div style="text-align:center; margin-bottom:64px;">
+        <h2 style="font-size: 2.5rem; margin-bottom: 16px;">Our Core Pillars</h2>
+        <div style="width: 60px; height: 2px; background: var(--gold); margin: 0 auto;"></div>
+      </div>
+      
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:32px;">
+        <div style="background:var(--bg-surface); padding:48px 32px; border:1px solid var(--line-light); border-radius:var(--r-md);">
+          <div style="font-size: 32px; margin-bottom: 24px;">✈️</div>
+          <h3 style="font-size: 1.5rem; margin-bottom: 16px;">Travel & Tours</h3>
+          <p style="color:var(--text-muted); font-size: 0.95rem; line-height:1.8; margin-bottom:24px;">Corporate ticketing, luxury hospitality, visa procurement, and protocol services with 24/7 traveler care.</p>
+          <a href="/services" style="color: var(--gold); font-size:0.85rem; font-weight:600; letter-spacing:1px; text-transform:uppercase;">Explore &rarr;</a>
+        </div>
+        <div style="background:var(--bg-surface); padding:48px 32px; border:1px solid var(--line-light); border-radius:var(--r-md);">
+          <div style="font-size: 32px; margin-bottom: 24px;">🚢</div>
+          <h3 style="font-size: 1.5rem; margin-bottom: 16px;">Global Logistics</h3>
+          <p style="color:var(--text-muted); font-size: 0.95rem; line-height:1.8; margin-bottom:24px;">End-to-end freight forwarding, customs clearance, and secure delivery with real-time tracking and global coverage.</p>
+          <a href="/services" style="color: var(--gold); font-size:0.85rem; font-weight:600; letter-spacing:1px; text-transform:uppercase;">Explore &rarr;</a>
+        </div>
+        <div style="background:var(--bg-surface); padding:48px 32px; border:1px solid var(--line-light); border-radius:var(--r-md);">
+          <div style="font-size: 32px; margin-bottom: 24px;">🏗️</div>
+          <h3 style="font-size: 1.5rem; margin-bottom: 16px;">Construction</h3>
+          <p style="color:var(--text-muted); font-size: 0.95rem; line-height:1.8; margin-bottom:24px;">Premium residential and commercial builds, from architectural design to project handover, with 10-year structural backing.</p>
+          <a href="/construction" style="color: var(--gold); font-size:0.85rem; font-weight:600; letter-spacing:1px; text-transform:uppercase;">Explore &rarr;</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURED PACKAGES (Airbnb Style) -->
+  <section style="padding: 100px 0; background: #050914; border-top: 1px solid var(--line-light); border-bottom: 1px solid var(--line-light);">
+    <div class="container">
+      <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom: 48px;">
+        <div>
+          <h2 style="font-size: 2.2rem; margin-bottom: 12px;">Featured Packages</h2>
+          <p style="color:var(--text-muted);">Curated travel and logistics solutions with transparent pricing.</p>
+        </div>
+        <a href="/services" style="color: var(--gold); font-weight: 600; font-size: 0.9rem; letter-spacing: 1px; text-transform: uppercase;">View All &rarr;</a>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:24px;">
+        {packages?.map(pkg => (
+          <a href={`/services/${pkg.id}`} style="display:flex; flex-direction:column; background:var(--bg-card); border:1px solid var(--line-light); border-radius:var(--r-md); padding:24px; transition:0.3s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--line-light)'">
+            <div style="font-size:0.7rem; text-transform:uppercase; letter-spacing:1.5px; color:var(--gold); margin-bottom:16px;">{pkg.category}</div>
+            <h3 style="font-size:1.3rem; margin-bottom:12px; color:var(--white);">{pkg.title}</h3>
+            <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:20px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">{pkg.description}</p>
+            <div style="margin-top:auto; padding-top:16px; border-top:1px solid var(--line-light); display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-weight:600; color:var(--gold); font-size:1.1rem;">₦{Number(pkg.price).toLocaleString()}</span>
+              <span style="font-size:0.8rem; color:var(--text-muted); border:1px solid var(--gold); padding:4px 12px; border-radius:var(--r-sm);">Book Now</span>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- CONSTRUCTION PORTFOLIO (Royal Craft Style) -->
+  <section style="padding: 100px 0; background: var(--bg-main);">
+    <div class="container">
+      <div style="text-align:center; margin-bottom:64px;">
+        <h2 style="font-size: 2.5rem; margin-bottom: 16px;">Construction Portfolio</h2>
+        <p style="color:var(--text-muted); max-width:600px; margin:0 auto;">From luxury residential remodels to commercial infrastructure, we deliver with certified craftsmanship and a 10-year installation guarantee.</p>
+      </div>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:24px;">
+        <div style="border:1px solid var(--line-light); border-radius:var(--r-md); overflow:hidden;">
+          <div style="height:240px; background: url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2070&auto=format&fit=crop') center/cover;"></div>
+          <div style="padding:24px; background:var(--bg-card);">
+            <div style="font-size:0.75rem; color:var(--gold); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">Residential Remodel</div>
+            <h3 style="font-size:1.2rem; margin-bottom:8px;">Lekki Penthouse Renovation</h3>
+            <p style="color:var(--text-muted); font-size:0.85rem;">Full structural remodel with premium finishes. Budget: ₦45M.</p>
+          </div>
+        </div>
+        <div style="border:1px solid var(--line-light); border-radius:var(--r-md); overflow:hidden;">
+          <div style="height:240px; background: url('https://images.unsplash.com/photo-1541888946425-d81bb19240f5?q=80&w=2070&auto=format&fit=crop') center/cover;"></div>
+          <div style="padding:24px; background:var(--bg-card);">
+            <div style="font-size:0.75rem; color:var(--gold); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">Commercial Build</div>
+            <h3 style="font-size:1.2rem; margin-bottom:8px;">Abuja Corporate HQ</h3>
+            <p style="color:var(--text-muted); font-size:0.85rem;">5-storey office complex with LEED certification. Budget: ₦320M.</p>
+          </div>
+        </div>
+        <div style="border:1px solid var(--line-light); border-radius:var(--r-md); overflow:hidden;">
+          <div style="height:240px; background: url('https://images.unsplash.com/photo-1503387762-592deb58ef4e?q=80&w=2070&auto=format&fit=crop') center/cover;"></div>
+          <div style="padding:24px; background:var(--bg-card);">
+            <div style="font-size:0.75rem; color:var(--gold); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">Infrastructure</div>
+            <h3 style="font-size:1.2rem; margin-bottom:8px;">Kano Logistics Warehouse</h3>
+            <p style="color:var(--text-muted); font-size:0.85rem;">10,000 sqm cold-storage facility. Budget: ₦180M.</p>
+          </div>
+        </div>
+      </div>
+      <div style="text-align:center; margin-top:48px;">
+        <a href="/construction" class="btn btn-outline" style="padding:14px 40px;">View Full Portfolio &rarr;</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- CORPORATE TRAVEL FEATURES (Amex GBT Style) -->
+  <section style="padding: 100px 0; background: var(--bg-surface); border-top: 1px solid var(--line-light); border-bottom: 1px solid var(--line-light);">
+    <div class="container">
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:64px; align-items:center;">
+        <div>
+          <div style="font-size:0.8rem; text-transform:uppercase; letter-spacing:2px; color:var(--gold); margin-bottom:16px;">For Travel Managers & Executives</div>
+          <h2 style="font-size: 2.8rem; margin-bottom:24px;">Corporate Travel, Simplified.</h2>
+          <p style="color:var(--text-muted); font-size:1rem; line-height:1.9; margin-bottom:32px;">Manage policy compliance, traveler preferences, and expense reporting from one unified platform. Our AI-powered booking tool ensures your team gets the best available rates while staying within budget.</p>
+          <ul style="list-style:none; color:var(--text-light); font-size:0.95rem; line-height:2.2;">
+            <li>✓ Centralized policy management</li>
+            <li>✓ Real-time booking transparency</li>
+            <li>✓ 24/7 traveler care & crisis response</li>
+            <li>✓ Automated expense integration</li>
+          </ul>
+        </div>
+        <div style="background: var(--bg-card); border: 1px solid var(--line); padding: 40px; border-radius: var(--r-md);">
+          <div style="font-family: var(--font-display); font-size: 1.3rem; margin-bottom: 24px; color: var(--gold);">Client Dashboard Preview</div>
+          <div style="display:flex; flex-direction:column; gap:16px;">
+            <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--line-light); padding-bottom:12px;"><span style="color:var(--text-muted);">Upcoming Trip</span><span style="color:var(--white); font-weight:600;">Lagos → London (Oct 24)</span></div>
+            <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--line-light); padding-bottom:12px;"><span style="color:var(--text-muted);">Policy Status</span><span style="color:var(--green); font-weight:600;">Compliant</span></div>
+            <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--line-light); padding-bottom:12px;"><span style="color:var(--text-muted);">Expense Sync</span><span style="color:var(--white); font-weight:600;">Auto-Integrated</span></div>
+            <div style="margin-top:16px;"><a href="/contact" class="btn btn-primary" style="width:100%; text-align:center;">Request Corporate Access</a></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section style="padding: 100px 0; background: var(--bg-main); text-align:center;">
+    <div class="container">
+      <h2 style="font-size: 2.8rem; margin-bottom: 20px;">Ready to Plan Your Next Move?</h2>
+      <p style="color:var(--text-muted); font-size:1.1rem; max-width:600px; margin:0 auto 40px;">Whether it's a boardroom in London, a container in Lagos, or a foundation in Abuja — ABSL delivers.</p>
+      <div style="display:flex; gap:16px; justify-content:center; flex-wrap:wrap;">
+        <a href="/services" class="btn btn-primary" style="padding:16px 48px;">Book a Service</a>
+        <a href="/contact" class="btn btn-outline" style="padding:16px 48px;">Speak to an Expert</a>
+      </div>
+    </div>
+  </section>
+
 </Layout>
-
-<style is:global>
-  #feed-container.feed-layout-card {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 20px;
-  }
-  #feed-container.feed-layout-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-  #feed-container.feed-layout-list .post-card {
-    border-radius: var(--r-md);
-  }
-</style>
-
-<script>
-  const container = document.getElementById('feed-container')!;
-  const viewButtons = document.querySelectorAll('.view-btn');
-  const feedTabs = document.querySelectorAll('.feed-tab');
-
-  // --- View toggle ---
-  const savedView = localStorage.getItem('qm-feed-view') || 'card';
-  applyView(savedView);
-
-  viewButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      const view = (btn as HTMLElement).dataset.view || 'card';
-      applyView(view);
-      localStorage.setItem('qm-feed-view', view);
-    });
-  });
-
-  function applyView(view: string) {
-    container.classList.remove('feed-layout-card', 'feed-layout-list');
-    container.classList.add('feed-layout-' + view);
-
-    viewButtons.forEach(b => {
-      const isActive = (b as HTMLElement).dataset.view === view;
-      (b as HTMLElement).style.background = isActive ? 'var(--cyan)' : 'transparent';
-      (b as HTMLElement).style.color = isActive ? 'var(--bg-950)' : 'var(--ink-muted)';
-    });
-
-    // Re-render cards with the right layout class
-    document.querySelectorAll('.post-card').forEach(card => {
-      card.classList.remove('layout-card', 'layout-list');
-      card.classList.add('layout-' + view);
-    });
-  }
-
-  // --- Filter tabs ---
-  feedTabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      const filter = (tab as HTMLElement).dataset.filter;
-      feedTabs.forEach(t => {
-        (t as HTMLElement).style.background = 'transparent';
-        (t as HTMLElement).style.color = 'var(--ink-muted)';
-      });
-      (tab as HTMLElement).style.background = 'var(--cyan)';
-      (tab as HTMLElement).style.color = 'var(--bg-950)';
-
-      const cards = document.querySelectorAll('.post-card');
-      cards.forEach(card => {
-        const wrapper = card as HTMLElement;
-        const badge = wrapper.querySelector('.badge-community, .badge-news');
-        const isCommunity = badge?.classList.contains('badge-community');
-        const type = isCommunity ? 'community' : 'news';
-        if (filter === 'all' || filter === type) {
-          wrapper.style.display = '';
-        } else {
-          wrapper.style.display = 'none';
-        }
-      });
-    });
-  });
-</script>
