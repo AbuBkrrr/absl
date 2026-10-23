@@ -1,0 +1,38 @@
+---
+import Layout from '../../layouts/Layout.astro';
+---
+<Layout title="Admin Dashboard - ABSL">
+  <div style="background: var(--bg-surface); padding: 80px 0; border-bottom: 1px solid var(--line-light);">
+    <div class="container">
+      <h1 style="font-size:3rem; margin-bottom:16px;">Admin Control Center</h1>
+      <p style="color:var(--text-muted); font-size:1.1rem;">Manage ABSL bookings, services, and platform analytics.</p>
+    </div>
+  </div>
+
+  <div class="container" style="padding: 80px 24px;">
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:32px;">
+      
+      <!-- Bookings Card -->
+      <a href="/admin/bookings" style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 40px; text-decoration: none; transition: 0.2s;">
+        <div style="font-size: 32px; margin-bottom: 16px;">📦</div>
+        <h2 style="font-size: 1.5rem; color: var(--white); margin-bottom: 8px;">Manage Bookings</h2>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">View client travel and logistics requests. Update statuses and contact buyers.</p>
+      </a>
+
+      <!-- Services Card -->
+      <a href="/admin/services" style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 40px; text-decoration: none; transition: 0.2s;">
+        <div style="font-size: 32px; margin-bottom: 16px;">✈️</div>
+        <h2 style="font-size: 1.5rem; color: var(--white); margin-bottom: 8px;">Manage Services</h2>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">Add, edit, or remove travel packages, freight routes, and construction contracts.</p>
+      </a>
+
+      <!-- Analytics Card -->
+      <div style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 40px; opacity: 0.6;">
+        <div style="font-size: 32px; margin-bottom: 16px;">📊</div>
+        <h2 style="font-size: 1.5rem; color: var(--white); margin-bottom: 8px;">Analytics</h2>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">Revenue charts and traffic insights. (Coming soon)</p>
+      </div>
+
+    </div>
+  </div>
+</Layout>
