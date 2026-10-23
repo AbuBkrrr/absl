@@ -10,7 +10,7 @@ const { data: packages } = await supabase
 ---
 
 <Layout title="Global Logistics & Supply Chain - ABSL">
-  <!-- HERO SECTION (FedEx-inspired Tracking + UPS messaging) -->
+  <!-- HERO SECTION -->
   <section style="position:relative; padding: 100px 0 80px; background: linear-gradient(rgba(10, 17, 40, 0.85), rgba(10, 17, 40, 0.95)), url('https://images.unsplash.com/photo-1578575437130-527eed3abbec?q=80&w=2070&auto=format&fit=crop'); background-size: cover; background-position: center; border-bottom: 1px solid var(--line);">
     <div class="container" style="position:relative; z-index:2;">
       <div style="max-width: 800px; margin-bottom: 48px;">
@@ -26,13 +26,13 @@ const { data: packages } = await supabase
         </p>
       </div>
 
-      <!-- Tracking Bar (FedEx-inspired) -->
+      <!-- Tracking Bar -->
       <div style="background: rgba(255,255,255,0.05); backdrop-filter: blur(12px); border: 1px solid var(--line); border-radius: var(--r-md); padding: 8px; display: flex; flex-wrap: wrap; gap: 8px; max-width: 900px;">
         <div style="flex:1; min-width:200px; padding: 12px 16px;">
           <div style="font-size:0.7rem; text-transform:uppercase; letter-spacing:1px; color:var(--gold); margin-bottom:4px;">Track Your Shipment</div>
-          <input type="text" placeholder="Enter tracking number (e.g. ABSL123456789)" style="width:100%; background:transparent; border:none; color:var(--white); font-family:var(--font-body); font-size:0.95rem; outline:none;">
+          <input id="hero-track-input" type="text" placeholder="Enter tracking number (e.g. ABSL123456789)" style="width:100%; background:transparent; border:none; color:var(--white); font-family:var(--font-body); font-size:0.95rem; outline:none;">
         </div>
-        <button class="btn btn-primary" style="display:flex; align-items:center; justify-content:center; padding: 0 32px; border-radius: var(--r-sm);">Track</button>
+        <button id="hero-track-btn" class="btn btn-primary" style="display:flex; align-items:center; justify-content:center; padding: 0 32px; border-radius: var(--r-sm);">Track</button>
       </div>
     </div>
   </section>
@@ -40,14 +40,26 @@ const { data: packages } = await supabase
   <!-- TRUST STATS -->
   <section style="background: var(--bg-surface); border-bottom: 1px solid var(--line-light); padding: 32px 0;">
     <div class="container" style="display:flex; justify-content:space-around; flex-wrap:wrap; gap:24px; text-align:center;">
-      <div><div style="font-family:var(--font-display); font-size:2.2rem; color:var(--gold);">170+</div><div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted);">Countries Served</div></div>
-      <div><div style="font-family:var(--font-display); font-size:2.2rem; color:var(--gold);">140k</div><div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted);">SQM Warehouse Space</div></div>
-      <div><div style="font-family:var(--font-display); font-size:2.2rem; color:var(--gold);">24/7</div><div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted);">Cargo Security & Tracking</div></div>
-      <div><div style="font-family:var(--font-display); font-size:2.2rem; color:var(--gold);">100+</div><div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted);">Local Logistics Experts</div></div>
+      <div>
+        <div style="font-family:var(--font-display); font-size:2.2rem; color:var(--gold);">170+</div>
+        <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted);">Countries Served</div>
+      </div>
+      <div>
+        <div style="font-family:var(--font-display); font-size:2.2rem; color:var(--gold);">140k</div>
+        <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted);">SQM Warehouse Space</div>
+      </div>
+      <div>
+        <div style="font-family:var(--font-display); font-size:2.2rem; color:var(--gold);">24/7</div>
+        <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted);">Cargo Security & Tracking</div>
+      </div>
+      <div>
+        <div style="font-family:var(--font-display); font-size:2.2rem; color:var(--gold);">100+</div>
+        <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted);">Local Logistics Experts</div>
+      </div>
     </div>
   </section>
 
-  <!-- CORE SERVICES (UPS & CEVA Merge) -->
+  <!-- CORE SERVICES -->
   <section style="padding: 100px 0; background: var(--bg-main);">
     <div class="container">
       <div style="text-align:center; margin-bottom:64px;">
@@ -57,37 +69,31 @@ const { data: packages } = await supabase
       </div>
 
       <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:32px;">
-        <!-- Air Freight -->
         <div style="background:var(--bg-surface); padding:48px 32px; border:1px solid var(--line-light); border-radius:var(--r-md);">
           <div style="font-size: 32px; margin-bottom: 24px;">✈️</div>
           <h3 style="font-size: 1.5rem; margin-bottom: 16px;">Air Freight</h3>
           <p style="color:var(--text-muted); font-size: 0.95rem; line-height:1.8; margin-bottom:24px;">Time-critical shipments moved via our global air network. We offer express, standard, and chartered air freight solutions.</p>
         </div>
-        <!-- Ocean Freight -->
         <div style="background:var(--bg-surface); padding:48px 32px; border:1px solid var(--line-light); border-radius:var(--r-md);">
           <div style="font-size: 32px; margin-bottom: 24px;">🚢</div>
           <h3 style="font-size: 1.5rem; margin-bottom: 16px;">Ocean Freight</h3>
           <p style="color:var(--text-muted); font-size: 0.95rem; line-height:1.8; margin-bottom:24px;">Cost-effective FCL and LCL ocean shipping. We handle port-to-port and door-to-door delivery with full visibility.</p>
         </div>
-        <!-- Ground & Road -->
         <div style="background:var(--bg-surface); padding:48px 32px; border:1px solid var(--line-light); border-radius:var(--r-md);">
           <div style="font-size: 32px; margin-bottom: 24px;">🚛</div>
           <h3 style="font-size: 1.5rem; margin-bottom: 16px;">Ground & Road Freight</h3>
           <p style="color:var(--text-muted); font-size: 0.95rem; line-height:1.8; margin-bottom:24px;">Reliable FTL and LTL trucking across Nigeria and West Africa. Our dedicated fleet ensures last-mile delivery.</p>
         </div>
-        <!-- Warehousing -->
         <div style="background:var(--bg-surface); padding:48px 32px; border:1px solid var(--line-light); border-radius:var(--r-md);">
           <div style="font-size: 32px; margin-bottom: 24px;">🏢</div>
           <h3 style="font-size: 1.5rem; margin-bottom: 16px;">Warehousing & Distribution</h3>
           <p style="color:var(--text-muted); font-size: 0.95rem; line-height:1.8; margin-bottom:24px;">140,000 SQM of secure warehouse space. We offer fulfillment, inventory management, and cross-docking.</p>
         </div>
-        <!-- Customs Brokerage -->
         <div style="background:var(--bg-surface); padding:48px 32px; border:1px solid var(--line-light); border-radius:var(--r-md);">
           <div style="font-size: 32px; margin-bottom: 24px;">📋</div>
           <h3 style="font-size: 1.5rem; margin-bottom: 16px;">Customs Brokerage</h3>
           <p style="color:var(--text-muted); font-size: 0.95rem; line-height:1.8; margin-bottom:24px;">Licensed in-house customs team ensuring fast clearance and compliance with local and international trade regulations.</p>
         </div>
-        <!-- Supply Chain Tech -->
         <div style="background:var(--bg-surface); padding:48px 32px; border:1px solid var(--line-light); border-radius:var(--r-md);">
           <div style="font-size: 32px; margin-bottom: 24px;">📊</div>
           <h3 style="font-size: 1.5rem; margin-bottom: 16px;">Supply Chain Visibility</h3>
@@ -97,7 +103,7 @@ const { data: packages } = await supabase
     </div>
   </section>
 
-  <!-- LOCAL EXPERTISE (CEVA-inspired) -->
+  <!-- LOCAL EXPERTISE -->
   <section style="padding: 100px 0; background: var(--bg-surface); border-top: 1px solid var(--line-light); border-bottom: 1px solid var(--line-light);">
     <div class="container">
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:64px; align-items:center;">
@@ -138,4 +144,19 @@ const { data: packages } = await supabase
       </div>
     </div>
   </section>
+
+  <!-- Tracking Script -->
+  <script is:inline>
+    document.addEventListener('DOMContentLoaded', () => {
+      const trackBtn = document.getElementById('hero-track-btn');
+      if (trackBtn) {
+        trackBtn.addEventListener('click', () => {
+          const val = document.getElementById('hero-track-input').value.trim();
+          if (val) {
+            window.location.href = '/track?num=' + encodeURIComponent(val);
+          }
+        });
+      }
+    });
+  </script>
 </Layout>

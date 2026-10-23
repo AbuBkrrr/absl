@@ -1,0 +1,115 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { supabase } from '../../lib/supabase';
+
+const { data: shipments } = await supabase.from('absl_shipments').select('*').order('created_at', { ascending: false });
+const rows = shipments || [];
+---
+
+<Layout title="Shipments - ABSL Admin">
+  <div style="background: var(--bg-surface); padding: 60px 0; border-bottom: 1px solid var(--line-light);">
+    <div class="container" style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:16px;">
+      <div>
+        <h1 style="font-size:2.5rem; margin:0;">Manage Shipments</h1>
+        <p style="color:var(--text-muted); margin-top:8px;">Create new tracking numbers and update cargo status.</p>
+      </div>
+      <a href="/admin" class="btn btn-outline" style="padding:10px 24px;">&larr; Back to Admin</a>
+    </div>
+  </div>
+
+  <div class="container" style="padding: 40px 24px 80px;">
+    
+    <!-- Add New Shipment Form -->
+    <div style="background:var(--bg-surface); border:1px solid var(--line-light); border-radius:var(--r-md); padding:32px; margin-bottom:32px;">
+      <h2 style="font-size:1.2rem; color:var(--gold); margin-bottom:20px;">Create New Shipment</h2>
+      <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:16px;">
+        <input id="f-tracking" type="text" placeholder="Tracking Number (e.g. ABSL-123)" style="padding:12px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
+        <input id="f-origin" type="text" placeholder="Origin (e.g. Lagos, NG)" style="padding:12px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
+        <input id="f-dest" type="text" placeholder="Destination (e.g. London, UK)" style="padding:12px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
+        <button id="save-btn" class="btn btn-primary">Create Shipment</button>
+      </div>
+      <div style="margin-top:16px;">
+        <input id="f-location" type="text" placeholder="Current Location (e.g. Apapa Port)" style="width:100%; padding:12px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
+      </div>
+    </div>
+
+    <!-- Existing Shipments Table -->
+    <div style="background:var(--bg-card); border:1px solid var(--line-light); border-radius:var(--r-md); overflow:hidden;">
+      <table style="width:100%; border-collapse:collapse; font-family:var(--mono); font-size:12.5px;">
+        <thead>
+          <tr style="background:var(--bg-surface); text-align:left;">
+            <th style="padding:16px; color:var(--gold);">Tracking #</th>
+            <th style="padding:16px; color:var(--gold);">Route</th>
+            <th style="padding:16px; color:var(--gold);">Current Status</th>
+            <th style="padding:16px; color:var(--gold);">Location</th>
+            <th style="padding:16px; color:var(--gold); text-align:right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.length === 0 ? (
+            <tr><td colspan="5" style="padding:32px; text-align:center; color:var(--text-muted);">No shipments yet.</td></tr>
+          ) : (
+            rows.map(s => (
+              <tr style="border-top:1px solid var(--line-light);">
+                <td style="padding:16px; color:var(--white); font-weight:600;">{s.tracking_number}</td>
+                <td style="padding:16px; color:var(--text-muted);">{s.origin} → {s.destination}</td>
+                <td style="padding:16px;"><span style="font-size:10px; padding:3px 8px; border-radius:4px; background:var(--bg-surface); color:var(--gold); text-transform:uppercase;">{s.status}</span></td>
+                <td style="padding:16px; color:var(--text-light);">{s.current_location}</td>
+                <td style="padding:16px; text-align:right;">
+                  <button data-id={s.id} data-tracking={s.tracking_number} class="update-btn" style="background:transparent; border:1px solid var(--gold); color:var(--gold); padding:4px 12px; border-radius:4px; cursor:pointer; font-size:11px;">Update Status</button>
+                </td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script is:inline>
+    document.addEventListener('astro:page-load', () => {
+      // Create Shipment
+      document.getElementById('save-btn')?.addEventListener('click', async () => {
+        const tracking = document.getElementById('f-tracking').value;
+        const origin = document.getElementById('f-origin').value;
+        const dest = document.getElementById('f-dest').value;
+        const loc = document.getElementById('f-location').value;
+        
+        if (!tracking || !origin || !dest) return alert('Fill all required fields');
+
+        const { error } = await supabase.from('absl_shipments').insert({
+          tracking_number: tracking,
+          origin, destination: dest, current_location: loc || origin,
+          status: 'picked_up',
+          history: [{ status: 'picked_up', location: loc || origin, timestamp: new Date().toISOString() }]
+        });
+
+        if (error) alert(error.message);
+        else window.location.reload();
+      });
+
+      // Update Status
+      document.querySelectorAll('.update-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          const id = e.target.dataset.id;
+          const tracking = e.target.dataset.tracking;
+          
+          const status = prompt(`Update status for ${tracking}:\n(picked_up, in_transit, customs, out_for_delivery, delivered)`);
+          if (!status) return;
+          
+          const location = prompt('Enter current location (e.g. Customs, London Hub):');
+          if (!location) return;
+
+          const res = await fetch('/api/shipments/update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, status, location })
+          });
+
+          if (res.ok) window.location.reload();
+          else alert('Failed to update');
+        });
+      });
+    });
+  </script>
+</Layout>
