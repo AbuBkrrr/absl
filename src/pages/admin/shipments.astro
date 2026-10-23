@@ -9,6 +9,9 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 ---
 
 <Layout title="Shipments - ABSL Admin">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" is:inline></script>
+
   <div style="background: var(--bg-surface); padding: 60px 0; border-bottom: 1px solid var(--line-light);">
     <div class="container" style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:16px;">
       <div>
@@ -68,17 +71,59 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
     </div>
   </div>
 
-  <!-- Toast Container -->
-  <div id="toast-container" style="position:fixed; bottom:24px; right:24px; z-index:9999; display:flex; flex-direction:column; gap:10px;"></div>
+  <!-- Update Modal -->
+  <div id="update-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:9999; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+    <div style="background:var(--bg-surface); border:1px solid var(--gold); border-radius:var(--r-md); width:100%; max-width:800px; overflow:hidden; display:flex; flex-direction:column;">
+      <div style="padding:20px 24px; border-bottom:1px solid var(--line-light); display:flex; justify-content:space-between; align-items:center;">
+        <h3 style="margin:0; color:var(--white); font-size:1.2rem;">Update Shipment: <span id="modal-tracking" style="color:var(--gold);"></span></h3>
+        <button id="close-modal" style="background:none; border:none; color:var(--text-muted); font-size:1.5rem; cursor:pointer;">✕</button>
+      </div>
+      
+      <div style="display:grid; grid-template-columns: 1fr 1.5fr;">
+        <!-- Form Controls -->
+        <div style="padding:24px; border-right:1px solid var(--line-light);">
+          <input type="hidden" id="modal-id" />
+          
+          <label style="display:block; font-family:var(--mono); font-size:11px; color:var(--gold); margin-bottom:8px;">NEW STATUS</label>
+          <select id="modal-status" style="width:100%; padding:12px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px; margin-bottom:20px;">
+            <option value="picked_up">Picked Up</option>
+            <option value="in_transit">In Transit</option>
+            <option value="customs">Customs Clearance</option>
+            <option value="out_for_delivery">Out for Delivery</option>
+            <option value="delivered">Delivered</option>
+          </select>
 
-  <!-- Notice the define:vars directive here -->
+          <label style="display:block; font-family:var(--mono); font-size:11px; color:var(--gold); margin-bottom:8px;">LOCATION NAME</label>
+          <input id="modal-location" type="text" placeholder="e.g. Heathrow Airport" style="width:100%; padding:12px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px; margin-bottom:20px;" />
+
+          <div style="background:rgba(245,166,35,0.1); border:1px dashed var(--gold); padding:12px; border-radius:4px; margin-bottom:20px;">
+            <p style="margin:0; font-size:0.8rem; color:var(--text-muted);">Click anywhere on the map to drop a pin and capture the exact GPS coordinates.</p>
+          </div>
+
+          <button id="modal-save" type="button" class="btn btn-primary" style="width:100%;">Save Update</button>
+        </div>
+
+        <!-- Map Container -->
+        <div style="position:relative; min-height:350px;">
+          <div id="admin-map" style="width:100%; height:100%; min-height:400px; background:#e5e5e5;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container" style="position:fixed; bottom:24px; right:24px; z-index:99999; display:flex; flex-direction:column; gap:10px;"></div>
+
   <script is:inline define:vars={{ supabaseUrl, supabaseAnonKey }}>
     let supabaseClient = null;
+    let map = null;
+    let currentMarker = null;
+    let selectedLat = null;
+    let selectedLng = null;
 
     async function getSupabase() {
       if (supabaseClient) return supabaseClient;
       const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
-      // Variables injected via define:vars
       supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
       return supabaseClient;
     }
@@ -89,101 +134,130 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       const toast = document.createElement('div');
       const bgColor = type === 'success' ? 'var(--green)' : (type === 'error' ? '#ef4444' : 'var(--gold)');
       const icon = type === 'success' ? '✓' : (type === 'error' ? '✕' : 'ℹ');
-
-      toast.style.cssText = `
-        background: var(--bg-card); border: 1px solid ${bgColor}; color: var(--white); 
-        padding: 16px 24px; border-radius: var(--r-md); font-family: var(--font-body); 
-        font-weight: 600; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        display: flex; align-items: center; gap: 12px;
-        transform: translateY(100%); opacity: 0; transition: all 0.3s ease;
-      `;
-      
+      toast.style.cssText = `background: var(--bg-card); border: 1px solid ${bgColor}; color: var(--white); padding: 16px 24px; border-radius: var(--r-md); font-family: var(--font-body); font-weight: 600; box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 12px; transform: translateY(100%); opacity: 0; transition: all 0.3s ease;`;
       toast.innerHTML = `<span style="color:${bgColor}; font-size:1.2rem;">${icon}</span> ${message}`;
       container.appendChild(toast);
-
       setTimeout(() => { toast.style.transform = 'translateY(0)'; toast.style.opacity = '1'; }, 10);
-      setTimeout(() => {
-        toast.style.transform = 'translateY(100%)';
-        toast.style.opacity = '0';
-        setTimeout(() => toast.remove(), 300);
-      }, 3000);
+      setTimeout(() => { toast.style.transform = 'translateY(100%)'; toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
     }
 
     document.addEventListener('DOMContentLoaded', () => {
+      // Create Shipment Logic
       const saveBtn = document.getElementById('save-btn');
       if (saveBtn) {
         saveBtn.addEventListener('click', async (e) => {
           e.preventDefault();
-          
           const tracking = document.getElementById('f-tracking').value.trim();
           const origin = document.getElementById('f-origin').value.trim();
           const dest = document.getElementById('f-dest').value.trim();
           const loc = document.getElementById('f-location').value.trim();
           
-          if (!tracking || !origin || !dest) {
-            return showToast('Please fill all required fields.', 'error');
-          }
-
-          saveBtn.textContent = 'Creating...';
-          saveBtn.disabled = true;
+          if (!tracking || !origin || !dest) return showToast('Please fill all required fields.', 'error');
+          saveBtn.textContent = 'Creating...'; saveBtn.disabled = true;
 
           try {
             const supabase = await getSupabase();
             const { error } = await supabase.from('absl_shipments').insert({
-              tracking_number: tracking,
-              origin: origin,
-              destination: dest,
-              current_location: loc || origin,
+              tracking_number: tracking, origin: origin, destination: dest, current_location: loc || origin,
               status: 'picked_up',
               history: [{ status: 'picked_up', location: loc || origin, timestamp: new Date().toISOString() }]
             });
-
             if (error) throw error;
-            
             showToast('Shipment created successfully!', 'success');
             setTimeout(() => window.location.reload(), 1000);
-
           } catch (err) {
             showToast(err.message || 'Failed to create shipment.', 'error');
-            saveBtn.textContent = 'Create Shipment';
-            saveBtn.disabled = false;
+            saveBtn.textContent = 'Create Shipment'; saveBtn.disabled = false;
           }
         });
       }
 
+      // Modal Logic
+      const modal = document.getElementById('update-modal');
+      const closeBtn = document.getElementById('close-modal');
+      const saveUpdateBtn = document.getElementById('modal-save');
+
+      closeBtn.addEventListener('click', () => modal.style.display = 'none');
+
       document.querySelectorAll('.update-btn').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-          const target = e.target;
-          const id = target.dataset.id;
-          const tracking = target.dataset.tracking;
+        btn.addEventListener('click', (e) => {
+          document.getElementById('modal-id').value = e.target.dataset.id;
+          document.getElementById('modal-tracking').textContent = e.target.dataset.tracking;
           
-          const status = prompt(`Update status for ${tracking}:\n(picked_up, in_transit, customs, out_for_delivery, delivered)`);
-          if (!status) return;
-          
-          const location = prompt('Enter current location (e.g. Customs, London Hub):');
-          if (!location) return;
+          // Reset selections
+          selectedLat = null; selectedLng = null;
+          document.getElementById('modal-location').value = '';
 
-          target.textContent = 'Updating...';
-          target.disabled = true;
+          // Show Modal
+          modal.style.display = 'flex';
 
-          try {
-            const res = await fetch('/api/shipments/update', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ id, status, location })
+          // Init Map if not already
+          if (!map) {
+            map = L.map('admin-map').setView([20, 0], 2); // World view
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+              attribution: '© OpenStreetMap'
+            }).addTo(map);
+
+            map.on('click', function(e) {
+              selectedLat = e.latlng.lat;
+              selectedLng = e.latlng.lng;
+              
+              if (currentMarker) map.removeLayer(currentMarker);
+              currentMarker = L.marker([selectedLat, selectedLng]).addTo(map);
+              
+              // Auto-fill coordinates into location field if user hasn't typed anything
+              const locInput = document.getElementById('modal-location');
+              if(!locInput.value) {
+                locInput.value = `${selectedLat.toFixed(4)}, ${selectedLng.toFixed(4)}`;
+              }
             });
-
-            if (!res.ok) throw new Error('Server error');
-
-            showToast('Status updated successfully!', 'success');
-            setTimeout(() => window.location.reload(), 1000);
-
-          } catch (err) {
-            showToast('Failed to update status.', 'error');
-            target.textContent = 'Update Status';
-            target.disabled = false;
           }
+
+          // Invalidate size is crucial when map is in a hidden modal
+          setTimeout(() => { map.invalidateSize(); }, 200);
         });
+      });
+
+      saveUpdateBtn.addEventListener('click', async (e) => {
+        const id = document.getElementById('modal-id').value;
+        const status = document.getElementById('modal-status').value;
+        const location = document.getElementById('modal-location').value;
+        
+        if (!location) return showToast('Please provide a location name or click the map.', 'error');
+
+        saveUpdateBtn.textContent = 'Saving...'; saveUpdateBtn.disabled = true;
+
+        try {
+          const supabase = await getSupabase();
+          
+          // Get current history
+          const { data: current, error: fetchErr } = await supabase.from('absl_shipments').select('history').eq('id', id).single();
+          if (fetchErr) throw fetchErr;
+
+          const history = Array.isArray(current.history) ? current.history : [];
+          
+          // Add to history with optional lat/lng
+          const newEntry = { status, location, timestamp: new Date().toISOString() };
+          if (selectedLat && selectedLng) {
+            newEntry.lat = selectedLat;
+            newEntry.lng = selectedLng;
+          }
+          history.push(newEntry);
+
+          // Update Database
+          const { error } = await supabase.from('absl_shipments').update({
+            status, current_location: location, history: history
+          }).eq('id', id);
+
+          if (error) throw error;
+
+          showToast('Shipment updated successfully!', 'success');
+          setTimeout(() => window.location.reload(), 1000);
+
+        } catch (err) {
+          showToast(err.message || 'Failed to update.', 'error');
+          saveUpdateBtn.textContent = 'Save Update'; saveUpdateBtn.disabled = false;
+        }
       });
     });
   </script>

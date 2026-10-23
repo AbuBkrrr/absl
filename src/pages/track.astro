@@ -1,10 +1,13 @@
 ---
 import Layout from '../layouts/Layout.astro';
-
 const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 ---
+
 <Layout title="Track Your Shipment - ABSL">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" is:inline></script>
+
   <div style="background: var(--bg-surface); padding: 80px 0; border-bottom: 1px solid var(--line-light);">
     <div class="container" style="text-align:center; max-width: 800px;">
       <h1 style="font-size:3rem; margin-bottom:16px;">Track Your Cargo</h1>
@@ -18,40 +21,55 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
     </div>
   </div>
 
-  <!-- Results Section -->
   <div class="container" style="padding: 60px 24px; min-height: 400px;">
-    <div id="results-container" style="display:none; max-width: 800px; margin: 0 auto;">
-      <div style="background:var(--bg-card); border:1px solid var(--line-light); border-radius:var(--r-md); padding:40px;">
-        <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:1px solid var(--line-light); padding-bottom:20px; margin-bottom:24px;">
-          <div>
-            <div style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Tracking Number</div>
-            <div id="res-tracking" style="font-size:1.5rem; color:var(--white); font-family:var(--mono); font-weight:700;">-</div>
-          </div>
-          <div style="text-align:right;">
-            <div style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Current Status</div>
-            <div id="res-status" style="font-size:1.2rem; color:var(--gold); font-weight:700; text-transform:uppercase;">-</div>
-          </div>
-        </div>
-
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-bottom:32px;">
-          <div>
-            <div style="font-size:0.8rem; color:var(--text-muted);">Origin</div>
-            <div id="res-origin" style="color:var(--white); font-weight:600;">-</div>
-          </div>
-          <div>
-            <div style="font-size:0.8rem; color:var(--text-muted);">Destination</div>
-            <div id="res-dest" style="color:var(--white); font-weight:600;">-</div>
-          </div>
-        </div>
-
+    <div id="results-container" style="display:none; max-width: 900px; margin: 0 auto;">
+      
+      <div style="display:grid; grid-template-columns: 1fr 1.2fr; gap:24px;">
+        
         <!-- Timeline -->
-        <h3 style="font-size:1.2rem; color:var(--white); border-bottom:1px solid var(--line-light); padding-bottom:12px; margin-bottom:20px;">Shipment History</h3>
-        <div id="timeline" style="display:flex; flex-direction:column; gap:20px;"></div>
+        <div style="background:var(--bg-card); border:1px solid var(--line-light); border-radius:var(--r-md); padding:32px;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:1px solid var(--line-light); padding-bottom:20px; margin-bottom:24px;">
+            <div>
+              <div style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Tracking Number</div>
+              <div id="res-tracking" style="font-size:1.3rem; color:var(--white); font-family:var(--mono); font-weight:700;">-</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Status</div>
+              <div id="res-status" style="font-size:1rem; color:var(--gold); font-weight:700; text-transform:uppercase;">-</div>
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-bottom:32px;">
+            <div>
+              <div style="font-size:0.8rem; color:var(--text-muted);">Origin</div>
+              <div id="res-origin" style="color:var(--white); font-weight:600;">-</div>
+            </div>
+            <div>
+              <div style="font-size:0.8rem; color:var(--text-muted);">Destination</div>
+              <div id="res-dest" style="color:var(--white); font-weight:600;">-</div>
+            </div>
+          </div>
+
+          <h3 style="font-size:1.2rem; color:var(--white); border-bottom:1px solid var(--line-light); padding-bottom:12px; margin-bottom:20px;">Shipment History</h3>
+          <div id="timeline" style="display:flex; flex-direction:column; gap:20px; max-height:400px; overflow-y:auto; padding-right:10px;"></div>
+        </div>
+
+        <!-- Map -->
+        <div style="background:var(--bg-card); border:1px solid var(--line-light); border-radius:var(--r-md); overflow:hidden; min-height:400px; display:flex; flex-direction:column;">
+          <div style="background:var(--bg-surface); padding:12px 16px; border-bottom:1px solid var(--line-light); font-family:var(--mono); font-size:12px; color:var(--gold);">
+            LIVE MAP TRACKING
+          </div>
+          <div id="track-map" style="width:100%; flex:1; min-height:400px;"></div>
+        </div>
+
       </div>
+
     </div>
   </div>
 
   <script is:inline define:vars={{ supabaseUrl, supabaseAnonKey }}>
+    let trackMap = null;
+
     document.addEventListener('astro:page-load', async () => {
       const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
       const supabase = createClient(supabaseUrl, supabaseAnonKey);
@@ -61,7 +79,6 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       const errorEl = document.getElementById('error-msg');
       const results = document.getElementById('results-container');
 
-      // Check URL for tracking param
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.get('num')) {
         input.value = urlParams.get('num');
@@ -72,15 +89,12 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
         const tracking = input.value.trim();
         if (!tracking) return;
 
-        btn.textContent = 'Searching...';
-        btn.disabled = true;
-        errorEl.style.display = 'none';
-        results.style.display = 'none';
+        btn.textContent = 'Searching...'; btn.disabled = true;
+        errorEl.style.display = 'none'; results.style.display = 'none';
 
         const { data, error } = await supabase.from('absl_shipments').select('*').eq('tracking_number', tracking).single();
 
-        btn.textContent = 'Track';
-        btn.disabled = false;
+        btn.textContent = 'Track'; btn.disabled = false;
 
         if (error || !data) {
           errorEl.textContent = 'Shipment not found. Please check your tracking number.';
@@ -88,7 +102,6 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
           return;
         }
 
-        // Populate Data
         document.getElementById('res-tracking').textContent = data.tracking_number;
         document.getElementById('res-status').textContent = data.status.replace(/_/g, ' ');
         document.getElementById('res-origin').textContent = data.origin;
@@ -97,8 +110,6 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
         // Build Timeline
         const timeline = document.getElementById('timeline');
         timeline.innerHTML = '';
-        
-        // Reverse history so newest is on top
         const history = [...(data.history || [])].reverse();
         
         history.forEach((h, i) => {
@@ -118,7 +129,41 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
           `;
         });
 
+        // Build Map
+        if (trackMap) trackMap.remove();
+        trackMap = L.map('track-map').setView([20, 0], 2);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(trackMap);
+
+        // Filter only history entries that have coordinates
+        const pathCoords = [];
+        
+        [...history].reverse().forEach((h) => {
+          if (h.lat && h.lng) {
+            pathCoords.push([h.lat, h.lng]);
+            
+            const isLatest = h === history[0];
+            L.circleMarker([h.lat, h.lng], {
+              radius: isLatest ? 8 : 5,
+              fillColor: isLatest ? '#f5a623' : '#ffffff',
+              color: '#f5a623',
+              weight: 2,
+              opacity: 1,
+              fillOpacity: 0.8
+            }).addTo(trackMap).bindPopup(`<b>${h.status.replace(/_/g, ' ')}</b><br>${h.location}`);
+          }
+        });
+
+        // Draw path line if more than 1 coordinate exists
+        if (pathCoords.length > 1) {
+          L.polyline(pathCoords, { color: '#f5a623', weight: 3, dashArray: '5, 10' }).addTo(trackMap);
+          // Fit map to bounds of path
+          trackMap.fitBounds(pathCoords, { padding: [50, 50] });
+        } else if (pathCoords.length === 1) {
+          trackMap.setView(pathCoords[0], 6);
+        }
+
         results.style.display = 'block';
+        setTimeout(() => { trackMap.invalidateSize(); }, 200);
       });
     });
   </script>
