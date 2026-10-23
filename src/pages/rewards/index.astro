@@ -2,8 +2,19 @@
 import Layout from '../../layouts/Layout.astro';
 import { supabase } from '../../lib/supabase';
 
-// Fetch initial data server-side
-const { data: loyalty } = await supabase.from('absl_rewards_loyalty').select('*');
+const { data: { user } } = await supabase.auth.getUser();
+
+let loyalty = [];
+if (user) {
+  // Logged in: Fetch ONLY this user's loyalty accounts
+  const { data } = await supabase.from('absl_rewards_loyalty').select('*').eq('user_id', user.id);
+  loyalty = data || [];
+} else {
+  // Not logged in: Fetch demo data (where user_id is null)
+  const { data } = await supabase.from('absl_rewards_loyalty').select('*').is('user_id', null);
+  loyalty = data || [];
+}
+
 const { data: offers } = await supabase.from('absl_rewards_offers').select('*');
 const { data: discounts } = await supabase.from('absl_rewards_discounts').select('*');
 const { data: carbon } = await supabase.from('absl_rewards_carbon').select('*');
@@ -27,11 +38,16 @@ const { data: carbon } = await supabase.from('absl_rewards_carbon').select('*');
       </div>
 
       <!-- HERO DASHBOARD -->
-      <div id="dashboard-hero" style="background: #0b1e3a; color: white; border-radius: 24px; padding: 32px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 24px; margin-bottom: 32px;">
+            <div id="dashboard-hero" style="background: #0b1e3a; color: white; border-radius: 24px; padding: 32px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 24px; margin-bottom: 32px;">
         <div>
-          <div style="font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; color:#8ba0b9; margin-bottom:8px;">Total Loyalty Value</div>
-          <div style="font-size:3rem; font-weight:700; line-height:1;">125,847</div>
-          <div style="font-size:0.85rem; color:#8ba0b9; margin-top:8px;">miles across 4 airlines</div>
+          <div style="font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; color:#8ba0b9; margin-bottom:8px;">{user ? `Welcome back` : 'Demo Mode'} · Total Loyalty Value</div>
+          <div style="font-size:3rem; font-weight:700; line-height:1;">{loyalty.reduce((s, r) => s + (r.points || 0), 0).toLocaleString()}</div>
+          <div style="font-size:0.85rem; color:#8ba0b9; margin-top:8px;">miles across {loyalty.length} airlines</div>
+          {!user && (
+            <div style="margin-top: 16px;">
+              <a href="/login" style="background: #d4af37; color: #0b1e3a; padding: 8px 16px; border-radius: 20px; font-weight: 700; text-decoration: none; font-size: 0.8rem;">Sign in to track your miles</a>
+            </div>
+          )}
         </div>
         <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;" id="loyalty-accounts">
           <!-- Populated by JS -->
@@ -70,10 +86,12 @@ const { data: carbon } = await supabase.from('absl_rewards_carbon').select('*');
           <!-- Populated by JS -->
         </div>
       </div>
-
+      <div style="text-align: center; margin-top: 40px;">
+        {user ? (
+          <button onclick="document.cookie='sb-access-token=; Max-Age=0; path=/'; supabase.auth.signOut().then(() => window.location.href='/');" style="background: none; border: 1px solid var(--line-light); color: var(--text-muted); padding: 10px 24px; border-radius: 40px; cursor: pointer;">Log Out</button>
+        ) : null}
+      </div>
     </div>
-  </div>
-
   <!-- Pass server data to client -->
   <script type="application/json" id="rewards-data" set:html={JSON.stringify({ loyalty, offers, discounts, carbon })} />
 
