@@ -11,56 +11,93 @@ import Layout from '../../layouts/Layout.astro';
   </div>
 
   <div class="container" style="padding: 80px 0;">
+    
+    <!-- BUDGETPRO CALCULATOR -->
+    <div style="background:var(--bg-card); border:1px solid var(--line); border-radius:var(--r-lg); padding:40px; margin-bottom:80px;">
+      <div style="text-align:center; margin-bottom:40px;">
+        <h2 style="font-size:2rem; color:var(--gold); margin-bottom:8px;">ABSL Construction Estimator</h2>
+        <p style="color:var(--text-muted);">Calculate your preliminary Bill of Quantities and Labor Costs instantly.</p>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:40px;">
+        <!-- Inputs -->
+        <div>
+          <div style="margin-bottom:24px;">
+            <label style="display:block; font-family:var(--mono); font-size:12px; color:var(--text-muted); margin-bottom:8px;">TOTAL SQUARE METERS</label>
+            <input type="number" id="calc-sqm" value="200" min="50" max="5000" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
+          </div>
+          <div style="margin-bottom:24px;">
+            <label style="display:block; font-family:var(--mono); font-size:12px; color:var(--text-muted); margin-bottom:8px;">NUMBER OF FLOORS</label>
+            <input type="number" id="calc-floors" value="1" min="1" max="10" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
+          </div>
+          <div style="margin-bottom:24px;">
+            <label style="display:block; font-family:var(--mono); font-size:12px; color:var(--text-muted); margin-bottom:8px;">BUILD QUALITY</label>
+            <select id="calc-quality" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;">
+              <option value="45000">Basic (₦45,000/sqm)</option>
+              <option value="65000" selected>Mid-Range (₦65,000/sqm)</option>
+              <option value="95000">Luxury (₦95,000/sqm)</option>
+            </select>
+          </div>
+          <button id="calc-btn" class="btn btn-primary" style="width:100%; padding:16px; font-size:1.1rem;">Calculate Budget</button>
+        </div>
+
+        <!-- Results -->
+        <div style="background:var(--bg-surface); border:1px solid var(--line-light); border-radius:var(--r-md); padding:32px; display:flex; flex-direction:column; justify-content:center;">
+          <div style="display:flex; justify-content:space-between; margin-bottom:16px; border-bottom:1px solid var(--line-light); padding-bottom:16px;">
+            <span style="color:var(--text-muted);">Estimated Materials</span>
+            <span id="res-materials" style="color:var(--white); font-weight:700; font-family:var(--mono);">₦0</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:16px; border-bottom:1px solid var(--line-light); padding-bottom:16px;">
+            <span style="color:var(--text-muted);">Estimated Labor (40%)</span>
+            <span id="res-labor" style="color:var(--white); font-weight:700; font-family:var(--mono);">₦0</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-top:16px;">
+            <span style="color:var(--gold); font-weight:700; font-size:1.2rem;">Total Estimate</span>
+            <span id="res-total" style="color:var(--gold); font-weight:700; font-size:1.5rem; font-family:var(--mono);">₦0</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PORTFOLIO -->
+    <h2 style="font-size:2.5rem; margin-bottom:32px; text-align:center;">Our Recent Projects</h2>
     <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(350px, 1fr)); gap:40px;">
-      
-      <!-- Project 1 -->
       <div style="border:1px solid var(--line-light); border-radius:var(--r-md); overflow:hidden; background:var(--bg-card);">
         <div style="height:280px; background: url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2070&auto=format&fit=crop') center/cover;"></div>
         <div style="padding:32px;">
-          <div style="font-size:0.75rem; color:var(--gold); text-transform:uppercase; letter-spacing:1px; margin-bottom:12px;">Residential Remodel</div>
           <h3 style="font-size:1.4rem; margin-bottom:12px;">Lekki Penthouse Renovation</h3>
-          <p style="color:var(--text-muted); font-size:0.9rem; line-height:1.7; margin-bottom:20px;">Complete structural remodel with Italian marble finishes, smart-home integration, and custom joinery.</p>
-          <div style="display:flex; justify-content:space-between; border-top:1px solid var(--line-light); padding-top:16px;">
-            <span style="color:var(--text-muted); font-size:0.85rem;">Budget: ₦45M</span>
-            <span style="color:var(--gold); font-size:0.85rem; font-weight:600;">View Case Study &rarr;</span>
-          </div>
+          <p style="color:var(--text-muted); font-size:0.9rem;">Complete structural remodel with Italian marble finishes, smart-home integration, and custom joinery.</p>
         </div>
       </div>
-
-      <!-- Project 2 -->
       <div style="border:1px solid var(--line-light); border-radius:var(--r-md); overflow:hidden; background:var(--bg-card);">
         <div style="height:280px; background: url('https://images.unsplash.com/photo-1541888946425-d81bb19240f5?q=80&w=2070&auto=format&fit=crop') center/cover;"></div>
         <div style="padding:32px;">
-          <div style="font-size:0.75rem; color:var(--gold); text-transform:uppercase; letter-spacing:1px; margin-bottom:12px;">Commercial Build</div>
           <h3 style="font-size:1.4rem; margin-bottom:12px;">Abuja Corporate HQ</h3>
-          <p style="color:var(--text-muted); font-size:0.9rem; line-height:1.7; margin-bottom:20px;">5-storey office complex with LEED certification, solar integration, and smart building management.</p>
-          <div style="display:flex; justify-content:space-between; border-top:1px solid var(--line-light); padding-top:16px;">
-            <span style="color:var(--text-muted); font-size:0.85rem;">Budget: ₦320M</span>
-            <span style="color:var(--gold); font-size:0.85rem; font-weight:600;">View Case Study &rarr;</span>
-          </div>
+          <p style="color:var(--text-muted); font-size:0.9rem;">5-storey office complex with LEED certification, solar integration, and smart building management.</p>
         </div>
       </div>
-
-      <!-- Project 3 -->
-      <div style="border:1px solid var(--line-light); border-radius:var(--r-md); overflow:hidden; background:var(--bg-card);">
-        <div style="height:280px; background: url('https://images.unsplash.com/photo-1503387762-592deb58ef4e?q=80&w=2070&auto=format&fit=crop') center/cover;"></div>
-        <div style="padding:32px;">
-          <div style="font-size:0.75rem; color:var(--gold); text-transform:uppercase; letter-spacing:1px; margin-bottom:12px;">Infrastructure</div>
-          <h3 style="font-size:1.4rem; margin-bottom:12px;">Kano Logistics Warehouse</h3>
-          <p style="color:var(--text-muted); font-size:0.9rem; line-height:1.7; margin-bottom:20px;">10,000 sqm cold-storage facility with automated racking and 24/7 security systems.</p>
-          <div style="display:flex; justify-content:space-between; border-top:1px solid var(--line-light); padding-top:16px;">
-            <span style="color:var(--text-muted); font-size:0.85rem;">Budget: ₦180M</span>
-            <span style="color:var(--gold); font-size:0.85rem; font-weight:600;">View Case Study &rarr;</span>
-          </div>
-        </div>
-      </div>
-
-    </div>
-
-    <div style="text-align:center; margin-top:64px; padding:48px; background:var(--bg-surface); border-radius:var(--r-md); border:1px solid var(--line-light);">
-      <h3 style="font-size:1.8rem; margin-bottom:16px;">Have a Project in Mind?</h3>
-      <p style="color:var(--text-muted); max-width:500px; margin:0 auto 24px;">Book a free consultation with our construction team. We'll provide a preliminary budget and timeline within 48 hours.</p>
-      <a href="/contact" class="btn btn-primary">Book a Consultation</a>
     </div>
   </div>
+
+  <!-- Calculator Logic -->
+  <script>
+    document.getElementById('calc-btn').addEventListener('click', () => {
+      const sqm = Number(document.getElementById('calc-sqm').value);
+      const floors = Number(document.getElementById('calc-floors').value);
+      const rate = Number(document.getElementById('calc-quality').value);
+
+      if (!sqm || !floors) return alert('Please enter valid square meters and floors.');
+
+      const totalBaseCost = sqm * rate * floors;
+      const materials = totalBaseCost * 0.6; // Assuming 60% is materials
+      const labor = totalBaseCost * 0.4;     // Assuming 40% is labor
+      const total = materials + labor;
+
+      const fmt = (num) => '₦' + num.toLocaleString(undefined, { maximumFractionDigits: 0 });
+
+      document.getElementById('res-materials').textContent = fmt(materials);
+      document.getElementById('res-labor').textContent = fmt(labor);
+      document.getElementById('res-total').textContent = fmt(total);
+    });
+  </script>
 </Layout>
