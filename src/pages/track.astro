@@ -15,7 +15,7 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       
       <div style="display:flex; gap:12px; max-width:600px; margin:0 auto;">
         <input id="track-input" type="text" placeholder="e.g. ABSL-123456" style="flex:1; padding:16px; background:var(--bg-card); border:1px solid var(--line); color:var(--white); border-radius:var(--r-md); font-size:1.1rem; outline:none;" />
-        <button id="track-btn" class="btn btn-primary" style="padding:0 32px; font-size:1.1rem;">Track</button>
+        <button id="track-btn" type="button" class="btn btn-primary" style="padding:0 32px; font-size:1.1rem; cursor:pointer;">Track</button>
       </div>
       <div id="error-msg" style="display:none; margin-top:16px; color:#ef4444; font-weight:600;"></div>
     </div>
@@ -70,7 +70,8 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
   <script is:inline define:vars={{ supabaseUrl, supabaseAnonKey }}>
     let trackMap = null;
 
-    document.addEventListener('astro:page-load', async () => {
+    // Use DOMContentLoaded to ensure the page elements are ready
+    document.addEventListener('DOMContentLoaded', async () => {
       const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
       const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
@@ -89,12 +90,15 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
         const tracking = input.value.trim();
         if (!tracking) return;
 
-        btn.textContent = 'Searching...'; btn.disabled = true;
-        errorEl.style.display = 'none'; results.style.display = 'none';
+        btn.textContent = 'Searching...';
+        btn.disabled = true;
+        errorEl.style.display = 'none';
+        results.style.display = 'none';
 
         const { data, error } = await supabase.from('absl_shipments').select('*').eq('tracking_number', tracking).single();
 
-        btn.textContent = 'Track'; btn.disabled = false;
+        btn.textContent = 'Track';
+        btn.disabled = false;
 
         if (error || !data) {
           errorEl.textContent = 'Shipment not found. Please check your tracking number.';
@@ -134,7 +138,6 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
         trackMap = L.map('track-map').setView([20, 0], 2);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(trackMap);
 
-        // Filter only history entries that have coordinates
         const pathCoords = [];
         
         [...history].reverse().forEach((h) => {
@@ -153,10 +156,8 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
           }
         });
 
-        // Draw path line if more than 1 coordinate exists
         if (pathCoords.length > 1) {
           L.polyline(pathCoords, { color: '#f5a623', weight: 3, dashArray: '5, 10' }).addTo(trackMap);
-          // Fit map to bounds of path
           trackMap.fitBounds(pathCoords, { padding: [50, 50] });
         } else if (pathCoords.length === 1) {
           trackMap.setView(pathCoords[0], 6);
