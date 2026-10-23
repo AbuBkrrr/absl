@@ -28,8 +28,8 @@ const { data: packages } = await supabase
       </div>
 
       <!-- Search Bar (Airbnb style) -->
-      <div style="background: rgba(255,255,255,0.05); backdrop-filter: blur(12px); border: 1px solid var(--line); border-radius: var(--r-md); padding: 8px; display: flex; flex-wrap: wrap; gap: 8px; max-width: 900px;">
-        <div style="flex:1; min-width:200px; padding: 12px 16px; border-right: 1px solid var(--line-light);">
+      <div style="background: rgba(255,255,255,0.05); backdrop-filter: blur(12px); border: 1px solid var(--line); border-radius: var(--r-md); padding: 8px; display: flex; flex-wrap: wrap; gap: 8px; width: 100%; max-width: 900px;">
+        <div style="flex:1 1 200px; padding: 12px 16px; border-right: 1px solid var(--line-light);">
           <div style="font-size:0.7rem; text-transform:uppercase; letter-spacing:1px; color:var(--gold); margin-bottom:4px;">Service Type</div>
           <select style="width:100%; background:transparent; border:none; color:var(--white); font-family:var(--font-body); font-size:0.95rem; outline:none;">
             <option style="color:#000;">Travel & Tours</option>
@@ -37,11 +37,11 @@ const { data: packages } = await supabase
             <option style="color:#000;">Construction</option>
           </select>
         </div>
-        <div style="flex:1; min-width:180px; padding: 12px 16px; border-right: 1px solid var(--line-light);">
+        <div style="flex:1 1 180px; padding: 12px 16px; border-right: 1px solid var(--line-light);">
           <div style="font-size:0.7rem; text-transform:uppercase; letter-spacing:1px; color:var(--gold); margin-bottom:4px;">Destination / Location</div>
           <input type="text" placeholder="Dubai, London, Lagos..." style="width:100%; background:transparent; border:none; color:var(--white); font-family:var(--font-body); font-size:0.95rem; outline:none;">
         </div>
-        <div style="flex:1; min-width:140px; padding: 12px 16px; border-right: 1px solid var(--line-light);">
+        <div style="flex:1 1 140px; padding: 12px 16px; border-right: 1px solid var(--line-light);">
           <div style="font-size:0.7rem; text-transform:uppercase; letter-spacing:1px; color:var(--gold); margin-bottom:4px;">Date</div>
           <input type="date" style="width:100%; background:transparent; border:none; color:var(--text-light); font-family:var(--font-body); font-size:0.9rem; outline:none;">
         </div>

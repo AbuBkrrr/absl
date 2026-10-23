@@ -68,11 +68,11 @@ const year = new Date().getFullYear();
         /* Navbar */
         .navbar { position: sticky; top: 0; z-index: 100; background: rgba(10, 17, 40, 0.95); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line-light); padding: 20px 0; }
         .nav-inner { display: flex; justify-content: space-between; align-items: center; }
-        .logo { font-family: var(--font-display); font-size: 1.6rem; font-weight: 700; color: var(--white); letter-spacing: 1px; }
+        .logo { display: flex; align-items: center; text-decoration: none; }`n        .logo img { height: 48px; width: auto; object-fit: contain; }
         .logo span { color: var(--gold); }
         
         .nav-links { display: flex; gap: 32px; align-items: center; font-size: 0.9rem; font-weight: 500; }
-        .nav-links a { color: var(--text-light); text-transform: uppercase; letter-spacing: 1px; font-size: 0.8rem; }
+        .nav-links a { color: var(--text-light); text-transform: uppercase; letter-spacing: 1px; font-size: 0.8rem; white-space: nowrap; }
         .nav-links a:hover { color: var(--gold); }
         
         .cart-icon { position: relative; display: flex; align-items: center; gap: 8px; color: var(--gold); font-weight: 600; font-size: 0.9rem; }
@@ -89,6 +89,7 @@ const year = new Date().getFullYear();
         @media (max-width: 768px) {
             .logo img { height: 32px !important; }
             .nav-links { display: none; }
+            .logo img { height: 36px; }
             .footer-grid { grid-template-columns: 1fr; }
         }
     </style>
@@ -97,7 +98,7 @@ const year = new Date().getFullYear();
     <div class="top-bar">
         <div class="container">
             <div>📍 Lagos • Abuja • London</div>
-            <div>📞 +234 803 254 0215 &nbsp;|&nbsp; ✉️ info@absl.com.ng</div>
+            <div>📞 08033355060 &nbsp;|&nbsp; ✉️ info@absl.com.ng</div>
         </div>
     </div>
 
@@ -139,7 +140,7 @@ const year = new Date().getFullYear();
                     <h4>Contact</h4>
                     <p>Plot 105, Gidan Dan Asabe,<br>Zoo Road, Kano, Nigeria.</p>
                     <p>info@absl.com.ng</p>
-                    <p>+234 803 254 0215</p>
+                    <p>08033355060</p>
                 </div>
             </div>
             <div class="footer-bottom">
