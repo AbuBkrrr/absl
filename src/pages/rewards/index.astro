@@ -74,7 +74,8 @@ const { data: allLoyalty } = await supabase.from('absl_rewards_loyalty').select(
 
   <script type="application/json" id="rewards-data" set:html={JSON.stringify({ allLoyalty, offers, discounts, carbon })} />
 
-  <script>
+  <script is:inline>
+document.addEventListener("astro:page-load", () => {
     import { supabase } from '../../lib/supabase';
 
     const data = JSON.parse(document.getElementById('rewards-data').textContent);
@@ -189,7 +190,8 @@ const { data: allLoyalty } = await supabase.from('absl_rewards_loyalty').select(
         document.getElementById(`panel-${btn.dataset.tab}`).style.display = 'block';
       });
     });
-  </script>
+  });
+</script>
 
   <style is:global>
     .mm-tab { background: #fff; border: 1px solid #e3eaf2; border-radius: 40px; padding: 10px 24px; font-weight: 600; cursor: pointer; color: #0b1e3a; transition: 0.2s; }

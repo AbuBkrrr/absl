@@ -1,5 +1,15 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import { supabase } from '../../lib/supabase';
+
+const { data: projects } = await supabase
+  .from('absl_projects')
+  .select('*')
+  .eq('status', 'active')
+  .order('order_index', { ascending: true })
+  .order('created_at', { ascending: false });
+
+const portfolio = projects || [];
 ---
 
 <Layout title="Construction & Remodeling - ABSL">
@@ -10,183 +20,177 @@ import Layout from '../../layouts/Layout.astro';
     </div>
   </div>
 
-  <div class="container" style="padding: 80px 0;">
+  <div class="container" style="padding: 40px 24px 80px;">
     
-    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:40px;">
-      
-      <!-- LEFT COLUMN: INPUTS -->
-      <div style="background:var(--bg-card); border:1px solid var(--line); border-radius:var(--r-lg); padding:32px;">
-        <h2 style="font-size:1.8rem; color:var(--gold); margin-bottom:24px;">Build Your Design</h2>
-
-        <!-- SECTION 1: CORE STRUCTURE -->
-        <h3 style="font-family:var(--display); font-size:1.2rem; color:var(--white); margin-bottom:16px; border-bottom:1px solid var(--line-light); padding-bottom:8px;">1. Core Structure</h3>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:24px;">
-          <div>
-            <label style="display:block; font-family:var(--mono); font-size:11px; color:var(--gold); margin-bottom:6px;">DESIGN TEMPLATE</label>
-            <select id="calc-template" style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;">
-              <option value="custom">Custom Build</option>
-              <option value="home">Standard Home</option>
-              <option value="villa">Luxury Villa</option>
-              <option value="office">Corporate Office</option>
-            </select>
-          </div>
-          <div>
-            <label style="display:block; font-family:var(--mono); font-size:11px; color:var(--gold); margin-bottom:6px;">BUILD QUALITY</label>
-            <select id="calc-quality" style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;">
-              <option value="basic">Basic</option>
-              <option value="mid" selected>Mid-Range</option>
-              <option value="luxury">Luxury</option>
-            </select>
-          </div>
-          <div>
-            <label style="display:block; font-family:var(--mono); font-size:11px; color:var(--gold); margin-bottom:6px;">TOTAL SQM</label>
-            <input type="number" id="calc-sqm" value="200" min="50" max="20000" style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
-          </div>
-          <div>
-            <label style="display:block; font-family:var(--mono); font-size:11px; color:var(--gold); margin-bottom:6px;">NUMBER OF FLOORS</label>
-            <input type="number" id="calc-floors" value="1" min="1" max="20" style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
-          </div>
+    <!-- INTERACTIVE FLOOR PLAN EDITOR -->
+    <div style="background:#eef2f6; border-radius:12px; overflow:hidden; margin-bottom:80px; border:4px solid var(--bg-card); box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+      <div style="background:var(--bg-surface); padding:12px 20px; color:var(--gold); font-family:var(--mono); font-size:12px; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+        <span>2D FLOOR PLAN EDITOR</span>
+        <div style="display:flex; gap:8px;">
+          <button id="tool-wall" class="btn btn-primary" style="padding:6px 16px; font-size:11px;">Draw Walls</button>
+          <button id="tool-door" class="btn btn-outline" style="padding:6px 16px; font-size:11px;">Add Door</button>
+          <button id="tool-window" class="btn btn-outline" style="padding:6px 16px; font-size:11px;">Add Window</button>
         </div>
+      </div>
+      <div id="floorplan-editor" style="width:100%; height:500px; background:#ffffff; position:relative;"></div>
+    </div>
 
-        <!-- SECTION 2: FINISHES -->
-        <h3 style="font-family:var(--display); font-size:1.2rem; color:var(--white); margin-bottom:16px; border-bottom:1px solid var(--line-light); padding-bottom:8px;">2. Finishes & Materials</h3>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:24px;">
-          <div>
-            <label style="display:block; font-family:var(--mono); font-size:11px; color:var(--gold); margin-bottom:6px;">ROOF TYPE</label>
-            <select id="opt-roof" style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;">
-              <option value="15000">Long Span Aluminum</option>
-              <option value="25000">Stone Coated</option>
-              <option value="35000">Flat Concrete Roof</option>
-            </select>
-          </div>
-          <div>
-            <label style="display:block; font-family:var(--mono); font-size:11px; color:var(--gold); margin-bottom:6px;">WINDOWS</label>
-            <select id="opt-windows" style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;">
-              <option value="8000">Aluminum Sliding</option>
-              <option value="15000">UPVC Casement</option>
-              <option value="28000">Double Glazed</option>
-            </select>
-          </div>
-          <div>
-            <label style="display:block; font-family:var(--mono); font-size:11px; color:var(--gold); margin-bottom:6px;">DOORS</label>
-            <select id="opt-doors" style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;">
-              <option value="5000">Flush Doors</option>
-              <option value="12000">Solid Wood</option>
-              <option value="25000">Security / Steel</option>
-            </select>
-          </div>
-          <div>
-            <label style="display:block; font-family:var(--mono); font-size:11px; color:var(--gold); margin-bottom:6px;">FLOORING</label>
-            <select id="opt-floor" style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;">
-              <option value="6000">Standard Tiles</option>
-              <option value="15000">Porcelain / Marble</option>
-              <option value="22000">Italian Marble</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- SECTION 3: EXTRAS -->
-        <h3 style="font-family:var(--display); font-size:1.2rem; color:var(--white); margin-bottom:16px; border-bottom:1px solid var(--line-light); padding-bottom:8px;">3. Extras</h3>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:24px;">
-          <label style="display:flex; align-items:center; gap:8px; font-size:0.9rem; color:var(--text-light); cursor:pointer;">
-            <input type="checkbox" id="opt-solar" style="width:16px; height:16px;" /> Solar Power
-          </label>
-          <label style="display:flex; align-items:center; gap:8px; font-size:0.9rem; color:var(--text-light); cursor:pointer;">
-            <input type="checkbox" id="opt-pool" style="width:16px; height:16px;" /> Swimming Pool
-          </label>
-          <label style="display:flex; align-items:center; gap:8px; font-size:0.9rem; color:var(--text-light); cursor:pointer;">
-            <input type="checkbox" id="opt-landscape" style="width:16px; height:16px;" /> Landscaping
-          </label>
-        </div>
-
-        <button id="calc-btn" class="btn btn-primary" style="width:100%; padding:16px; font-size:1.1rem; background:var(--gold);">Update Estimate</button>
+    <!-- MASTER CONSTRUCTION ESTIMATOR -->
+    <div style="background:var(--bg-card); border:1px solid var(--line); border-radius:var(--r-lg); padding:40px; margin-bottom:80px; box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
+      <div style="text-align:center; margin-bottom:40px;">
+        <h2 style="font-size:2.2rem; color:var(--gold); margin-bottom:8px;">ABSL Detailed Estimator</h2>
+        <p style="color:var(--text-muted);">Customize every detail of your build to generate a precise Bill of Quantities.</p>
       </div>
 
-      <!-- RIGHT COLUMN: 2D VISUALIZER & RESULTS -->
-      <div>
-        <!-- 2D VISUALIZER CANVAS -->
-        <div style="background:#eef2f6; border-radius:12px; overflow:hidden; margin-bottom:24px; border:4px solid var(--bg-card); box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
-          <div style="background:var(--bg-surface); padding:10px 16px; color:var(--gold); font-family:var(--mono); font-size:12px; border-bottom:1px solid var(--line);">
-            LIVE 2D PREVIEW
+      <div style="display:grid; grid-template-columns: 1.2fr 1fr; gap:40px;">
+        
+        <!-- INPUTS COLUMN -->
+        <div>
+          <h3 style="font-family:var(--display); font-size:1.2rem; color:var(--white); margin-bottom:16px; border-bottom:1px solid var(--line-light); padding-bottom:8px;">1. Core Structure</h3>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:24px;">
+            <div>
+              <label style="display:block; font-family:var(--mono); font-size:11px; color:var(--gold); margin-bottom:6px;">DESIGN TEMPLATE</label>
+              <select id="calc-template" style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;">
+                <option value="custom">Custom Build</option>
+                <option value="home">Standard Home</option>
+                <option value="villa">Luxury Villa</option>
+                <option value="office">Corporate Office</option>
+              </select>
+            </div>
+            <div>
+              <label style="display:block; font-family:var(--mono); font-size:11px; color:var(--gold); margin-bottom:6px;">BUILD QUALITY</label>
+              <select id="calc-quality" style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;">
+                <option value="basic">Basic</option>
+                <option value="mid" selected>Mid-Range</option>
+                <option value="luxury">Luxury</option>
+              </select>
+            </div>
+            <div>
+              <label style="display:block; font-family:var(--mono); font-size:11px; color:var(--gold); margin-bottom:6px;">TOTAL SQM</label>
+              <input type="number" id="calc-sqm" value="200" min="50" max="20000" style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
+            </div>
+            <div>
+              <label style="display:block; font-family:var(--mono); font-size:11px; color:var(--gold); margin-bottom:6px;">NUMBER OF FLOORS</label>
+              <input type="number" id="calc-floors" value="1" min="1" max="20" style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
+            </div>
           </div>
-          <div style="padding: 20px; display:flex; justify-content:center; align-items:center; height: 300px;">
-            <svg width="100%" height="100%" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
-              <!-- Sky -->
-              <rect width="400" height="200" fill="#e0f2fe" />
-              
-              <!-- Ground / Landscaping -->
-              <rect id="svg-ground" x="0" y="200" width="400" height="100" fill="#84cc16" />
-              
-              <!-- Trees (Hidden by default) -->
-              <g id="svg-trees" style="display:none;">
-                <circle cx="50" cy="180" r="30" fill="#166534" />
-                <circle cx="350" cy="170" r="40" fill="#166534" />
-                <rect x="45" y="210" width="10" height="30" fill="#78350f" />
-                <rect x="345" y="210" width="10" height="30" fill="#78350f" />
-              </g>
 
-              <!-- Pool (Hidden by default) -->
-              <ellipse id="svg-pool" cx="330" cy="250" rx="50" ry="20" fill="#0ea5e9" stroke="#0284c7" stroke-width="2" style="display:none;" />
-
-              <!-- House Base (Structure) -->
-              <rect id="svg-house-base" x="80" y="100" width="240" height="130" fill="#cbd5e1" stroke="#475569" stroke-width="2" />
-              
-              <!-- Roof -->
-              <polygon id="svg-roof" points="60,100 200,30 340,100" fill="#ef4444" stroke="#7f1d1d" stroke-width="2" />
-              
-              <!-- Solar Panels (Hidden by default) -->
-              <g id="svg-solar" style="display:none;">
-                <rect x="160" y="60" width="30" height="20" fill="#1e3a8a" stroke="#0f172a" stroke-width="1" transform="rotate(-20 175 70)" />
-                <rect x="200" y="50" width="30" height="20" fill="#1e3a8a" stroke="#0f172a" stroke-width="1" transform="rotate(-20 215 60)" />
-              </g>
-
-              <!-- Door -->
-              <rect id="svg-door" x="180" y="170" width="40" height="60" fill="#78350f" stroke="#451a03" stroke-width="2" rx="2" />
-              <circle cx="210" cy="200" r="3" fill="#fbbf24" /> <!-- Doorknob -->
-              
-              <!-- Windows Left -->
-              <rect id="svg-window-l" x="110" y="130" width="40" height="40" fill="#60a5fa" stroke="#1e3a8a" stroke-width="2" />
-              <line x1="130" y1="130" x2="130" y2="170" stroke="#1e3a8a" stroke-width="2" />
-              <line x1="110" y1="150" x2="150" y2="150" stroke="#1e3a8a" stroke-width="2" />
-
-              <!-- Windows Right -->
-              <rect id="svg-window-r" x="250" y="130" width="40" height="40" fill="#60a5fa" stroke="#1e3a8a" stroke-width="2" />
-              <line x1="270" y1="130" x2="270" y2="170" stroke="#1e3a8a" stroke-width="2" />
-              <line x1="250" y1="150" x2="290" y2="150" stroke="#1e3a8a" stroke-width="2" />
-              
-              <!-- Base Path -->
-              <rect x="180" y="230" width="40" height="70" fill="#9ca3af" />
-            </svg>
+          <h3 style="font-family:var(--display); font-size:1.2rem; color:var(--white); margin-bottom:16px; border-bottom:1px solid var(--line-light); padding-bottom:8px;">2. Finishes & Materials</h3>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:24px;">
+            <div>
+              <label style="display:block; font-family:var(--mono); font-size:11px; color:var(--gold); margin-bottom:6px;">ROOF TYPE</label>
+              <select id="opt-roof" style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;">
+                <option value="15000">Long Span Aluminum</option>
+                <option value="25000">Stone Coated</option>
+                <option value="35000">Flat Concrete Roof</option>
+              </select>
+            </div>
+            <div>
+              <label style="display:block; font-family:var(--mono); font-size:11px; color:var(--gold); margin-bottom:6px;">WINDOWS</label>
+              <select id="opt-windows" style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;">
+                <option value="8000">Aluminum Sliding</option>
+                <option value="15000">UPVC Casement</option>
+                <option value="28000">Double Glazed</option>
+              </select>
+            </div>
+            <div>
+              <label style="display:block; font-family:var(--mono); font-size:11px; color:var(--gold); margin-bottom:6px;">DOORS</label>
+              <select id="opt-doors" style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;">
+                <option value="5000">Flush Doors</option>
+                <option value="12000">Solid Wood</option>
+                <option value="25000">Security / Steel</option>
+              </select>
+            </div>
+            <div>
+              <label style="display:block; font-family:var(--mono); font-size:11px; color:var(--gold); margin-bottom:6px;">FLOORING</label>
+              <select id="opt-floor" style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;">
+                <option value="6000">Standard Tiles</option>
+                <option value="15000">Porcelain / Marble</option>
+                <option value="22000">Italian Marble</option>
+              </select>
+            </div>
           </div>
+
+          <h3 style="font-family:var(--display); font-size:1.2rem; color:var(--white); margin-bottom:16px; border-bottom:1px solid var(--line-light); padding-bottom:8px;">3. Extras</h3>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:24px;">
+            <label style="display:flex; align-items:center; gap:8px; font-size:0.9rem; color:var(--text-light); cursor:pointer;">
+              <input type="checkbox" id="opt-solar" style="width:16px; height:16px;" /> Solar Power
+            </label>
+            <label style="display:flex; align-items:center; gap:8px; font-size:0.9rem; color:var(--text-light); cursor:pointer;">
+              <input type="checkbox" id="opt-pool" style="width:16px; height:16px;" /> Swimming Pool
+            </label>
+            <label style="display:flex; align-items:center; gap:8px; font-size:0.9rem; color:var(--text-light); cursor:pointer;">
+              <input type="checkbox" id="opt-landscape" style="width:16px; height:16px;" /> Landscaping
+            </label>
+          </div>
+
+          <button id="calc-btn" class="btn btn-primary" style="width:100%; padding:16px; font-size:1.1rem; background:var(--gold);">Update Estimate</button>
         </div>
 
-        <!-- BOQ RESULTS -->
-        <div style="background:var(--bg-surface); border:1px solid var(--line-light); border-radius:var(--r-md); padding:24px;">
-          <h3 style="font-family:var(--display); font-size:1.2rem; color:var(--white); border-bottom:1px solid var(--line-light); padding-bottom:12px; margin-bottom:16px;">Bill of Quantities</h3>
-          <div id="results-list" style="display:flex; flex-direction:column; gap:10px; font-size:0.9rem; max-height:400px; overflow-y:auto;">
-            <div style="color:var(--text-muted); text-align:center; padding: 20px;">Click "Update Estimate" to see costs.</div>
+        <!-- RESULTS COLUMN -->
+        <div>
+          <div style="background:var(--bg-surface); border:1px solid var(--line-light); border-radius:var(--r-md); padding:24px;">
+            <h3 style="font-family:var(--display); font-size:1.2rem; color:var(--white); border-bottom:1px solid var(--line-light); padding-bottom:12px; margin-bottom:16px;">Bill of Quantities</h3>
+            <div id="results-list" style="display:flex; flex-direction:column; gap:10px; font-size:0.9rem; max-height:400px; overflow-y:auto;">
+              <div style="color:var(--text-muted); text-align:center; padding: 20px;">Click "Update Estimate" to see costs.</div>
+            </div>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- PORTFOLIO -->
+    <h2 style="font-size:2.5rem; margin-bottom:32px; text-align:center;">Our Recent Projects</h2>
+    {portfolio.length === 0 ? (
+      <div style="text-align:center; padding:60px; background:var(--bg-card); border:1px dashed var(--line); border-radius:var(--r-md);">
+        <p style="color:var(--text-muted);">No portfolio projects yet. Check back soon.</p>
+      </div>
+    ) : (
+      <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(350px, 1fr)); gap:40px;">
+        {portfolio.map(p => (
+          <div style="border:1px solid var(--line-light); border-radius:var(--r-md); overflow:hidden; background:var(--bg-card);">
+            <div style={`height:280px; background:url('${p.image_url}') center/cover;`}></div>
+            <div style="padding:32px;">
+              <div style="font-size:10px; color:var(--gold); text-transform:uppercase; letter-spacing:1px; margin-bottom:10px;">{p.category}</div>
+              <h3 style="font-size:1.4rem; margin-bottom:12px;">{p.title}</h3>
+              <p style="color:var(--text-muted); font-size:0.9rem; line-height:1.7; margin-bottom:16px;">{p.description}</p>
+              {p.budget && (
+                <div style="font-family:var(--mono); font-size:11px; color:var(--gold); border-top:1px solid var(--line-light); padding-top:12px;">BUDGET: {p.budget}</div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
   </div>
 
   <script>
+    import { FloorPlanner } from '@robinweitzel/floor-planner';
+    
+    // Initialize Floor Planner
+    function initPlanner() {
+      const editorDiv = document.getElementById('floorplan-editor');
+      if (!editorDiv || editorDiv.hasAttribute('data-initialized')) return;
+      editorDiv.setAttribute('data-initialized', 'true');
+
+      const planner = new FloorPlanner(editorDiv, {
+        mode: 'edit',
+        snap: { grid: true, gridSize: 20 },
+      });
+
+      planner.setTool('wall');
+      document.getElementById('tool-wall')?.addEventListener('click', () => planner.setTool('wall'));
+      document.getElementById('tool-door')?.addEventListener('click', () => planner.setTool('opening', { type: 'door' }));
+      document.getElementById('tool-window')?.addEventListener('click', () => planner.setTool('opening', { type: 'window' }));
+    }
+
+    document.addEventListener('astro:page-load', initPlanner);
+    if (document.readyState === 'complete') initPlanner();
+
+    // Estimator Logic
     const templateSelect = document.getElementById('calc-template');
     const sqmInput = document.getElementById('calc-sqm');
     const floorsInput = document.getElementById('calc-floors');
-
-    // UI Elements to Update
-    const svgRoof = document.getElementById('svg-roof');
-    const svgDoor = document.getElementById('svg-door');
-    const svgWindowL = document.getElementById('svg-window-l');
-    const svgWindowR = document.getElementById('svg-window-r');
-    const svgPool = document.getElementById('svg-pool');
-    const svgSolar = document.getElementById('svg-solar');
-    const svgTrees = document.getElementById('svg-trees');
-    const svgGround = document.getElementById('svg-ground');
-
-    // Dropdowns
     const optRoof = document.getElementById('opt-roof');
     const optWindows = document.getElementById('opt-windows');
     const optDoors = document.getElementById('opt-doors');
@@ -195,146 +199,104 @@ import Layout from '../../layouts/Layout.astro';
     const optPool = document.getElementById('opt-pool');
     const optLandscape = document.getElementById('opt-landscape');
 
-    // 1. Live Visual Updates (Triggers on change)
-    function updateVisuals() {
-      // Roof Colors
-      const roofVal = optRoof.value;
-      if (roofVal === '15000') svgRoof.setAttribute('fill', '#ef4444'); // Long span (Red)
-      else if (roofVal === '25000') svgRoof.setAttribute('fill', '#475569'); // Stone coated (Gray)
-      else if (roofVal === '35000') svgRoof.setAttribute('fill', '#d1d5db'); // Concrete (Light Gray)
-
-      // Window Colors
-      const winVal = optWindows.value;
-      if (winVal === '8000') {
-        svgWindowL.setAttribute('fill', '#93c5fd'); svgWindowR.setAttribute('fill', '#93c5fd');
-      } else if (winVal === '15000') {
-        svgWindowL.setAttribute('fill', '#60a5fa'); svgWindowR.setAttribute('fill', '#60a5fa');
-      } else if (winVal === '28000') {
-        svgWindowL.setAttribute('fill', '#1e3a8a'); svgWindowR.setAttribute('fill', '#1e3a8a');
-      }
-
-      // Door Colors
-      const doorVal = optDoors.value;
-      if (doorVal === '5000') svgDoor.setAttribute('fill', '#d6d3d1'); // Flush
-      else if (doorVal === '12000') svgDoor.setAttribute('fill', '#78350f'); // Wood
-      else if (doorVal === '25000') svgDoor.setAttribute('fill', '#334155'); // Steel
-
-      // Toggles
-      svgPool.style.display = optPool.checked ? 'block' : 'none';
-      svgSolar.style.display = optSolar.checked ? 'block' : 'none';
-      
-      if (optLandscape.checked) {
-        svgTrees.style.display = 'block';
-        svgGround.setAttribute('fill', '#84cc16'); // Lush green
-      } else {
-        svgTrees.style.display = 'none';
-        svgGround.setAttribute('fill', '#d1d5db'); // Dirt/Gray
-      }
-    }
-
-    // Attach live listeners to all inputs
-    document.querySelectorAll('select, input[type="checkbox"]').forEach(el => {
-      el.addEventListener('change', updateVisuals);
-    });
-
-    // Initialize visuals on page load
-    updateVisuals();
-
-    // 2. Template Logic
     const templates = {
       custom: { sqm: 150, floors: 1 },
       home: { sqm: 200, floors: 1 },
       villa: { sqm: 500, floors: 2 },
       office: { sqm: 1200, floors: 4 }
     };
-    templateSelect.addEventListener('change', (e) => {
-      const t = templates[e.target.value];
-      sqmInput.value = t.sqm;
-      floorsInput.value = t.floors;
-    });
 
-    // 3. Calculate BOQ Logic
-    document.getElementById('calc-btn').addEventListener('click', () => {
-      updateVisuals(); // Ensure visuals are synced
-      
-      const sqm = Number(sqmInput.value);
-      const floors = Number(floorsInput.value);
-      const totalSqm = sqm * floors;
-      if (!sqm || !floors) return alert('Please enter valid square meters and floors.');
+    if (templateSelect) {
+      templateSelect.addEventListener('change', (e) => {
+        const t = templates[e.target.value];
+        sqmInput.value = t.sqm;
+        floorsInput.value = t.floors;
+      });
+    }
 
-      const qualityRates = { basic: 65000, mid: 95000, luxury: 140000 };
-      const coreCost = totalSqm * qualityRates[document.getElementById('calc-quality').value];
+    const calcBtn = document.getElementById('calc-btn');
+    if (calcBtn) {
+      calcBtn.addEventListener('click', () => {
+        const sqm = Number(sqmInput.value);
+        const floors = Number(floorsInput.value);
+        const totalSqm = sqm * floors;
+        if (!sqm || !floors) return alert('Please enter valid square meters and floors.');
 
-      const roofCost = totalSqm * Number(optRoof.value);
-      const windowCost = totalSqm * Number(optWindows.value);
-      const doorCost = totalSqm * Number(optDoors.value);
-      const floorCost = totalSqm * Number(optFloor.value);
-      const finishesTotal = roofCost + windowCost + doorCost + floorCost;
+        const qualityRates = { basic: 65000, mid: 95000, luxury: 140000 };
+        const quality = document.getElementById('calc-quality').value;
+        const coreCost = totalSqm * qualityRates[quality];
 
-      let extrasTotal = 0;
-      const extras = [];
-      if (optSolar.checked) { extrasTotal += 4500000; extras.push('Solar'); }
-      if (optPool.checked) { extrasTotal += 8000000; extras.push('Pool'); }
-      if (optLandscape.checked) { extrasTotal += 1200000; extras.push('Landscaping'); }
+        const roofCost = totalSqm * Number(optRoof.value);
+        const windowCost = totalSqm * Number(optWindows.value);
+        const doorCost = totalSqm * Number(optDoors.value);
+        const floorCost = totalSqm * Number(optFloor.value);
+        const finishesTotal = roofCost + windowCost + doorCost + floorCost;
 
-      const subtotal = coreCost + finishesTotal + extrasTotal;
-      const professionalFees = subtotal * 0.05;
-      const contingency = subtotal * 0.10;
-      const grandTotal = subtotal + professionalFees + contingency;
+        let extrasTotal = 0;
+        const extras = [];
+        if (optSolar.checked) { extrasTotal += 4500000; extras.push('Solar'); }
+        if (optPool.checked) { extrasTotal += 8000000; extras.push('Pool'); }
+        if (optLandscape.checked) { extrasTotal += 1200000; extras.push('Landscaping'); }
 
-      const fmt = (num) => '₦' + Math.round(num).toLocaleString();
+        const subtotal = coreCost + finishesTotal + extrasTotal;
+        const professionalFees = subtotal * 0.05;
+        const contingency = subtotal * 0.10;
+        const grandTotal = subtotal + professionalFees + contingency;
 
-      let html = `
-        <div style="display:flex; justify-content:space-between; padding-bottom:8px; border-bottom:1px dashed var(--line-light);">
-          <span style="color:var(--white); font-weight:600;">Core Structure & Labor</span>
-          <span style="color:var(--gold); font-family:var(--mono);">${fmt(coreCost)}</span>
-        </div>
-        <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px dashed var(--line-light);">
-          <span style="color:var(--text-muted);">- Roofing</span>
-          <span style="color:var(--white); font-family:var(--mono);">${fmt(roofCost)}</span>
-        </div>
-        <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px dashed var(--line-light);">
-          <span style="color:var(--text-muted);">- Windows</span>
-          <span style="color:var(--white); font-family:var(--mono);">${fmt(windowCost)}</span>
-        </div>
-        <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px dashed var(--line-light);">
-          <span style="color:var(--text-muted);">- Doors</span>
-          <span style="color:var(--white); font-family:var(--mono);">${fmt(doorCost)}</span>
-        </div>
-        <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px dashed var(--line-light);">
-          <span style="color:var(--text-muted);">- Flooring</span>
-          <span style="color:var(--white); font-family:var(--mono);">${fmt(floorCost)}</span>
-        </div>
-      `;
+        const fmt = (num) => '₦' + Math.round(num).toLocaleString();
 
-      if (extras.length > 0) {
-        html += `
-        <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px dashed var(--line-light); margin-top:8px;">
-          <span style="color:var(--white); font-weight:600;">Extras</span>
-          <span style="color:var(--gold); font-family:var(--mono);">${fmt(extrasTotal)}</span>
-        </div>
-        <div style="padding:4px 0 8px 12px; font-size:0.8rem; color:var(--text-muted);">
-          (${extras.join(', ')})
-        </div>
+        let html = `
+          <div style="display:flex; justify-content:space-between; padding-bottom:8px; border-bottom:1px dashed var(--line-light);">
+            <span style="color:var(--white); font-weight:600;">Core Structure & Labor</span>
+            <span style="color:var(--gold); font-family:var(--mono);">${fmt(coreCost)}</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px dashed var(--line-light);">
+            <span style="color:var(--text-muted);">- Roofing</span>
+            <span style="color:var(--white); font-family:var(--mono);">${fmt(roofCost)}</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px dashed var(--line-light);">
+            <span style="color:var(--text-muted);">- Windows</span>
+            <span style="color:var(--white); font-family:var(--mono);">${fmt(windowCost)}</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px dashed var(--line-light);">
+            <span style="color:var(--text-muted);">- Doors</span>
+            <span style="color:var(--white); font-family:var(--mono);">${fmt(doorCost)}</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px dashed var(--line-light);">
+            <span style="color:var(--text-muted);">- Flooring</span>
+            <span style="color:var(--white); font-family:var(--mono);">${fmt(floorCost)}</span>
+          </div>
         `;
-      }
 
-      html += `
-        <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px dashed var(--line-light); margin-top:8px;">
-          <span style="color:var(--text-muted);">Professional Fees (5%)</span>
-          <span style="color:var(--white); font-family:var(--mono);">${fmt(professionalFees)}</span>
-        </div>
-        <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px dashed var(--line-light);">
-          <span style="color:var(--text-muted);">Contingency (10%)</span>
-          <span style="color:var(--white); font-family:var(--mono);">${fmt(contingency)}</span>
-        </div>
-        <div style="display:flex; justify-content:space-between; margin-top:20px; padding-top:16px; border-top:2px solid var(--gold);">
-          <span style="color:var(--gold); font-weight:700; font-size:1.2rem;">Grand Total</span>
-          <span style="color:var(--gold); font-weight:700; font-size:1.4rem; font-family:var(--mono);">${fmt(grandTotal)}</span>
-        </div>
-      `;
+        if (extras.length > 0) {
+          html += `
+            <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px dashed var(--line-light); margin-top:8px;">
+              <span style="color:var(--white); font-weight:600;">Extras</span>
+              <span style="color:var(--gold); font-family:var(--mono);">${fmt(extrasTotal)}</span>
+            </div>
+            <div style="padding:4px 0 8px 12px; font-size:0.8rem; color:var(--text-muted);">
+              (${extras.join(', ')})
+            </div>
+          `;
+        }
 
-      document.getElementById('results-list').innerHTML = html;
-    });
+        html += `
+          <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px dashed var(--line-light); margin-top:8px;">
+            <span style="color:var(--text-muted);">Professional Fees (5%)</span>
+            <span style="color:var(--white); font-family:var(--mono);">${fmt(professionalFees)}</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px dashed var(--line-light);">
+            <span style="color:var(--text-muted);">Contingency (10%)</span>
+            <span style="color:var(--white); font-family:var(--mono);">${fmt(contingency)}</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-top:20px; padding-top:16px; border-top:2px solid var(--gold);">
+            <span style="color:var(--gold); font-weight:700; font-size:1.2rem;">Grand Total</span>
+            <span style="color:var(--gold); font-weight:700; font-size:1.4rem; font-family:var(--mono);">${fmt(grandTotal)}</span>
+          </div>
+        `;
+
+        document.getElementById('results-list').innerHTML = html;
+      });
+    }
   </script>
 </Layout>
