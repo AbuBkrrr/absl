@@ -23,7 +23,7 @@ if (error || !pkg) return Astro.redirect('/services');
           <div style="font-family:var(--mono); font-size:2rem; font-weight:700; color:var(--gold);">₦{Number(pkg.price).toLocaleString()}</div>
         </div>
         
-        <button id="add-btn" class="btn btn-primary" style="padding:16px 48px; font-size:1.1rem;">
+        <button id="add-btn" class="btn btn-primary" style="padding:16px 48px; font-size:1.1rem; background: var(--green); color: white;">
           Add to Cart
         </button>
       </div>
@@ -47,7 +47,7 @@ if (error || !pkg) return Astro.redirect('/services');
       btn.style.background = 'var(--green)';
       setTimeout(() => {
         btn.textContent = 'Add to Cart';
-        btn.style.background = 'var(--gold)';
+        btn.style.background = 'var(--green)';
       }, 1500);
     });
   </script>

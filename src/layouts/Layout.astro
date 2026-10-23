@@ -28,9 +28,9 @@ const year = new Date().getFullYear();
             --bg-main: #0A1128;
             --bg-surface: #121C3E;
             --bg-card: #0F1731;
-            --gold: #C5A059;
-            --gold-hover: #D4B673;
-            --gold-soft: rgba(197, 160, 89, 0.1);
+            --gold: #1E5F9E; /* Changed to Logo Royal Blue */
+            --gold-hover: #2A73BD;
+            --gold-soft: rgba(30, 95, 158, 0.15);
             --white: #FFFFFF;
             --text-muted: #9CA3AF;
             --text-light: #E5E7EB;
@@ -87,6 +87,7 @@ const year = new Date().getFullYear();
         .footer-bottom { border-top: 1px solid var(--line-light); padding-top: 24px; text-align: center; color: var(--text-muted); font-size: 0.8rem; }
         
         @media (max-width: 768px) {
+            .logo img { height: 32px !important; }
             .nav-links { display: none; }
             .footer-grid { grid-template-columns: 1fr; }
         }
@@ -102,7 +103,7 @@ const year = new Date().getFullYear();
 
     <nav class="navbar">
         <div class="container nav-inner">
-            <a href="/" class="logo">ABSL<span>.</span></a>
+            <a href="/" class="logo"><img src="/absl-logo.png" alt="ABSL Logo" style="height: 45px; width: auto; object-fit: contain;" /></a>
             <div class="nav-links">
                 <a href="/">Home</a>
                 <a href="/services">Travel & Tours</a>
@@ -124,7 +125,7 @@ const year = new Date().getFullYear();
         <div class="container">
             <div class="footer-grid">
                 <div>
-                    <h3 class="logo">ABSL<span>.</span></h3>
+                    <img src="/absl-logo.png" alt="ABSL Logo" style="height: 60px; width: auto; object-fit: contain; margin-bottom: 16px;" />
                     <p style="margin-top:16px; max-width:300px;">Allstates Business Solutions and Logistics Ltd. Delivering excellence in global travel, secure freight, and infrastructure development.</p>
                 </div>
                 <div>
