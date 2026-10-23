@@ -1,5 +1,8 @@
 ---
 import Layout from '../layouts/Layout.astro';
+
+const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 ---
 <Layout title="Track Your Shipment - ABSL">
   <div style="background: var(--bg-surface); padding: 80px 0; border-bottom: 1px solid var(--line-light);">
@@ -48,10 +51,10 @@ import Layout from '../layouts/Layout.astro';
     </div>
   </div>
 
-  <script is:inline>
+  <script is:inline define:vars={{ supabaseUrl, supabaseAnonKey }}>
     document.addEventListener('astro:page-load', async () => {
       const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
-      const supabase = createClient('https://xnlwfifnxtpsxbgmlshq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhubHdmZGlmbmR0cHN4YmdtbHNocSIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNzI2NTg0MDAwLCJleHAiOjIwNDIxNjAwMDB9.YOUR_ANON_KEY_HERE');
+      const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
       const input = document.getElementById('track-input');
       const btn = document.getElementById('track-btn');

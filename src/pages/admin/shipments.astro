@@ -4,6 +4,8 @@ import { supabase } from '../../lib/supabase';
 
 const { data: shipments } = await supabase.from('absl_shipments').select('*').order('created_at', { ascending: false });
 const rows = shipments || [];
+const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 ---
 
 <Layout title="Shipments - ABSL Admin">
@@ -66,16 +68,66 @@ const rows = shipments || [];
     </div>
   </div>
 
-  <script is:inline>
-    document.addEventListener('astro:page-load', () => {
+  <!-- Toast Container -->
+  <div id="toast-container" style="position:fixed; bottom:24px; right:24px; z-index:9999; display:flex; flex-direction:column; gap:10px;"></div>
+
+  <script is:inline define:vars={{ supabaseUrl, supabaseAnonKey }}>
+    document.addEventListener('astro:page-load', async () => {
+      // Initialize Supabase Client
+      const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+      const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+      // --- Toast Notification System ---
+      function showToast(message, type = 'success') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        
+        const bgColor = type === 'success' ? 'var(--green)' : (type === 'error' ? '#ef4444' : 'var(--gold)');
+        const icon = type === 'success' ? '✓' : (type === 'error' ? '✕' : 'ℹ');
+
+        toast.style.cssText = `
+          background: var(--bg-card); 
+          border: 1px solid ${bgColor}; 
+          color: var(--white); 
+          padding: 16px 24px; 
+          border-radius: var(--r-md); 
+          font-family: var(--font-body); 
+          font-weight: 600; 
+          box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          transform: translateY(100%);
+          opacity: 0;
+          transition: all 0.3s ease;
+        `;
+        
+        toast.innerHTML = `<span style="color:${bgColor}; font-size:1.2rem;">${icon}</span> ${message}`;
+        container.appendChild(toast);
+
+        // Animate in
+        setTimeout(() => { toast.style.transform = 'translateY(0)'; toast.style.opacity = '1'; }, 10);
+
+        // Remove after 3 seconds
+        setTimeout(() => {
+          toast.style.transform = 'translateY(100%)';
+          toast.style.opacity = '0';
+          setTimeout(() => toast.remove(), 300);
+        }, 3000);
+      }
+
       // Create Shipment
       document.getElementById('save-btn')?.addEventListener('click', async () => {
-        const tracking = document.getElementById('f-tracking').value;
-        const origin = document.getElementById('f-origin').value;
-        const dest = document.getElementById('f-dest').value;
-        const loc = document.getElementById('f-location').value;
+        const btn = document.getElementById('save-btn');
+        const tracking = document.getElementById('f-tracking').value.trim();
+        const origin = document.getElementById('f-origin').value.trim();
+        const dest = document.getElementById('f-dest').value.trim();
+        const loc = document.getElementById('f-location').value.trim();
         
-        if (!tracking || !origin || !dest) return alert('Fill all required fields');
+        if (!tracking || !origin || !dest) return showToast('Please fill all required fields.', 'error');
+
+        btn.textContent = 'Creating...';
+        btn.disabled = true;
 
         const { error } = await supabase.from('absl_shipments').insert({
           tracking_number: tracking,
@@ -84,8 +136,14 @@ const rows = shipments || [];
           history: [{ status: 'picked_up', location: loc || origin, timestamp: new Date().toISOString() }]
         });
 
-        if (error) alert(error.message);
-        else window.location.reload();
+        if (error) {
+          showToast(error.message, 'error');
+          btn.textContent = 'Create Shipment';
+          btn.disabled = false;
+        } else {
+          showToast('Shipment created successfully!', 'success');
+          setTimeout(() => window.location.reload(), 1000);
+        }
       });
 
       // Update Status
@@ -100,14 +158,23 @@ const rows = shipments || [];
           const location = prompt('Enter current location (e.g. Customs, London Hub):');
           if (!location) return;
 
+          e.target.textContent = 'Updating...';
+          e.target.disabled = true;
+
           const res = await fetch('/api/shipments/update', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id, status, location })
           });
 
-          if (res.ok) window.location.reload();
-          else alert('Failed to update');
+          if (res.ok) {
+            showToast('Status updated successfully!', 'success');
+            setTimeout(() => window.location.reload(), 1000);
+          } else {
+            showToast('Failed to update status.', 'error');
+            e.target.textContent = 'Update Status';
+            e.target.disabled = false;
+          }
         });
       });
     });
