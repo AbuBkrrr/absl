@@ -14,6 +14,7 @@ const KEY = 'qm-cart';
 
 export function getCart(): CartItem[] {
   try {
+    if (typeof localStorage === 'undefined') return [];
     const raw = localStorage.getItem(KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
@@ -23,6 +24,7 @@ export function getCart(): CartItem[] {
 }
 
 export function saveCart(items: CartItem[]) {
+  if (typeof localStorage === 'undefined') return;
   localStorage.setItem(KEY, JSON.stringify(items));
   window.dispatchEvent(new CustomEvent('qm-cart-updated', { detail: items }));
 }

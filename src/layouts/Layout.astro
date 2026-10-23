@@ -1,6 +1,6 @@
 ---
 import Analytics from '@vercel/analytics/astro';
-import '../scripts/i18n-widget.ts';
+
 
 interface Props {
   title?: string;
@@ -147,7 +147,9 @@ const year = new Date().getFullYear();
     </footer>
 
     <script>
+        import '../scripts/i18n-widget.ts';
         import { cartCount } from '../scripts/cart';
+
         function updateBadge() {
             const b = document.getElementById('cart-badge');
             if (!b) return;
@@ -155,8 +157,12 @@ const year = new Date().getFullYear();
             b.textContent = n;
             b.style.display = n > 0 ? 'flex' : 'none';
         }
-        updateBadge();
-        window.addEventListener('absl-cart-updated', updateBadge);
+        
+        // Only run in the browser
+        if (typeof window !== 'undefined') {
+            updateBadge();
+            window.addEventListener('absl-cart-updated', updateBadge);
+        }
     </script>
     <Analytics />
 </body>
