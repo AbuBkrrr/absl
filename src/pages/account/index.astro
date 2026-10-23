@@ -1,0 +1,84 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { supabase } from '../lib/supabase';
+
+const { data: { user } } = await supabase.auth.getUser();
+
+if (!user) {
+  return Astro.redirect('/login');
+}
+
+// Check if admin
+const { data: profile } = await supabase.from('absl_profiles').select('is_admin, full_name').eq('id', user.id).single();
+if (profile?.is_admin) {
+  return Astro.redirect('/admin');
+}
+
+// Fetch Customer Bookings (by email)
+const { data: bookings } = await supabase
+  .from('absl_bookings')
+  .select('*')
+  .eq('customer_email', user.email)
+  .order('created_at', { ascending: false });
+
+const rows = bookings || [];
+---
+
+<Layout title="My Account - ABSL">
+  <div style="background: var(--bg-surface); padding: 60px 0; border-bottom: 1px solid var(--line-light);">
+    <div class="container" style="display: flex; justify-content: space-between; align-items: flex-end;">
+      <div>
+        <h1 style="font-size:2.5rem; color:var(--white); margin:0;">Welcome, {profile?.full_name || user.email}</h1>
+        <p style="color:var(--text-muted); margin-top:8px;">Manage your travel bookings and view your rewards.</p>
+      </div>
+      <button onclick="document.cookie='sb-access-token=; Max-Age=0; path=/'; window.location.href='/logout'" class="btn btn-outline" style="padding:10px 24px;">Log Out</button>
+    </div>
+  </div>
+
+  <div class="container" style="padding: 60px 24px;">
+    
+    <div style="display:grid; grid-template-columns: 1fr 300px; gap:40px;">
+      
+      <!-- Bookings List -->
+      <div>
+        <h2 style="font-size:1.8rem; color:var(--white); margin-bottom:24px;">My Bookings</h2>
+        
+        {rows.length === 0 ? (
+          <div style="background:var(--bg-card); border:1px dashed var(--line); padding:40px; text-align:center; border-radius:var(--r-md);">
+            <p style="color:var(--text-muted); margin-bottom:16px;">You have no active bookings yet.</p>
+            <a href="/travel" class="btn btn-primary">Book a Trip</a>
+          </div>
+        ) : (
+          <div style="display:flex; flex-direction:column; gap:16px;">
+            {rows.map(b => (
+              <div style="background:var(--bg-card); border:1px solid var(--line-light); border-radius:var(--r-md); padding:24px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
+                <div>
+                  <div style="font-family:var(--mono); font-size:11px; color:var(--gold); margin-bottom:4px;">ORDER #{b.id}</div>
+                  <div style="font-size:0.9rem; color:var(--text-light); font-weight:600;">{new Date(b.created_at).toLocaleDateString()}</div>
+                  <div style="font-size:0.85rem; color:var(--text-muted); margin-top:4px;">{b.notes || 'Standard Booking'}</div>
+                </div>
+                <div style="text-align:right;">
+                  <div style="font-size:1.2rem; font-weight:700; color:var(--white); margin-bottom:4px;">₦{Number(b.total_amount).toLocaleString()}</div>
+                  <span style="font-size:10px; padding:4px 10px; border-radius:4px; background:var(--bg-surface); color:var(--gold); text-transform:uppercase; font-weight:700;">
+                    {b.booking_status}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <!-- Sidebar / Quick Links -->
+      <div>
+        <div style="background:var(--bg-card); border:1px solid var(--line-light); border-radius:var(--r-md); padding:32px; text-align:center; margin-bottom:24px;">
+          <div style="font-size:32px; margin-bottom:12px;">✈️</div>
+          <h3 style="font-size:1.2rem; color:var(--white); margin-bottom:8px;">MileageMall</h3>
+          <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:16px;">Track your loyalty miles across airlines.</p>
+          <a href="/rewards" class="btn btn-primary" style="width:100%;">View Rewards</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</Layout>
