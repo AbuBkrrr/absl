@@ -72,7 +72,7 @@ import Layout from '../layouts/Layout.astro';
         if (isLogin) {
           const { error } = await supabase.auth.signInWithPassword({ email, password });
           if (error) throw error;
-          window.location.href = '/rewards'; // Redirect to rewards after login
+          window.location.href = '/rewards';
         } else {
           const { error } = await supabase.auth.signUp({ 
             email, 

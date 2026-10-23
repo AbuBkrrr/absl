@@ -1,0 +1,84 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { supabase } from '../../lib/supabase';
+
+// Fetch profiles and loyalty separately to avoid complex join errors
+const { data: profiles } = await supabase.from('absl_profiles').select('id, email');
+const { data: loyalty } = await supabase.from('absl_rewards_loyalty').select('*').order('created_at', { ascending: false });
+---
+
+<Layout title="Loyalty Manager - ABSL Admin">
+  <div class="container" style="padding: 80px 24px;">
+    <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:32px;">
+      <div>
+        <h1 style="font-size:2.5rem; color:var(--white); margin:0;">Loyalty Manager</h1>
+        <p style="color:var(--text-muted); margin-top:8px;">Manually add miles for clients (API integration pending).</p>
+      </div>
+      <a href="/admin" class="btn btn-outline" style="padding:10px 24px;">&larr; Back to Admin</a>
+    </div>
+
+    <div style="background:var(--bg-surface); border:1px solid var(--line-light); border-radius:var(--r-md); padding:32px; margin-bottom:32px;">
+      <h2 style="font-size:1.2rem; color:var(--gold); margin-bottom:16px;">Add Client Miles</h2>
+      <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr; gap:16px;">
+        <input id="f-user" type="text" placeholder="User Email..." style="padding:10px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
+        <input id="f-airline" type="text" placeholder="Airline (e.g. United)" style="padding:10px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
+        <input id="f-points" type="number" placeholder="Points" style="padding:10px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
+        <input id="f-tier" type="text" placeholder="Tier (e.g. Gold)" style="padding:10px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
+        <button id="save-btn" class="btn btn-primary">Add Miles</button>
+      </div>
+    </div>
+
+    <div style="background:var(--bg-card); border:1px solid var(--line-light); border-radius:var(--r-md); overflow:hidden;">
+      <table style="width:100%; border-collapse:collapse; font-family:var(--mono); font-size:12.5px;">
+        <thead>
+          <tr style="background:var(--bg-surface); text-align:left;">
+            <th style="padding:16px; color:var(--gold);">Client Email</th>
+            <th style="padding:16px; color:var(--gold);">Airline</th>
+            <th style="padding:16px; color:var(--gold); text-align:right;">Points</th>
+            <th style="padding:16px; color:var(--gold);">Tier</th>
+          </tr>
+        </thead>
+        <tbody>
+          {loyalty?.map(l => {
+            const profile = profiles?.find(p => p.id === l.user_id);
+            return (
+              <tr style="border-top:1px solid var(--line-light);">
+                <td style="padding:16px; color:var(--white);">{profile ? profile.email : 'Demo User (No Account)'}</td>
+                <td style="padding:16px; color:var(--text-muted);">{l.airline}</td>
+                <td style="padding:16px; text-align:right; color:var(--gold); font-weight:700;">{l.points.toLocaleString()}</td>
+                <td style="padding:16px; color:var(--text-muted);">{l.tier}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    import { supabase } from '../../lib/supabase';
+
+    document.getElementById('save-btn').addEventListener('click', async () => {
+      const email = document.getElementById('f-user').value;
+      const airline = document.getElementById('f-airline').value;
+      const points = Number(document.getElementById('f-points').value);
+      const tier = document.getElementById('f-tier').value;
+
+      if (!email || !airline || !points) return alert('Fill all fields');
+
+      const { data: profile } = await supabase.from('absl_profiles').select('id').eq('email', email).single();
+      if (!profile) return alert('User not found. They must sign up on /login first.');
+
+      const { error } = await supabase.from('absl_rewards_loyalty').insert({
+        user_id: profile.id,
+        airline,
+        points,
+        tier,
+        expiry: '2027-12-31'
+      });
+
+      if (error) alert(error.message);
+      else window.location.reload();
+    });
+  </script>
+</Layout>

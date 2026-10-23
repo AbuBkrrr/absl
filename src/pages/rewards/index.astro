@@ -2,22 +2,12 @@
 import Layout from '../../layouts/Layout.astro';
 import { supabase } from '../../lib/supabase';
 
-const { data: { user } } = await supabase.auth.getUser();
-
-let loyalty = [];
-if (user) {
-  // Logged in: Fetch ONLY this user's loyalty accounts
-  const { data } = await supabase.from('absl_rewards_loyalty').select('*').eq('user_id', user.id);
-  loyalty = data || [];
-} else {
-  // Not logged in: Fetch demo data (where user_id is null)
-  const { data } = await supabase.from('absl_rewards_loyalty').select('*').is('user_id', null);
-  loyalty = data || [];
-}
-
+// Fetch global data server-side
 const { data: offers } = await supabase.from('absl_rewards_offers').select('*');
 const { data: discounts } = await supabase.from('absl_rewards_discounts').select('*');
 const { data: carbon } = await supabase.from('absl_rewards_carbon').select('*');
+// Fetch ALL loyalty data (we filter client-side based on who is logged in)
+const { data: allLoyalty } = await supabase.from('absl_rewards_loyalty').select('*');
 ---
 
 <Layout title="MileageMall Rewards - ABSL">
@@ -35,19 +25,17 @@ const { data: carbon } = await supabase.from('absl_rewards_carbon').select('*');
             ⚡ One Hub. Every Airline. Max Rewards.
           </div>
         </div>
+        <div id="auth-header">
+          <a href="/login" style="background: #0b1e3a; color: white; padding: 8px 16px; border-radius: 20px; font-weight: 700; text-decoration: none; font-size: 0.8rem;">Sign In</a>
+        </div>
       </div>
 
       <!-- HERO DASHBOARD -->
-            <div id="dashboard-hero" style="background: #0b1e3a; color: white; border-radius: 24px; padding: 32px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 24px; margin-bottom: 32px;">
+      <div id="dashboard-hero" style="background: #0b1e3a; color: white; border-radius: 24px; padding: 32px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 24px; margin-bottom: 32px;">
         <div>
-          <div style="font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; color:#8ba0b9; margin-bottom:8px;">{user ? `Welcome back` : 'Demo Mode'} · Total Loyalty Value</div>
-          <div style="font-size:3rem; font-weight:700; line-height:1;">{loyalty.reduce((s, r) => s + (r.points || 0), 0).toLocaleString()}</div>
-          <div style="font-size:0.85rem; color:#8ba0b9; margin-top:8px;">miles across {loyalty.length} airlines</div>
-          {!user && (
-            <div style="margin-top: 16px;">
-              <a href="/login" style="background: #d4af37; color: #0b1e3a; padding: 8px 16px; border-radius: 20px; font-weight: 700; text-decoration: none; font-size: 0.8rem;">Sign in to track your miles</a>
-            </div>
-          )}
+          <div id="welcome-text" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; color:#8ba0b9; margin-bottom:8px;">Total Loyalty Value</div>
+          <div id="total-miles" style="font-size:3rem; font-weight:700; line-height:1;">0</div>
+          <div id="total-airlines" style="font-size:0.85rem; color:#8ba0b9; margin-top:8px;">miles across 0 airlines</div>
         </div>
         <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;" id="loyalty-accounts">
           <!-- Populated by JS -->
@@ -68,34 +56,27 @@ const { data: carbon } = await supabase.from('absl_rewards_carbon').select('*');
           <span class="mm-chip" data-cat="Clothing">Clothing</span>
           <span class="mm-chip" data-cat="Tech">Tech</span>
         </div>
-        <div id="offers-list" style="display:grid; gap:16px;">
-          <!-- Populated by JS -->
-        </div>
+        <div id="offers-list" style="display:grid; gap:16px;"></div>
       </div>
 
       <!-- DEALS PANEL -->
       <div class="mm-panel" id="panel-deals" style="display:none;">
-        <div id="deals-list" style="display:grid; gap:16px;">
-          <!-- Populated by JS -->
-        </div>
+        <div id="deals-list" style="display:grid; gap:16px;"></div>
       </div>
 
       <!-- CARBON PANEL -->
       <div class="mm-panel" id="panel-carbon" style="display:none;">
-        <div id="carbon-list" style="display:grid; gap:16px;">
-          <!-- Populated by JS -->
-        </div>
+        <div id="carbon-list" style="display:grid; gap:16px;"></div>
       </div>
-      <div style="text-align: center; margin-top: 40px;">
-        {user ? (
-          <button onclick="document.cookie='sb-access-token=; Max-Age=0; path=/'; supabase.auth.signOut().then(() => window.location.href='/');" style="background: none; border: 1px solid var(--line-light); color: var(--text-muted); padding: 10px 24px; border-radius: 40px; cursor: pointer;">Log Out</button>
-        ) : null}
-      </div>
+
     </div>
-  <!-- Pass server data to client -->
-  <script type="application/json" id="rewards-data" set:html={JSON.stringify({ loyalty, offers, discounts, carbon })} />
+  </div>
+
+  <script type="application/json" id="rewards-data" set:html={JSON.stringify({ allLoyalty, offers, discounts, carbon })} />
 
   <script>
+    import { supabase } from '../../lib/supabase';
+
     const data = JSON.parse(document.getElementById('rewards-data').textContent);
     const css = {
       card: "background:#fff; border:1px solid #e3eaf2; border-radius:16px; padding:20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; box-shadow:0 4px 12px rgba(0,0,0,0.02);",
@@ -105,22 +86,49 @@ const { data: carbon } = await supabase.from('absl_rewards_carbon').select('*');
       btnGreen: "background:#0f7b4a; color:#fff; padding:10px 20px; border-radius:40px; font-weight:600; text-decoration:none; font-size:0.85rem;"
     };
 
-    // 1. Render Loyalty Accounts
-    const accContainer = document.getElementById('loyalty-accounts');
-    data.loyalty.forEach(acc => {
-      accContainer.innerHTML += `
+    // 1. Check Auth & Render Loyalty
+    async function initAuth() {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      const header = document.getElementById('auth-header');
+      const welcome = document.getElementById('welcome-text');
+      const accContainer = document.getElementById('loyalty-accounts');
+      
+      let myLoyalty = [];
+
+      if (user) {
+        // User is logged in
+        header.innerHTML = `<span style="font-weight:600; color:#4a6a8a; margin-right:16px;">${user.email}</span><button id="logout-btn" style="background: transparent; border: 1px solid #e3eaf2; color: #4a6a8a; padding: 6px 12px; border-radius: 20px; cursor: pointer;">Log Out</button>`;
+        document.getElementById('logout-btn').addEventListener('click', async () => {
+          await supabase.auth.signOut();
+          window.location.reload();
+        });
+        
+        welcome.textContent = 'Welcome Back · Total Loyalty Value';
+        myLoyalty = data.allLoyalty.filter(l => l.user_id === user.id);
+      } else {
+        // Demo Mode
+        welcome.textContent = 'Demo Mode · Total Loyalty Value';
+        myLoyalty = data.allLoyalty.filter(l => l.user_id === null); // show demo data
+      }
+
+      // Render Hero
+      const totalMiles = myLoyalty.reduce((s, r) => s + (r.points || 0), 0);
+      document.getElementById('total-miles').textContent = totalMiles.toLocaleString();
+      document.getElementById('total-airlines').textContent = `miles across ${myLoyalty.length} airlines`;
+
+      accContainer.innerHTML = myLoyalty.map(acc => `
         <span style="background:rgba(255,255,255,0.1); padding:8px 16px; border-radius:40px; font-size:0.8rem; font-weight:500;">
           ✈️ ${acc.airline.split(' ')[0]} ${acc.points.toLocaleString()} mi
         </span>
-      `;
-    });
+      `).join('');
+    }
+    initAuth();
 
     // 2. Render Offers
     function renderOffers(cat) {
       const container = document.getElementById('offers-list');
       const filtered = cat === 'All' ? data.offers : data.offers.filter(o => o.category === cat);
-      
-      // Group by retailer
       const grouped = {};
       filtered.forEach(o => {
         if (!grouped[o.retailer]) grouped[o.retailer] = [];
@@ -143,7 +151,6 @@ const { data: carbon } = await supabase.from('absl_rewards_carbon').select('*');
     }
     renderOffers('All');
 
-    // Filter listener
     document.getElementById('shop-filters').addEventListener('click', (e) => {
       if (e.target.classList.contains('mm-chip')) {
         document.querySelectorAll('.mm-chip').forEach(c => c.classList.remove('active'));
@@ -152,7 +159,7 @@ const { data: carbon } = await supabase.from('absl_rewards_carbon').select('*');
       }
     });
 
-    // 3. Render Deals
+    // 3. Render Deals & Carbon
     document.getElementById('deals-list').innerHTML = data.discounts.map(d => `
       <div style="${css.card}">
         <div>
@@ -163,7 +170,6 @@ const { data: carbon } = await supabase.from('absl_rewards_carbon').select('*');
       </div>
     `).join('');
 
-    // 4. Render Carbon
     document.getElementById('carbon-list').innerHTML = data.carbon.map(c => `
       <div style="${css.card}">
         <div>
@@ -174,12 +180,11 @@ const { data: carbon } = await supabase.from('absl_rewards_carbon').select('*');
       </div>
     `).join('');
 
-    // 5. Tabs Logic
+    // 4. Tabs
     document.querySelectorAll('.mm-tab').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.mm-tab').forEach(b => b.classList.remove('active'));
         document.querySelectorAll('.mm-panel').forEach(p => p.style.display = 'none');
-        
         btn.classList.add('active');
         document.getElementById(`panel-${btn.dataset.tab}`).style.display = 'block';
       });
