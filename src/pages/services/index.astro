@@ -1,0 +1,45 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { supabase } from '../../lib/supabase';
+
+const { data: packages } = await supabase
+  .from('absl_packages')
+  .select('*')
+  .eq('status', 'active')
+  .order('created_at', { ascending: false });
+---
+
+<Layout title="Corporate Services - ABSL">
+  <div style="background: var(--bg-surface); padding: 80px 0; border-bottom: 1px solid var(--line-light);">
+    <div class="container">
+      <h1 style="font-size:3rem; margin-bottom:16px;">Our Services</h1>
+      <p style="color:var(--text-muted); font-size:1.1rem; max-width:600px;">Explore our portfolio of premium travel packages, freight solutions, and infrastructure development contracts.</p>
+    </div>
+  </div>
+
+  <div class="container" style="padding: 80px 0;">
+    {(!packages || packages.length === 0) ? (
+      <div style="text-align:center; padding:60px; background:var(--bg-card); border:1px dashed var(--line);">
+        <p style="color:var(--text-muted);">No services found in the database.</p>
+      </div>
+    ) : (
+      <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(350px, 1fr)); gap:32px;">
+        {packages.map(pkg => (
+          <div style="background:var(--bg-card); border:1px solid var(--line-light); border-radius:var(--r-md); padding:40px; display:flex; flex-direction:column;">
+            <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:1.5px; color:var(--gold); margin-bottom:20px;">{pkg.category}</div>
+            <h3 style="font-size:1.8rem; color:var(--white); margin-bottom:16px; line-height:1.2;">{pkg.title}</h3>
+            <p style="color:var(--text-muted); font-size:0.95rem; margin-bottom:32px; flex:1;">{pkg.description}</p>
+            
+            <div style="display:flex; justify-content:space-between; align-items:center; padding-top:24px; border-top:1px solid var(--line-light);">
+              <div>
+                <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">Starting From</div>
+                <div style="font-size:1.4rem; font-weight:700; color:var(--gold);">₦{Number(pkg.price).toLocaleString()}</div>
+              </div>
+              <a href={`/services/${pkg.id}`} class="btn btn-outline" style="padding:10px 24px;">View & Book</a>
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+</Layout>

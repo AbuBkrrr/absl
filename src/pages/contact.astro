@@ -1,24 +1,31 @@
-﻿---
+---
 import Layout from '../layouts/Layout.astro';
 ---
+<Layout title="Contact Us - ABSL">
+  <div style="background: var(--bg-surface); padding: 80px 0; border-bottom: 1px solid var(--line-light);">
+    <div class="container">
+      <h1 style="font-size:3rem; margin-bottom:16px;">Contact Us</h1>
+      <p style="color:var(--text-muted); font-size:1.1rem; max-width:600px;">Have questions, feedback, or need help with your booking? Our corporate desk is here to assist you.</p>
+    </div>
+  </div>
 
-<Layout title="Contact Us — Qaraye Marchants" description="Get in touch with the Qaraye Marchants team.">
-  <div class="container" style="padding: 60px 24px; max-width: 700px;">
-    <h1 style="font-family: var(--display); font-size: 2.2rem; margin-bottom: 8px; color: var(--ink);">Contact Us</h1>
-    <p style="color: var(--ink-muted); margin-bottom: 40px;">Have questions, feedback, or need help with your listing? We are here to assist you.</p>
-
-    <div style="background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--r-lg); padding: 32px;">
-      <h2 style="font-family: var(--display); font-size: 1.2rem; margin: 0 0 20px 0; color: var(--ink);">Reach out to us</h2>
+  <div class="container" style="padding: 80px 24px; max-width: 800px;">
+    <div style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 48px;">
+      <h2 style="font-size: 1.8rem; margin-bottom: 24px; color: var(--gold);">Reach out to us</h2>
       
-      <div style="display: flex; flex-direction: column; gap: 20px;">
-        <div>
-          <div style="font-family: var(--mono); font-size: 11px; color: var(--ink-muted); margin-bottom: 4px;">EMAIL</div>
-          <a href="mailto:support@qarayemarchants.com.ng" style="color: var(--cyan); font-family: var(--body); font-size: 15px;">support@qarayemarchants.com.ng</a>
-        </div>
-        <div>
-          <div style="font-family: var(--mono); font-size: 11px; color: var(--ink-muted); margin-bottom: 4px;">WHATSAPP</div>
-          <a href="https://wa.me/2348000000000" target="_blank" rel="noopener noreferrer" style="color: var(--cyan); font-family: var(--body); font-size: 15px;">Message us on WhatsApp</a>
-        </div>
+      <div style="margin-bottom: 24px;">
+        <div style="font-family: var(--mono); font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">Email</div>
+        <a href="mailto:info@absl.com.ng" style="font-size: 1.2rem; color: var(--white);">info@absl.com.ng</a>
+      </div>
+      
+      <div style="margin-bottom: 24px;">
+        <div style="font-family: var(--mono); font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">Phone</div>
+        <a href="tel:+2348032540215" style="font-size: 1.2rem; color: var(--white);">+234 803 254 0215</a>
+      </div>
+
+      <div>
+        <div style="font-family: var(--mono); font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">Address</div>
+        <p style="font-size: 1.1rem; color: var(--white);">Plot 105, Gidan Dan Asabe, Zoo Road, Kano, Nigeria.</p>
       </div>
     </div>
   </div>
