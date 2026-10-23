@@ -1,285 +1,668 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-import { supabase } from '../../lib/supabase';
-
-const { data: projects } = await supabase
-  .from('absl_projects')
-  .select('*')
-  .eq('status', 'active')
-  .order('order_index', { ascending: true })
-  .order('created_at', { ascending: false });
-
-const portfolio = projects || [];
 ---
 
-<Layout title="Construction Estimator - ABSL">
-  <div style="background: var(--bg-surface); padding: 80px 0; border-bottom: 1px solid var(--line-light);">
-    <div class="container">
-      <h1 style="font-size:3rem; margin-bottom:16px;">Professional Construction Estimator</h1>
-      <p style="color:var(--text-muted); font-size:1.1rem; max-width:600px;">Generate a detailed Bill of Quantities (BOQ) instantly. Select your parameters below to calculate precise material, labor, and finishing costs.</p>
-    </div>
-  </div>
+<Layout title="Construction Lifecycle Estimator - ABSL">
+  <!-- Load External Libraries for Chart & PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js" is:inline></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/4.2.1/jspdf.umd.min.js" is:inline></script>
 
-  <div class="container" style="padding: 60px 24px 80px;">
-    
-    <!-- MASTER ESTIMATOR GRID -->
-    <div style="display:grid; grid-template-columns: 1fr 1.2fr; gap:40px; margin-bottom:80px; align-items:start;">
+  <style is:global>
+    /* Scoped BudgetPro Theme */
+    .bp-wrap {
+      --navy-950: #0a1628;
+      --navy-900: #0e1d34;
+      --navy-850: #11223c;
+      --navy-800: #132846;
+      --navy-700: #1c3358;
+      --gold: #f5a623;
+      --gold-dim: #c8860f;
+      --gold-soft: rgba(245, 166, 35, 0.12);
+      --ink: #edf1f7;
+      --ink-muted: #8a96ac;
+      --ink-faint: #5c6883;
+      --line: rgba(245, 166, 35, 0.16);
+      --line-soft: rgba(255, 255, 255, 0.06);
+      --green: #3ddc97;
+      --red: #ef6a5f;
+      --display: "Space Grotesk", sans-serif;
+      --body: "Inter", sans-serif;
+      --mono: "IBM Plex Mono", monospace;
       
-      <!-- LEFT COLUMN: INPUTS -->
-      <div style="background:var(--bg-card); border:1px solid var(--line); border-radius:var(--r-lg); padding:40px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
-        <h2 style="font-size:1.8rem; color:var(--gold); margin-bottom:32px;">Project Parameters</h2>
+      font-family: var(--body);
+      background: var(--navy-950);
+      color: var(--ink);
+      padding: 40px 20px 80px;
+      border-radius: 16px;
+      margin-top: 20px;
+      position: relative;
+    }
+    .bp-wrap::before {
+      content:""; position:absolute; inset:0;
+      background-image:
+        repeating-linear-gradient(0deg, rgba(245,166,35,.045) 0 1px, transparent 1px 40px),
+        repeating-linear-gradient(90deg, rgba(245,166,35,.045) 0 1px, transparent 1px 40px),
+        repeating-linear-gradient(0deg, rgba(245,166,35,.06) 0 1px, transparent 1px 200px),
+        repeating-linear-gradient(90deg, rgba(245,166,35,.06) 0 1px, transparent 1px 200px);
+      pointer-events:none; z-index:0;
+    }
+    .bp-container { position: relative; z-index: 1; max-width: 1180px; margin: 0 auto; }
+    
+    .bp-header { display:flex; justify-content:space-between; align-items:center; padding-bottom:20px; border-bottom:1px solid var(--line); margin-bottom:30px; flex-wrap:wrap; gap:16px;}
+    .bp-brand { font-family:var(--display); font-weight:700; font-size:24px; color:var(--ink); }
+    .bp-brand span { color:var(--gold); }
+    .bp-brand-sub { font-family:var(--mono); font-size:11px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.08em; display:block; margin-top:4px;}
+    
+    .bp-sheet { background:var(--navy-900); border:1px solid var(--line-soft); border-radius:14px; padding:26px; margin-bottom:24px; position:relative; overflow:hidden; }
+    .bp-sheet::before { content:""; position:absolute; top:0; left:0; width:100%; height:3px; background:linear-gradient(90deg,var(--gold),transparent 70%); }
+    .bp-sheet-head { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:20px; flex-wrap:wrap; gap:16px;}
+    .bp-eyebrow { font-family:var(--mono); font-size:11px; letter-spacing:.12em; color:var(--gold); text-transform:uppercase; }
+    .bp-title { font-family:var(--display); font-size:20px; font-weight:600; margin:4px 0 0; color:var(--ink); }
+    .bp-sub { font-family:var(--body); font-size:13px; color:var(--ink-muted); margin-top:6px; max-width:520px; }
+    .bp-num { font-family:var(--mono); font-size:11px; color:var(--ink-faint); border:1px solid var(--line); border-radius:20px; padding:5px 12px; white-space:nowrap; }
 
-        <!-- SECTION 1 -->
-        <h3 style="font-family:var(--display); font-size:1.2rem; color:var(--white); margin-bottom:16px; border-bottom:1px solid var(--line-light); padding-bottom:8px;">1. Core Structure</h3>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:32px;">
-          <div>
-            <label style="display:block; font-family:var(--mono); font-size:11px; color:var(--gold); margin-bottom:6px;">BUILDING TYPE</label>
-            <select id="calc-template" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px; outline:none;">
-              <option value="home">Standard Home</option>
-              <option value="villa">Luxury Villa / Duplex</option>
-              <option value="office">Corporate Office</option>
-              <option value="school">Educational Facility</option>
-              <option value="shop">Market Shops / Plaza</option>
-            </select>
-          </div>
-          <div>
-            <label style="display:block; font-family:var(--mono); font-size:11px; color:var(--gold); margin-bottom:6px;">BUILD QUALITY</label>
-            <select id="calc-quality" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px; outline:none;">
-              <option value="basic">Standard / Basic</option>
-              <option value="mid" selected>Mid-Range</option>
-              <option value="luxury">Luxury / High-End</option>
-            </select>
-          </div>
-          <div>
-            <label style="display:block; font-family:var(--mono); font-size:11px; color:var(--gold); margin-bottom:6px;">TOTAL SQM (Per Floor)</label>
-            <input type="number" id="calc-sqm" value="150" min="20" max="10000" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px; outline:none;" />
-          </div>
-          <div>
-            <label style="display:block; font-family:var(--mono); font-size:11px; color:var(--gold); margin-bottom:6px;">NUMBER OF FLOORS</label>
-            <input type="number" id="calc-floors" value="1" min="1" max="10" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px; outline:none;" />
-          </div>
-        </div>
+    .bp-inputs-grid { display:grid; grid-template-columns:1.3fr 1fr 1.2fr 1fr; gap:24px; }
+    .bp-field { display:flex; flex-direction:column; gap:10px; }
+    .bp-field label { font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.07em; color:var(--ink-muted); display:flex; justify-content:space-between;}
+    .bp-field label .val { color:var(--gold); font-weight:600; }
+    
+    input[type=range] { -webkit-appearance:none; width:100%; height:4px; border-radius:2px; background:var(--navy-700); outline:none; }
+    input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:18px; height:18px; border-radius:50%; background:var(--gold); border:3px solid var(--navy-950); cursor:pointer; box-shadow:0 0 0 1px var(--gold); }
+    
+    .bp-segmented { display:flex; border:1px solid var(--line); border-radius:8px; overflow:hidden; }
+    .bp-segmented button { flex:1; background:transparent; border:none; border-right:1px solid var(--line); color:var(--ink-muted); font-family:var(--body); font-size:13px; font-weight:600; padding:10px 6px; cursor:pointer; transition:.15s; }
+    .bp-segmented button:last-child { border-right:none; }
+    .bp-segmented button.active { background:var(--gold); color:var(--navy-950); }
+    
+    .bp-toggle-row { display:flex; align-items:center; gap:12px; height:38px; }
+    .bp-switch { position:relative; width:46px; height:26px; flex-shrink:0; }
+    .bp-switch input { opacity:0; width:0; height:0; }
+    .bp-slider { position:absolute; inset:0; background:var(--navy-700); border-radius:14px; cursor:pointer; transition:.2s; border:1px solid var(--line); }
+    .bp-slider::before { content:""; position:absolute; width:18px; height:18px; left:3px; top:3px; background:var(--ink-muted); border-radius:50%; transition:.2s; }
+    .bp-switch input:checked + .bp-slider { background:var(--gold-soft); border-color:var(--gold); }
+    .bp-switch input:checked + .bp-slider::before { transform:translateX(20px); background:var(--gold); }
+    
+    .bp-table-scroll { overflow-x:auto; border:1px solid var(--line-soft); border-radius:10px; }
+    .bp-table { width:100%; border-collapse:collapse; font-family:var(--mono); font-size:13px; min-width:680px; }
+    .bp-table th { text-align:left; background:var(--navy-850); color:var(--ink-faint); font-size:10.5px; text-transform:uppercase; letter-spacing:.07em; padding:11px 14px; border-bottom:1px solid var(--line); font-weight:600; }
+    .bp-table td { padding:10px 14px; border-bottom:1px solid var(--line-soft); color:var(--ink); vertical-align:middle; }
+    .bp-table tr:hover { background:rgba(245,166,35,.035); }
+    .bp-table td.mat-name { font-family:var(--body); font-weight:600; }
+    .bp-table td.mat-name .unit-tag { display:block; font-family:var(--mono); font-size:10.5px; color:var(--ink-faint); font-weight:400; margin-top:2px; }
+    .bp-table .num { text-align:right; }
+    .bp-table tfoot td { padding:14px; font-family:var(--display); font-weight:600; font-size:15px; border-top:1px solid var(--line); }
+    
+    .bp-price-input { width:110px; background:var(--navy-800); border:1px solid var(--line); border-radius:6px; color:var(--gold); font-family:var(--mono); font-size:12.5px; padding:7px 9px; text-align:right; }
+    .bp-price-input.overridden { border-color:var(--gold); background:rgba(245,166,35,.08); }
+    
+    .bp-line-list { display:flex; flex-direction:column; border:1px solid var(--line-soft); border-radius:10px; overflow:hidden; }
+    .bp-line-row { display:grid; grid-template-columns:1.6fr .9fr .9fr .9fr; gap:14px; align-items:center; padding:13px 16px; border-bottom:1px solid var(--line-soft); }
+    .bp-line-row:last-child { border-bottom:none; }
+    .bp-line-row:nth-child(even) { background:rgba(255,255,255,.015); }
+    .bp-line-name { font-family:var(--body); font-weight:600; font-size:13.5px; }
+    .bp-line-note { display:block; font-family:var(--mono); font-size:10.5px; color:var(--ink-faint); font-weight:400; margin-top:3px; }
+    .bp-line-meta { font-family:var(--mono); font-size:12px; color:var(--ink-muted); text-align:right; }
+    .bp-line-total { font-family:var(--mono); font-size:13.5px; color:var(--gold); text-align:right; font-weight:600; }
+    
+    .bp-subtotal-bar { display:flex; justify-content:space-between; align-items:center; margin-top:16px; padding:14px 18px; background:var(--navy-850); border:1px solid var(--line); border-radius:10px; }
+    .bp-subtotal-bar .label { font-family:var(--mono); font-size:11px; text-transform:uppercase; color:var(--ink-muted); }
+    .bp-subtotal-bar .amount { font-family:var(--display); font-size:19px; font-weight:700; color:var(--gold); }
+    
+    .bp-summary-grid { display:grid; grid-template-columns:1.1fr .9fr; gap:28px; align-items:start; }
+    .bp-grand-card { background:linear-gradient(160deg,var(--navy-850),var(--navy-900)); border:1px solid var(--gold); border-radius:14px; padding:30px; text-align:center; }
+    .bp-grand-card .g-label { font-family:var(--mono); font-size:11.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--gold); }
+    .bp-grand-card .g-amount { font-family:var(--display); font-size:44px; font-weight:700; color:var(--ink); margin:10px 0 6px; word-break:break-word; }
+    .bp-grand-card .g-sub { font-family:var(--mono); font-size:12px; color:var(--ink-muted); }
+    .bp-legend { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:20px; text-align:left; }
+    .bp-legend-item { display:flex; align-items:center; gap:8px; font-family:var(--mono); font-size:11.5px; color:var(--ink-muted); }
+    .bp-legend-dot { width:10px; height:10px; border-radius:3px; flex-shrink:0; }
+    .bp-legend-item b { color:var(--ink); font-weight:600; margin-left:auto; }
+    .bp-chart-card { background:var(--navy-850); border:1px solid var(--line-soft); border-radius:14px; padding:20px; }
+    
+    .bp-btn-reset { margin-top:18px; width:100%; background:transparent; border:1px solid var(--line); color:var(--ink-muted); font-family:var(--mono); font-size:11.5px; text-transform:uppercase; padding:11px; border-radius:8px; cursor:pointer; }
+    .bp-btn-reset:hover { border-color:var(--red); color:var(--red); }
+    .bp-btn-pdf { margin-top:10px; width:100%; background:var(--gold-soft); border:1px solid var(--gold); color:var(--gold); font-family:var(--mono); font-size:11.5px; text-transform:uppercase; padding:11px; border-radius:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; transition:.15s; }
+    .bp-btn-pdf:hover { background:var(--gold); color:var(--navy-950); }
+    
+    .bp-manual-input { margin-top:8px; width:100%; background:var(--navy-800); border:1px solid var(--line); border-radius:6px; color:var(--gold); font-family:var(--mono); font-size:12.5px; padding:7px 9px; text-align:center; }
+    
+    @media(max-width:900px) {
+      .bp-inputs-grid { grid-template-columns:1fr 1fr; }
+      .bp-summary-grid { grid-template-columns:1fr; }
+      .bp-line-row { grid-template-columns:1.3fr 1fr 1fr; }
+      .bp-line-row .col-price { display:none; }
+    }
+    @media(max-width:560px) {
+      .bp-inputs-grid { grid-template-columns:1fr; }
+      .bp-sheet { padding:20px 16px; }
+      .bp-grand-card .g-amount { font-size:32px; }
+    }
+  </style>
 
-        <!-- SECTION 2 -->
-        <h3 style="font-family:var(--display); font-size:1.2rem; color:var(--white); margin-bottom:16px; border-bottom:1px solid var(--line-light); padding-bottom:8px;">2. Finishes & Materials</h3>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:32px;">
-          <div>
-            <label style="display:block; font-family:var(--mono); font-size:11px; color:var(--gold); margin-bottom:6px;">ROOFING TYPE</label>
-            <select id="opt-roof" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px; outline:none;">
-              <option value="15000">Long Span Aluminum</option>
-              <option value="25000">Stone Coated</option>
-              <option value="35000">Flat Concrete Roof</option>
-            </select>
+  <div class="container" style="padding: 40px 24px;">
+    <div class="bp-wrap">
+      <div class="bp-container">
+        
+        <!-- PROJECT PARAMETERS -->
+        <section class="bp-sheet">
+          <div class="bp-sheet-head">
+            <div>
+              <div class="bp-eyebrow">Project Parameters</div>
+              <div class="bp-title">Define the build</div>
+            </div>
+            <div class="bp-num">SHEET 00 / 03</div>
           </div>
-          <div>
-            <label style="display:block; font-family:var(--mono); font-size:11px; color:var(--gold); margin-bottom:6px;">WINDOWS</label>
-            <select id="opt-windows" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px; outline:none;">
-              <option value="8000">Aluminum Sliding</option>
-              <option value="15000">UPVC Casement</option>
-              <option value="28000">Double Glazed</option>
-            </select>
-          </div>
-          <div>
-            <label style="display:block; font-family:var(--mono); font-size:11px; color:var(--gold); margin-bottom:6px;">DOORS</label>
-            <select id="opt-doors" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px; outline:none;">
-              <option value="5000">Flush Doors</option>
-              <option value="12000">Solid Wood</option>
-              <option value="25000">Security / Steel</option>
-            </select>
-          </div>
-          <div>
-            <label style="display:block; font-family:var(--mono); font-size:11px; color:var(--gold); margin-bottom:6px;">FLOORING</label>
-            <select id="opt-floor" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px; outline:none;">
-              <option value="6000">Standard Tiles</option>
-              <option value="15000">Porcelain / Marble</option>
-              <option value="22000">Italian Marble</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- SECTION 3 -->
-        <h3 style="font-family:var(--display); font-size:1.2rem; color:var(--white); margin-bottom:16px; border-bottom:1px solid var(--line-light); padding-bottom:8px;">3. Extras & Utilities</h3>
-        <div style="display:flex; flex-direction:column; gap:16px;">
-          <label style="display:flex; align-items:center; gap:12px; font-size:0.95rem; color:var(--text-light); cursor:pointer;">
-            <input type="checkbox" id="opt-solar" style="width:18px; height:18px; accent-color:var(--gold);" /> 
-            <span>Solar Power Setup <span style="color:var(--text-muted); font-size:0.8rem;">(+₦4,500,000)</span></span>
-          </label>
-          <label style="display:flex; align-items:center; gap:12px; font-size:0.95rem; color:var(--text-light); cursor:pointer;">
-            <input type="checkbox" id="opt-pool" style="width:18px; height:18px; accent-color:var(--gold);" /> 
-            <span>Swimming Pool <span style="color:var(--text-muted); font-size:0.8rem;">(+₦8,000,000)</span></span>
-          </label>
-          <label style="display:flex; align-items:center; gap:12px; font-size:0.95rem; color:var(--text-light); cursor:pointer;">
-            <input type="checkbox" id="opt-landscape" style="width:18px; height:18px; accent-color:var(--gold);" /> 
-            <span>Landscaping & Fencing <span style="color:var(--text-muted); font-size:0.8rem;">(+₦1,200,000)</span></span>
-          </label>
-        </div>
-      </div>
-
-      <!-- RIGHT COLUMN: DETAILED BOQ -->
-      <div style="position: sticky; top: 100px;">
-        <div style="background:var(--bg-surface); border:1px solid var(--line); border-radius:var(--r-md); padding:40px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
-          <div style="display:flex; justify-content:space-between; align-items:flex-end; border-bottom:1px solid var(--line-light); padding-bottom:16px; margin-bottom:24px;">
-            <h3 style="font-family:var(--display); font-size:1.6rem; color:var(--gold); margin:0;">Bill of Quantities</h3>
-            <span id="total-area-label" style="font-family:var(--mono); font-size:12px; color:var(--text-muted);">150 SQM</span>
-          </div>
-          
-          <div id="results-list" style="display:flex; flex-direction:column; gap:12px; font-size:0.95rem;">
-            <!-- Populated by JS -->
-          </div>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- PORTFOLIO -->
-    <h2 style="font-size:2.5rem; margin-bottom:32px; text-align:center;">Our Recent Projects</h2>
-    {portfolio.length === 0 ? (
-      <div style="text-align:center; padding:60px; background:var(--bg-card); border:1px dashed var(--line); border-radius:var(--r-md);">
-        <p style="color:var(--text-muted);">No portfolio projects yet. Check back soon.</p>
-      </div>
-    ) : (
-      <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(350px, 1fr)); gap:40px;">
-        {portfolio.map(p => (
-          <div style="border:1px solid var(--line-light); border-radius:var(--r-md); overflow:hidden; background:var(--bg-card);">
-            <div style={`height:280px; background:url('${p.image_url}') center/cover;`}></div>
-            <div style="padding:32px;">
-              <div style="font-size:10px; color:var(--gold); text-transform:uppercase; letter-spacing:1px; margin-bottom:10px;">{p.category}</div>
-              <h3 style="font-size:1.4rem; margin-bottom:12px;">{p.title}</h3>
-              <p style="color:var(--text-muted); font-size:0.9rem; line-height:1.7; margin-bottom:16px;">{p.description}</p>
-              {p.budget && (
-                <div style="font-family:var(--mono); font-size:11px; color:var(--gold); border-top:1px solid var(--line-light); padding-top:12px;">BUDGET: {p.budget}</div>
-              )}
+          <div class="bp-inputs-grid">
+            <div class="bp-field">
+              <label>Floor Area <span class="val" id="sqmVal">120 m²</span></label>
+              <input type="range" id="sqmSlider" min="50" max="5000" step="10" value="120">
+              <input type="text" inputmode="numeric" class="bp-manual-input" id="sqmManual" value="120">
+            </div>
+            <div class="bp-field">
+              <label>Floors <span class="val" id="floorsVal">1</span></label>
+              <input type="range" id="floorsSlider" min="1" max="5" step="1" value="1">
+              <input type="text" inputmode="numeric" class="bp-manual-input" id="floorsManual" value="1">
+            </div>
+            <div class="bp-field">
+              <label>Build Quality</label>
+              <div class="bp-segmented" id="qualitySeg">
+                <button data-q="basic">Basic</button>
+                <button data-q="mid" class="active">Mid</button>
+                <button data-q="luxury">Luxury</button>
+              </div>
+            </div>
+            <div class="bp-field">
+              <label>Furnishing</label>
+              <div class="bp-toggle-row">
+                <label class="bp-switch">
+                  <input type="checkbox" id="furnishToggle" checked>
+                  <span class="bp-slider"></span>
+                </label>
+                <span style="font-family:var(--body); font-size:13px; font-weight:600;" id="furnishLabel">Included</span>
+              </div>
             </div>
           </div>
-        ))}
+        </section>
+
+        <!-- PHASE 1 -->
+        <section class="bp-sheet">
+          <div class="bp-sheet-head">
+            <div>
+              <div class="bp-eyebrow">Phase 01 — Setup</div>
+              <div class="bp-title">Bill of Quantities</div>
+              <div class="bp-sub">Suggested unit prices pull from local market data. Override any price to fit your actual quotes — overrides persist automatically.</div>
+            </div>
+            <div class="bp-num">SHEET 01 / 03</div>
+          </div>
+          <div class="bp-table-scroll">
+            <table class="bp-table">
+              <thead>
+                <tr>
+                  <th>Material</th><th class="num">Quantity</th><th class="num">Suggested</th><th class="num">Custom Price</th><th class="num">Subtotal</th>
+                </tr>
+              </thead>
+              <tbody id="boqBody"></tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="4">Materials Subtotal</td>
+                  <td class="num" id="materialsSubtotal">—</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </section>
+
+        <!-- PHASE 2 -->
+        <section class="bp-sheet">
+          <div class="bp-sheet-head">
+            <div>
+              <div class="bp-eyebrow">Phase 02 — Handover</div>
+              <div class="bp-title">Finishing & Furnishing</div>
+              <div class="bp-sub">Cleaning, furniture, labor and professional fees applied on top of the materials subtotal.</div>
+            </div>
+            <div class="bp-num">SHEET 02 / 03</div>
+          </div>
+          <div class="bp-line-list" id="phase2List"></div>
+          <div class="bp-subtotal-bar">
+            <span class="label">Phase 02 Subtotal</span>
+            <span class="amount" id="phase2Subtotal">—</span>
+          </div>
+        </section>
+
+        <!-- PHASE 3 -->
+        <section class="bp-sheet">
+          <div class="bp-sheet-head">
+            <div>
+              <div class="bp-eyebrow">Phase 03 — Recurring</div>
+              <div class="bp-title">Monthly Utility Burn</div>
+              <div class="bp-sub">Ongoing running costs once the building is occupied — not included in the one-time construction total.</div>
+            </div>
+            <div class="bp-num">SHEET 03 / 03</div>
+          </div>
+          <div class="bp-line-list" id="phase3List"></div>
+          <div class="bp-subtotal-bar">
+            <span class="label">Total Monthly Running Cost</span>
+            <span class="amount" id="monthlyTotal">—</span>
+          </div>
+        </section>
+
+        <!-- SUMMARY -->
+        <section class="bp-sheet">
+          <div class="bp-sheet-head">
+            <div>
+              <div class="bp-eyebrow">Grand Summary</div>
+              <div class="bp-title">Total project cost</div>
+            </div>
+          </div>
+          <div class="bp-summary-grid">
+            <div class="bp-grand-card">
+              <div class="g-label">Total Construction + Furnishing Cost</div>
+              <div class="g-amount" id="grandTotal">—</div>
+              <div class="g-sub">Materials + Labor + Professional Fees + Finishing</div>
+              <div class="bp-legend" id="legend"></div>
+            </div>
+            <div class="bp-chart-card">
+              <canvas id="breakdownChart" height="260"></canvas>
+              <button class="bp-btn-reset" id="resetBtn">Reset all overrides for this country</button>
+              <button class="bp-btn-pdf" id="pdfBtn">📄 Download PDF Summary</button>
+            </div>
+          </div>
+        </section>
+
+        <div style="margin-top:40px; text-align:center; font-family:var(--mono); font-size:11px; color:var(--ink-faint); line-height:1.7;">
+          All prices are editable local-market placeholders, not live quotes — verify with local suppliers before budgeting.<br>
+          Your custom prices are saved to this browser automatically and reload with the page.
+        </div>
       </div>
-    )}
+    </div>
   </div>
 
   <script is:inline>
-    document.addEventListener('astro:page-load', () => {
-      const inputs = document.querySelectorAll('input, select');
-      const resultsList = document.getElementById('results-list');
-      const totalAreaLabel = document.getElementById('total-area-label');
+    // Injecting the required data structure for Nigeria
+    const countryData = {
+      NG: {
+        currencySymbol: '₦',
+        construction: {
+          cementPerBag: 12500, rebarPerTon: 1250000, sandPerTon: 45000, gravelPerTon: 55000,
+          blocksPerPiece: 650, roofingSheet: 8500, timberPerPlank: 4500, tilesPerSqm: 6500,
+          paintPerBucket: 45000, doorUnit: 85000, windowUnit: 65000, electricalWirePerMeter: 850,
+          plumbingLumpPerSqm: 12000, cleaningPerSqm: 1500, laborMultiplier: 0.40, archFeeMultiplier: 0.10
+        },
+        furnishing: {
+          livingRoomSet: 850000, bedroomSet: 650000, kitchenAppliances: 950000, curtainsPerSqm: 8500
+        },
+        utilities: {
+          electricityPerKwh: 225, waterTariffPerM3: 350, gasCylinder: 15500, wasteDisposal: 5000
+        }
+      }
+    };
 
-      function calculateCosts() {
-        // Get values
-        const sqm = Number(document.getElementById('calc-sqm').value) || 0;
-        const floors = Number(document.getElementById('calc-floors').value) || 1;
-        const quality = document.getElementById('calc-quality').value;
-        const roofType = document.getElementById('opt-roof').value;
-        const windowType = document.getElementById('opt-windows').value;
-        const doorType = document.getElementById('opt-doors').value;
-        const floorType = document.getElementById('opt-floor').value;
+    const countryList = [{ code: 'NG', name: 'Nigeria', region: 'Africa', currencySymbol: '₦' }];
 
-        const solar = document.getElementById('opt-solar').checked;
-        const pool = document.getElementById('opt-pool').checked;
-        const landscape = document.getElementById('opt-landscape').checked;
+    const MATERIALS = [
+      { key:'cementPerBag', label:'Cement', unit:'bags', qtyPerSqm:0.45, round:'up' },
+      { key:'rebarPerTon', label:'Rebar', unit:'tons', qtyPerSqm:0.018,round:'dec' },
+      { key:'sandPerTon', label:'Sand', unit:'tons', qtyPerSqm:0.040,round:'dec' },
+      { key:'gravelPerTon', label:'Gravel', unit:'tons', qtyPerSqm:0.035,round:'dec' },
+      { key:'blocksPerPiece', label:'Blocks', unit:'pcs', qtyPerSqm:9.5, round:'up' },
+      { key:'roofingSheet', label:'Roofing Sheets', unit:'sheets', qtyPerSqm:0.18, round:'up' },
+      { key:'timberPerPlank', label:'Timber', unit:'planks', qtyPerSqm:0.25, round:'up' },
+      { key:'tilesPerSqm', label:'Tiles', unit:'sqm', qtyPerSqm:1.08, round:'dec' },
+      { key:'paintPerBucket', label:'Paint', unit:'buckets',qtyPerSqm:0.045,round:'up' },
+      { key:'doorUnit', label:'Doors', unit:'units', qtyPerSqm:0.018,round:'up' },
+      { key:'windowUnit', label:'Windows', unit:'units', qtyPerSqm:0.035,round:'up' },
+      { key:'electricalWirePerMeter', label:'Electrical Wiring', unit:'m', qtyPerSqm:2.8, round:'dec' },
+      { key:'plumbingLumpPerSqm', label:'Plumbing', unit:'sqm', qtyPerSqm:1, round:'dec' },
+    ];
 
-        const totalSQM = sqm * floors;
-        totalAreaLabel.textContent = `${totalSQM.toLocaleString()} SQM Total`;
+    const QUALITY_QTY_MULT  = { basic:0.85, mid:1.0, luxury:1.15 };
+    const QUALITY_PRICE_MULT= { basic:1.0, mid:1.0, luxury:1.30 };
+    const QUALITY_WATTS_SQM = { basic:35, mid:50, luxury:70 };
 
-        // Rates
-        const qualityRates = { basic: 65000, mid: 95000, luxury: 140000 };
-        const baseRate = qualityRates[quality];
+    const STORE_KEY = 'absl_construction_estimator_v1';
+    let store = loadStore();
+    let lastSummary = {};
+    let state = { country: 'NG', sqm: 120, floors: 1, quality: 'mid', furnish: true };
 
-        // Core Breakdown
-        const prelims = (totalSQM * baseRate) * 0.05;
-        const foundation = (totalSQM * baseRate) * 0.15;
-        const structure = (totalSQM * baseRate) * 0.25;
+    function loadStore() {
+      try { const raw = localStorage.getItem(STORE_KEY); if(raw) return JSON.parse(raw); } catch(e) {}
+      return { settings:{}, overrides:{} };
+    }
+    function saveStore() { localStorage.setItem(STORE_KEY, JSON.stringify(store)); }
+    function getOverride(category, key) {
+      const c = store.overrides[state.country];
+      if(!c) return undefined;
+      const v = c[category + '.' + key];
+      return (v === undefined || v === null || v === '') ? undefined : v;
+    }
+    function setOverride(category, key, value) {
+      if(!store.overrides[state.country]) store.overrides[state.country] = {};
+      const k = category + '.' + key;
+      if(value === '' || value === null || value === undefined || isNaN(value)) delete store.overrides[state.country][k];
+      else store.overrides[state.country][k] = Number(value);
+      saveStore();
+    }
+
+    function cd() { return countryData[state.country]; }
+    function sym() { return cd().currencySymbol; }
+    function fmtMoney(v) { return sym() + Math.round(v).toLocaleString(undefined,{maximumFractionDigits:0}); }
+    function fmtQty(v, round) { return round === 'up' ? Math.max(1, Math.ceil(v)).toLocaleString() : v.toFixed(2); }
+    function floorMultiplier() { return 1 + (state.floors - 1) * 0.07; }
+    function totalSqm() { return state.sqm; }
+
+    function syncManual(id, value) {
+      const el = document.getElementById(id);
+      if(el && document.activeElement !== el) el.value = value;
+    }
+    function bindManual(manualId, sliderId, setter) {
+      const manual = document.getElementById(manualId);
+      const slider = document.getElementById(sliderId);
+      if(!manual || !slider) return;
+      manual.addEventListener('input', () => {
+        let raw = manual.value.replace(/,/g, '').replace(/[^0-9.]/g, '');
+        if(raw === '' || raw === '-' || raw === '.') return;
+        const num = Number(raw);
+        if(isNaN(num)) return;
+        slider.value = Math.min(Number(slider.max), Math.max(Number(slider.min), num));
+        setter(num);
+      });
+      manual.addEventListener('change', () => {
+        let num = Number(manual.value.replace(/,/g, '').replace(/[^0-9.]/g, ''));
+        if(isNaN(num)) num = Number(slider.value);
+        num = Math.min(Number(slider.max), Math.max(Number(slider.min), num));
+        manual.value = num.toLocaleString();
+        setter(num);
+      });
+    }
+
+    let materialSubtotals = {};
+    function renderBOQ() {
+      const tbody = document.getElementById('boqBody');
+      tbody.innerHTML = '';
+      const c = cd().construction;
+      const fMult = floorMultiplier();
+      const qQty = QUALITY_QTY_MULT[state.quality];
+      const qPrice = QUALITY_PRICE_MULT[state.quality];
+      let subtotal = 0;
+      
+      MATERIALS.forEach(m => {
+        const qty = m.qtyPerSqm * totalSqm() * fMult * qQty;
+        const displayQty = m.round === 'up' ? Math.max(1, Math.ceil(qty)) : qty;
+        const basePrice = c[m.key] * qPrice;
+        const override = getOverride('construction', m.key);
+        const price = override !== undefined ? override : basePrice;
+        const rowSubtotal = displayQty * price;
+        subtotal += rowSubtotal;
         
-        // Finishes Breakdown
-        const roofing = totalSQM * Number(roofType);
-        const flooring = totalSQM * Number(floorType);
-        const windows = totalSQM * Number(windowType);
-        const doors = totalSQM * Number(doorType);
-        
-        // Extras
-        let extrasCost = 0;
-        const extrasList = [];
-        if (solar) { extrasCost += 4500000; extrasList.push('Solar'); }
-        if (pool) { extrasCost += 8000000; extrasList.push('Pool'); }
-        if (landscape) { extrasCost += 1200000; extrasList.push('Landscaping'); }
-
-        // Totals
-        const subtotal = prelims + foundation + structure + roofing + flooring + windows + doors + extrasCost;
-        const profFees = subtotal * 0.05;
-        const contingency = subtotal * 0.10;
-        const grandTotal = subtotal + profFees + contingency;
-
-        const fmt = (num) => '₦' + Math.round(num).toLocaleString();
-
-        // Render HTML
-        resultsList.innerHTML = `
-          <div style="font-family:var(--mono); font-size:11px; color:var(--gold); text-transform:uppercase; margin-bottom:4px; margin-top:8px;">Core Structure & Labor</div>
-          <div style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px dashed var(--line-light);">
-            <span style="color:var(--text-muted);">Preliminaries & Permits</span>
-            <span style="color:var(--text-light); font-family:var(--mono);">${fmt(prelims)}</span>
-          </div>
-          <div style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px dashed var(--line-light);">
-            <span style="color:var(--text-muted);">Foundation & Excavation</span>
-            <span style="color:var(--text-light); font-family:var(--mono);">${fmt(foundation)}</span>
-          </div>
-          <div style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px dashed var(--line-light);">
-            <span style="color:var(--text-muted);">Blockwork & Concrete</span>
-            <span style="color:var(--text-light); font-family:var(--mono);">${fmt(structure)}</span>
-          </div>
-
-          <div style="font-family:var(--mono); font-size:11px; color:var(--gold); text-transform:uppercase; margin-bottom:4px; margin-top:16px;">Finishes & Materials</div>
-          <div style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px dashed var(--line-light);">
-            <span style="color:var(--text-muted);">Roofing</span>
-            <span style="color:var(--text-light); font-family:var(--mono);">${fmt(roofing)}</span>
-          </div>
-          <div style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px dashed var(--line-light);">
-            <span style="color:var(--text-muted);">Flooring</span>
-            <span style="color:var(--text-light); font-family:var(--mono);">${fmt(flooring)}</span>
-          </div>
-          <div style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px dashed var(--line-light);">
-            <span style="color:var(--text-muted);">Windows</span>
-            <span style="color:var(--text-light); font-family:var(--mono);">${fmt(windows)}</span>
-          </div>
-          <div style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px dashed var(--line-light);">
-            <span style="color:var(--text-muted);">Doors</span>
-            <span style="color:var(--text-light); font-family:var(--mono);">${fmt(doors)}</span>
-          </div>
-
-          ${extrasCost > 0 ? `
-          <div style="font-family:var(--mono); font-size:11px; color:var(--gold); text-transform:uppercase; margin-bottom:4px; margin-top:16px;">Extras</div>
-          <div style="display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px dashed var(--line-light);">
-            <span style="color:var(--text-muted);">${extrasList.join(', ')}</span>
-            <span style="color:var(--text-light); font-family:var(--mono);">${fmt(extrasCost)}</span>
-          </div>
-          ` : ''}
-
-          <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px dashed var(--line-light); margin-top:16px;">
-            <span style="color:var(--text-muted);">Professional Fees (5%)</span>
-            <span style="color:var(--text-light); font-family:var(--mono);">${fmt(profFees)}</span>
-          </div>
-          <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px dashed var(--line-light);">
-            <span style="color:var(--text-muted);">Contingency Fund (10%)</span>
-            <span style="color:var(--text-light); font-family:var(--mono);">${fmt(contingency)}</span>
-          </div>
-
-          <div style="display:flex; justify-content:space-between; margin-top:24px; padding-top:16px; border-top:2px solid var(--gold);">
-            <span style="color:var(--gold); font-weight:700; font-size:1.2rem;">Grand Total</span>
-            <span style="color:var(--gold); font-weight:700; font-size:1.5rem; font-family:var(--mono);">${fmt(grandTotal)}</span>
-          </div>
-          
-          <div style="margin-top:24px;">
-             <a href="/contact" class="btn btn-primary" style="width:100%; text-align:center; padding:12px;">Request Formal Quote</a>
-             <p style="text-align:center; font-size:0.75rem; color:var(--text-muted); margin-top:8px; font-family:var(--mono);">*Estimate only. Final costs depend on site survey.</p>
-          </div>
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="mat-name">${m.label}<span class="unit-tag">${m.unit}</span></td>
+          <td class="num">${fmtQty(qty, m.round)}</td>
+          <td class="num">${fmtMoney(basePrice)}</td>
+          <td class="num"><input type="number" class="bp-price-input ${override!==undefined?'overridden':''}" data-cat="construction" data-key="${m.key}" placeholder="${basePrice.toFixed(2)}" value="${override!==undefined?override:''}"></td>
+          <td class="num">${fmtMoney(rowSubtotal)}</td>
         `;
+        tbody.appendChild(tr);
+      });
+      document.getElementById('materialsSubtotal').textContent = fmtMoney(subtotal);
+      return subtotal;
+    }
+
+    function renderPhase2(materialsSubtotal) {
+      const list = document.getElementById('phase2List');
+      list.innerHTML = '';
+      const c = cd();
+      let subtotal = 0;
+
+      function addRow(name, note, qtyLabel, unitPrice, cat, key, lineTotal) {
+        subtotal += lineTotal;
+        const row = document.createElement('div');
+        row.className = 'bp-line-row';
+        row.innerHTML = `
+          <div><div class="bp-line-name">${name}</div><span class="bp-line-note">${note}</span></div>
+          <div class="bp-line-meta">${qtyLabel}</div>
+          <div class="bp-line-meta col-price"><input type="number" class="bp-price-input" data-cat="${cat}" data-key="${key}" placeholder="${unitPrice.toFixed(2)}" value="${getOverride(cat,key)!==undefined?getOverride(cat,key):''}"></div>
+          <div class="bp-line-total">${fmtMoney(lineTotal)}</div>
+        `;
+        list.appendChild(row);
       }
 
-      // Attach live listeners
-      inputs.forEach(el => {
-        el.addEventListener('input', calculateCosts);
-        el.addEventListener('change', calculateCosts);
-      });
+      const cleanBase = c.construction.cleaningPerSqm;
+      const cleanOv = getOverride('construction','cleaningPerSqm');
+      const cleanPrice = cleanOv !== undefined ? cleanOv : cleanBase;
+      addRow('Post-Construction Cleaning', `${totalSqm()} m² × unit rate`, `${totalSqm()} m²`, cleanBase, 'construction', 'cleaningPerSqm', cleanPrice*totalSqm());
 
-      // Initial calculation
-      calculateCosts();
+      let furnishTotal = 0;
+      if(state.furnish) {
+        const f = c.furnishing;
+        const bedrooms = Math.max(1, Math.round(totalSqm()/70));
+
+        const lrBase = f.livingRoomSet, lrOv = getOverride('furnishing','livingRoomSet');
+        const lrPrice = lrOv!==undefined?lrOv:lrBase;
+        addRow('Living Room Set', '1 set', '1 ×', lrBase, 'furnishing','livingRoomSet', lrPrice);
+        furnishTotal += lrPrice;
+
+        const brBase = f.bedroomSet, brOv = getOverride('furnishing','bedroomSet');
+        const brPrice = brOv!==undefined?brOv:brBase;
+        addRow('Bedroom Sets', `${bedrooms} bedroom(s), ⌈${totalSqm()}/70⌉`, `${bedrooms} ×`, brBase, 'furnishing','bedroomSet', brPrice*bedrooms);
+        furnishTotal += brPrice*bedrooms;
+
+        const kBase = f.kitchenAppliances, kOv = getOverride('furnishing','kitchenAppliances');
+        const kPrice = kOv!==undefined?kOv:kBase;
+        addRow('Kitchen Appliances', '1 set', '1 ×', kBase, 'furnishing','kitchenAppliances', kPrice);
+        furnishTotal += kPrice;
+
+        const curBase = f.curtainsPerSqm, curOv = getOverride('furnishing','curtainsPerSqm');
+        const curPrice = curOv!==undefined?curOv:curBase;
+        addRow('Curtains', `${totalSqm()} m² × unit rate`, `${totalSqm()} m²`, curBase, 'furnishing','curtainsPerSqm', curPrice*totalSqm());
+        furnishTotal += curPrice*totalSqm();
+      }
+
+      const laborRateBase = c.construction.laborMultiplier;
+      const laborOv = getOverride('construction','laborMultiplier');
+      const laborRate = laborOv !== undefined ? laborOv : laborRateBase;
+      const laborCost = materialsSubtotal * laborRate;
+      addRow('Labor', `${Math.round(laborRate*100)}% of materials`, `${(laborRate*100).toFixed(0)}%`, laborRateBase, 'construction','laborMultiplier', laborCost);
+
+      const archRateBase = c.construction.archFeeMultiplier;
+      const archOv = getOverride('construction','archFeeMultiplier');
+      const archRate = archOv !== undefined ? archOv : archRateBase;
+      const archCost = materialsSubtotal * archRate;
+      addRow('Architect / Engineer Fee', `${Math.round(archRate*100)}% of materials`, `${(archRate*100).toFixed(0)}%`, archRateBase, 'construction','archFeeMultiplier', archCost);
+
+      document.getElementById('phase2Subtotal').textContent = fmtMoney(subtotal);
+      return { phase2Subtotal: subtotal, laborCost, archCost, furnishTotal, cleaningCost: cleanPrice*totalSqm() };
+    }
+
+    function renderPhase3() {
+      const list = document.getElementById('phase3List');
+      list.innerHTML = '';
+      const u = cd().utilities;
+      let total = 0;
+
+      function addRow(name, note, qtyLabel, unitPrice, cat, key, lineTotal) {
+        total += lineTotal;
+        const row = document.createElement('div');
+        row.className = 'bp-line-row';
+        row.innerHTML = `
+          <div><div class="bp-line-name">${name}</div><span class="bp-line-note">${note}</span></div>
+          <div class="bp-line-meta">${qtyLabel}</div>
+          <div class="bp-line-meta col-price"><input type="number" class="bp-price-input" data-cat="${cat}" data-key="${key}" placeholder="${unitPrice.toFixed(2)}" value="${getOverride(cat,key)!==undefined?getOverride(cat,key):''}"></div>
+          <div class="bp-line-total">${fmtMoney(lineTotal)}</div>
+        `;
+        list.appendChild(row);
+      }
+
+      const watts = QUALITY_WATTS_SQM[state.quality];
+      const monthlyKwh = (totalSqm() * watts * 6 * 30) / 1000;
+      const elBase = u.electricityPerKwh, elOv = getOverride('utilities','electricityPerKwh');
+      const elPrice = elOv!==undefined?elOv:elBase;
+      addRow('Electricity', `${watts}W/m² load × 6h/day → ${monthlyKwh.toFixed(0)} kWh/mo`, `${monthlyKwh.toFixed(0)} kWh`, elBase, 'utilities','electricityPerKwh', monthlyKwh*elPrice);
+
+      const people = Math.max(1, Math.ceil(totalSqm()/30));
+      const m3 = people * 4;
+      const waBase = u.waterTariffPerM3, waOv = getOverride('utilities','waterTariffPerM3');
+      const waPrice = waOv!==undefined?waOv:waBase;
+      addRow('Water', `${people} occupant(s) × 4 m³/mo`, `${m3} m³`, waBase, 'utilities','waterTariffPerM3', m3*waPrice);
+
+      const gasBase = u.gasCylinder, gasOv = getOverride('utilities','gasCylinder');
+      const gasPrice = gasOv!==undefined?gasOv:gasBase;
+      addRow('Gas', '2 cylinders/mo', '2 ×', gasBase, 'utilities','gasCylinder', 2*gasPrice);
+
+      const wBase = u.wasteDisposal, wOv = getOverride('utilities','wasteDisposal');
+      const wPrice = wOv!==undefined?wOv:wBase;
+      addRow('Waste Disposal', 'flat monthly fee', '1 ×', wBase, 'utilities','wasteDisposal', wPrice);
+
+      document.getElementById('monthlyTotal').textContent = fmtMoney(total);
+      return total;
+    }
+
+    let chart;
+    function renderSummary(materialsSubtotal, p2) {
+      const grand = materialsSubtotal + p2.phase2Subtotal;
+      document.getElementById('grandTotal').textContent = fmtMoney(grand);
+
+      const slices = [
+        { label:'Materials',  value: materialsSubtotal, color:'#f5a623' },
+        { label:'Labor',       value: p2.laborCost,       color:'#3ddc97' },
+        { label:'Prof. Fees',  value: p2.archCost,        color:'#5b8def' },
+        { label:'Finishing',   value: p2.cleaningCost + p2.furnishTotal, color:'#ef6a5f' },
+      ];
+
+      document.getElementById('legend').innerHTML = slices.map(s => `
+        <div class="bp-legend-item">
+          <span class="bp-legend-dot" style="background:${s.color}"></span>${s.label} <b>${fmtMoney(s.value)}</b>
+        </div>
+      `).join('');
+
+      const ctx = document.getElementById('breakdownChart');
+      const data = { labels: slices.map(s=>s.label), datasets: [{ data: slices.map(s=>s.value), backgroundColor: slices.map(s=>s.color), borderColor:'#0e1d34', borderWidth:2 }] };
+      
+      if(window.Chart) {
+        if(chart){ chart.data = data; chart.update(); }
+        else {
+          chart = new Chart(ctx, {
+            type:'doughnut', data,
+            options:{ plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label:(c)=> `${c.label}: ${fmtMoney(c.raw)}` } } }, cutout:'62%' }
+          });
+        }
+      }
+    }
+
+    function renderAll() {
+      document.getElementById('sqmVal').textContent = `${state.sqm} m²`;
+      document.getElementById('floorsVal').textContent = state.floors;
+      syncManual('sqmManual', state.sqm);
+      syncManual('floorsManual', state.floors);
+      document.getElementById('furnishLabel').textContent = state.furnish ? 'Included' : 'Excluded';
+
+      const materialsSubtotal = renderBOQ();
+      const p2 = renderPhase2(materialsSubtotal);
+      const monthlyTotal = renderPhase3();
+      renderSummary(materialsSubtotal, p2);
+
+      lastSummary = { materialsSubtotal, phase2Subtotal: p2.phase2Subtotal, grandTotal: materialsSubtotal + p2.phase2Subtotal, monthlyTotal };
+      store.settings = { country: state.country, sqm: state.sqm, floors: state.floors, quality: state.quality, furnish: state.furnish };
+      saveStore();
+    }
+
+    // Events
+    document.getElementById('sqmSlider').addEventListener('input', e => { state.sqm = Number(e.target.value); renderAll(); });
+    document.getElementById('floorsSlider').addEventListener('input', e => { state.floors = Number(e.target.value); renderAll(); });
+    document.getElementById('qualitySeg').addEventListener('click', e => {
+      const btn = e.target.closest('button'); if(!btn) return;
+      state.quality = btn.dataset.q;
+      document.querySelectorAll('#qualitySeg button').forEach(b=>b.classList.toggle('active', b===btn));
+      renderAll();
     });
+    document.getElementById('furnishToggle').addEventListener('change', e => { state.furnish = e.target.checked; renderAll(); });
+    document.getElementById('resetBtn').addEventListener('click', () => { delete store.overrides[state.country]; saveStore(); renderAll(); });
+    bindManual('sqmManual', 'sqmSlider', v => { state.sqm = v; renderAll(); });
+    bindManual('floorsManual', 'floorsSlider', v => { state.floors = Math.round(v); renderAll(); });
+
+    // Delegated listener for custom-price inputs
+    document.body.addEventListener('input', e => {
+      if(!e.target.classList.contains('bp-price-input')) return;
+      const cat = e.target.dataset.cat, key = e.target.dataset.key;
+      const rawTyped = e.target.value;
+      const selStart = e.target.selectionStart, selEnd = e.target.selectionEnd;
+      setOverride(cat, key, rawTyped === '' ? '' : Number(rawTyped));
+      renderAll();
+      const again = document.querySelector(`.bp-price-input[data-cat="${cat}"][data-key="${key}"]`);
+      if(again){
+        again.value = rawTyped; again.focus();
+        try{ again.setSelectionRange(selStart, selEnd); }catch(_){}
+      }
+    });
+
+    // PDF Export
+    document.getElementById('pdfBtn').addEventListener('click', () => {
+      const btn = document.getElementById('pdfBtn'); btn.disabled = true; btn.textContent = 'Generating…';
+      try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        const pageWidth = doc.internal.pageSize.getWidth();
+        let y = 20;
+
+        function fmtPDF(v) { return 'NGN ' + Math.round(v || 0).toLocaleString(); }
+        
+        // Header
+        doc.setFillColor(10, 22, 40); doc.rect(0, 0, pageWidth, 45, 'F');
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(22); doc.setTextColor(245, 166, 35);
+        doc.text('', 14, 30);
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(255, 255, 255);
+        doc.text('Construction Estimate', 14, 40);
+        doc.setFontSize(9); doc.setTextColor(140, 150, 180);
+        doc.text(`Generated: ${new Date().toLocaleDateString()} | Nigeria (NG)`, 14, 52);
+        y = 62;
+
+        // Recalculate totals for PDF
+        const c = countryData['NG'];
+        let matSub = 0;
+        MATERIALS.forEach(m => {
+          const basePrice = c.construction[m.key] * QUALITY_PRICE_MULT[state.quality];
+          const override = getOverride('construction', m.key);
+          const price = override !== undefined ? override : basePrice;
+          const qty = m.qtyPerSqm * state.sqm * floorMultiplier() * QUALITY_QTY_MULT[state.quality];
+          const dispQty = m.round === 'up' ? Math.max(1, Math.ceil(qty)) : qty;
+          matSub += dispQty * price;
+        });
+
+        const p2 = lastSummary.phase2Subtotal || 0;
+        const grand = matSub + p2;
+
+        doc.setDrawColor(245, 166, 35); doc.setLineWidth(0.5); doc.line(14, y, pageWidth - 14, y); y += 6;
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.setTextColor(0, 0, 0); doc.text('Project Parameters', 14, y); y += 7;
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(60, 60, 60);
+        doc.text(`Floor Area: ${state.sqm} m²`, 14, y); y += 6;
+        doc.text(`Floors: ${state.floors}`, 14, y); y += 6;
+        doc.text(`Build Quality: ${state.quality}`, 14, y); y += 6;
+        doc.text(`Furnishing: ${state.furnish ? 'Included' : 'Excluded'}`, 14, y); y += 10;
+
+        doc.setDrawColor(245, 166, 35); doc.line(14, y, pageWidth - 14, y); y += 6;
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.setTextColor(0, 0, 0); doc.text('Cost Breakdown', 14, y); y += 7;
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(60, 60, 60);
+        doc.text(`Materials Subtotal: ${fmtPDF(matSub)}`, 14, y); y += 6;
+        doc.text(`Finishing & Handover: ${fmtPDF(p2)}`, 14, y); y += 8;
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.setTextColor(245, 166, 35);
+        doc.text(`Total Project Cost: ${fmtPDF(grand)}`, 14, y); y += 10;
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(60, 60, 60);
+        doc.text(`Monthly Running Cost: ${fmtPDF(lastSummary.monthlyTotal)}`, 14, y); y += 12;
+
+        doc.setFontSize(8); doc.setTextColor(140, 140, 140);
+        doc.text('All figures are local-market placeholders. Verify before budgeting.', 14, 280);
+        doc.save(`ABSL-Construction-${Date.now()}.pdf`);
+      } catch (err) {
+        alert('PDF generation failed: ' + err.message);
+      } finally {
+        btn.disabled = false; btn.textContent = '📄 Download PDF Summary';
+      }
+    });
+
+    // Initialize
+    document.getElementById('sqmSlider').value = state.sqm;
+    document.getElementById('floorsSlider').value = state.floors;
+    document.getElementById('furnishToggle').checked = state.furnish;
+    renderAll();
   </script>
 </Layout>

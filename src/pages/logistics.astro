@@ -9,33 +9,133 @@ const { data: packages } = await supabase
   .eq('status', 'active');
 ---
 
-<Layout title="Global Logistics - ABSL">
-  <div style="background: var(--bg-surface); padding: 80px 0; border-bottom: 1px solid var(--line-light);">
-    <div class="container">
-      <h1 style="font-size:3rem; margin-bottom:16px;">Global Logistics</h1>
-      <p style="color:var(--text-muted); font-size:1.1rem; max-width:600px;">End-to-end freight forwarding, customs clearance, and secure delivery with real-time tracking and global coverage.</p>
-    </div>
-  </div>
+<Layout title="Global Logistics & Supply Chain - ABSL">
+  <!-- HERO SECTION (FedEx-inspired Tracking + UPS messaging) -->
+  <section style="position:relative; padding: 100px 0 80px; background: linear-gradient(rgba(10, 17, 40, 0.85), rgba(10, 17, 40, 0.95)), url('https://images.unsplash.com/photo-1578575437130-527eed3abbec?q=80&w=2070&auto=format&fit=crop'); background-size: cover; background-position: center; border-bottom: 1px solid var(--line);">
+    <div class="container" style="position:relative; z-index:2;">
+      <div style="max-width: 800px; margin-bottom: 48px;">
+        <div style="display:flex; align-items:center; gap:16px; margin-bottom: 24px;">
+          <div style="width: 60px; height: 1px; background: var(--gold);"></div>
+          <span style="font-size: 0.85rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--gold);">Global Freight & Supply Chain</span>
+        </div>
+        <h1 style="font-size: 4rem; line-height: 1.1; margin-bottom: 24px;">
+          Moving Your World, <br> Without Limits.
+        </h1>
+        <p style="font-size: 1.15rem; color: var(--text-muted); max-width: 600px;">
+          From a single parcel to complex supply chain management, ABSL connects Nigeria to the global economy. We combine international reach with deep local expertise to deliver your cargo securely and on time.
+        </p>
+      </div>
 
-  <div class="container" style="padding: 80px 0;">
-    <h2 style="font-size:2rem; margin-bottom:32px; color:var(--white);">Freight & Logistics Solutions</h2>
-    {(!packages || packages.length === 0) ? (
-      <div style="text-align:center; padding:60px; background:var(--bg-card); border:1px dashed var(--line);">
-        <p style="color:var(--text-muted);">No logistics packages available at the moment.</p>
+      <!-- Tracking Bar (FedEx-inspired) -->
+      <div style="background: rgba(255,255,255,0.05); backdrop-filter: blur(12px); border: 1px solid var(--line); border-radius: var(--r-md); padding: 8px; display: flex; flex-wrap: wrap; gap: 8px; max-width: 900px;">
+        <div style="flex:1; min-width:200px; padding: 12px 16px;">
+          <div style="font-size:0.7rem; text-transform:uppercase; letter-spacing:1px; color:var(--gold); margin-bottom:4px;">Track Your Shipment</div>
+          <input type="text" placeholder="Enter tracking number (e.g. ABSL123456789)" style="width:100%; background:transparent; border:none; color:var(--white); font-family:var(--font-body); font-size:0.95rem; outline:none;">
+        </div>
+        <button class="btn btn-primary" style="display:flex; align-items:center; justify-content:center; padding: 0 32px; border-radius: var(--r-sm);">Track</button>
       </div>
-    ) : (
-      <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(350px, 1fr)); gap:32px;">
-        {packages.map(pkg => (
-          <div style="background:var(--bg-card); border:1px solid var(--line-light); border-radius:var(--r-md); padding:40px; display:flex; flex-direction:column;">
-            <h3 style="font-size:1.8rem; color:var(--white); margin-bottom:16px; line-height:1.2;">{pkg.title}</h3>
-            <p style="color:var(--text-muted); font-size:0.95rem; margin-bottom:32px; flex:1;">{pkg.description}</p>
-            <div style="display:flex; justify-content:space-between; align-items:center; padding-top:24px; border-top:1px solid var(--line-light);">
-              <div style="font-size:1.4rem; font-weight:700; color:var(--gold);">₦{Number(pkg.price).toLocaleString()}</div>
-              <a href={`/services/${pkg.id}`} class="btn btn-outline" style="padding:10px 24px;">View & Book</a>
-            </div>
+    </div>
+  </section>
+
+  <!-- TRUST STATS -->
+  <section style="background: var(--bg-surface); border-bottom: 1px solid var(--line-light); padding: 32px 0;">
+    <div class="container" style="display:flex; justify-content:space-around; flex-wrap:wrap; gap:24px; text-align:center;">
+      <div><div style="font-family:var(--font-display); font-size:2.2rem; color:var(--gold);">170+</div><div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted);">Countries Served</div></div>
+      <div><div style="font-family:var(--font-display); font-size:2.2rem; color:var(--gold);">140k</div><div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted);">SQM Warehouse Space</div></div>
+      <div><div style="font-family:var(--font-display); font-size:2.2rem; color:var(--gold);">24/7</div><div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted);">Cargo Security & Tracking</div></div>
+      <div><div style="font-family:var(--font-display); font-size:2.2rem; color:var(--gold);">100+</div><div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted);">Local Logistics Experts</div></div>
+    </div>
+  </section>
+
+  <!-- CORE SERVICES (UPS & CEVA Merge) -->
+  <section style="padding: 100px 0; background: var(--bg-main);">
+    <div class="container">
+      <div style="text-align:center; margin-bottom:64px;">
+        <h2 style="font-size: 2.5rem; margin-bottom: 16px;">End-to-End Logistics Solutions</h2>
+        <p style="color:var(--text-muted); max-width:600px; margin:0 auto;">Whether you need air freight, ocean shipping, or full warehousing and distribution, our integrated network keeps your business moving.</p>
+        <div style="width: 60px; height: 2px; background: var(--gold); margin: 24px auto 0;"></div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:32px;">
+        <!-- Air Freight -->
+        <div style="background:var(--bg-surface); padding:48px 32px; border:1px solid var(--line-light); border-radius:var(--r-md);">
+          <div style="font-size: 32px; margin-bottom: 24px;">✈️</div>
+          <h3 style="font-size: 1.5rem; margin-bottom: 16px;">Air Freight</h3>
+          <p style="color:var(--text-muted); font-size: 0.95rem; line-height:1.8; margin-bottom:24px;">Time-critical shipments moved via our global air network. We offer express, standard, and chartered air freight solutions.</p>
+        </div>
+        <!-- Ocean Freight -->
+        <div style="background:var(--bg-surface); padding:48px 32px; border:1px solid var(--line-light); border-radius:var(--r-md);">
+          <div style="font-size: 32px; margin-bottom: 24px;">🚢</div>
+          <h3 style="font-size: 1.5rem; margin-bottom: 16px;">Ocean Freight</h3>
+          <p style="color:var(--text-muted); font-size: 0.95rem; line-height:1.8; margin-bottom:24px;">Cost-effective FCL and LCL ocean shipping. We handle port-to-port and door-to-door delivery with full visibility.</p>
+        </div>
+        <!-- Ground & Road -->
+        <div style="background:var(--bg-surface); padding:48px 32px; border:1px solid var(--line-light); border-radius:var(--r-md);">
+          <div style="font-size: 32px; margin-bottom: 24px;">🚛</div>
+          <h3 style="font-size: 1.5rem; margin-bottom: 16px;">Ground & Road Freight</h3>
+          <p style="color:var(--text-muted); font-size: 0.95rem; line-height:1.8; margin-bottom:24px;">Reliable FTL and LTL trucking across Nigeria and West Africa. Our dedicated fleet ensures last-mile delivery.</p>
+        </div>
+        <!-- Warehousing -->
+        <div style="background:var(--bg-surface); padding:48px 32px; border:1px solid var(--line-light); border-radius:var(--r-md);">
+          <div style="font-size: 32px; margin-bottom: 24px;">🏢</div>
+          <h3 style="font-size: 1.5rem; margin-bottom: 16px;">Warehousing & Distribution</h3>
+          <p style="color:var(--text-muted); font-size: 0.95rem; line-height:1.8; margin-bottom:24px;">140,000 SQM of secure warehouse space. We offer fulfillment, inventory management, and cross-docking.</p>
+        </div>
+        <!-- Customs Brokerage -->
+        <div style="background:var(--bg-surface); padding:48px 32px; border:1px solid var(--line-light); border-radius:var(--r-md);">
+          <div style="font-size: 32px; margin-bottom: 24px;">📋</div>
+          <h3 style="font-size: 1.5rem; margin-bottom: 16px;">Customs Brokerage</h3>
+          <p style="color:var(--text-muted); font-size: 0.95rem; line-height:1.8; margin-bottom:24px;">Licensed in-house customs team ensuring fast clearance and compliance with local and international trade regulations.</p>
+        </div>
+        <!-- Supply Chain Tech -->
+        <div style="background:var(--bg-surface); padding:48px 32px; border:1px solid var(--line-light); border-radius:var(--r-md);">
+          <div style="font-size: 32px; margin-bottom: 24px;">📊</div>
+          <h3 style="font-size: 1.5rem; margin-bottom: 16px;">Supply Chain Visibility</h3>
+          <p style="color:var(--text-muted); font-size: 0.95rem; line-height:1.8; margin-bottom:24px;">Real-time tracking, API integrations, and a customer portal to monitor your shipments from origin to destination.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LOCAL EXPERTISE (CEVA-inspired) -->
+  <section style="padding: 100px 0; background: var(--bg-surface); border-top: 1px solid var(--line-light); border-bottom: 1px solid var(--line-light);">
+    <div class="container">
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:64px; align-items:center;">
+        <div>
+          <div style="font-size:0.8rem; text-transform:uppercase; letter-spacing:2px; color:var(--gold); margin-bottom:16px;">Deep Local Expertise</div>
+          <h2 style="font-size: 2.8rem; margin-bottom:24px;">Nigeria is Complex.<br>We Make It Simple.</h2>
+          <p style="color:var(--text-muted); font-size:1rem; line-height:1.9; margin-bottom:32px;">
+            Port congestion, customs delays, and fragmented infrastructure are constant challenges. We overcome them with dedicated inland container depots (ICDs), barge operations, and a team of 100+ local experts.
+          </p>
+          <ul style="list-style:none; color:var(--text-light); font-size:0.95rem; line-height:2.2;">
+            <li>✓ Dedicated Barge Operations (Port to ICD)</li>
+            <li>✓ 140,000 SQM Inland Container Depots (Ikorodu & Apapa)</li>
+            <li>✓ 24/7 Security & Full Container Handling (VGM)</li>
+            <li>✓ Seamless Door-to-Door Delivery Fleet</li>
+          </ul>
+        </div>
+        <div style="background: var(--bg-card); border: 1px solid var(--line); padding: 40px; border-radius: var(--r-md);">
+          <div style="font-family: var(--font-display); font-size: 1.3rem; margin-bottom: 24px; color: var(--gold);">ABSL Network Advantages</div>
+          <div style="display:flex; flex-direction:column; gap:16px;">
+            <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--line-light); padding-bottom:12px;"><span style="color:var(--text-muted);">Global Reach</span><span style="color:var(--white); font-weight:600;">170+ Countries</span></div>
+            <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--line-light); padding-bottom:12px;"><span style="color:var(--text-muted);">Warehouse Space</span><span style="color:var(--white); font-weight:600;">140,000 SQM</span></div>
+            <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--line-light); padding-bottom:12px;"><span style="color:var(--text-muted);">Local Team</span><span style="color:var(--white); font-weight:600;">100+ Experts</span></div>
+            <div style="margin-top:16px;"><a href="/contact" class="btn btn-primary" style="width:100%; text-align:center;">Speak to a Logistics Expert</a></div>
           </div>
-        ))}
+        </div>
       </div>
-    )}
-  </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section style="padding: 100px 0; background: var(--bg-main); text-align:center;">
+    <div class="container">
+      <h2 style="font-size: 2.8rem; margin-bottom: 20px;">Ready to Optimize Your Supply Chain?</h2>
+      <p style="color:var(--text-muted); font-size:1.1rem; max-width:600px; margin:0 auto 40px;">Get a tailored logistics quote or speak with our team about your freight, warehousing, or customs needs.</p>
+      <div style="display:flex; gap:16px; justify-content:center; flex-wrap:wrap;">
+        <a href="/contact" class="btn btn-primary" style="padding:16px 48px;">Request a Quote</a>
+        <a href="/services" class="btn btn-outline" style="padding:16px 48px;">View All Services</a>
+      </div>
+    </div>
+  </section>
 </Layout>
