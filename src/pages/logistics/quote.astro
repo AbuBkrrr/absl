@@ -44,21 +44,24 @@ import Layout from '../../layouts/Layout.astro';
         <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:12px; margin-bottom:20px;">
           <div>
             <label style="display:block; font-family:var(--mono); font-size:11px; color:var(--text-muted); margin-bottom:6px;">LENGTH (cm)</label>
-            <input id="f-l" type="number" value="30" min="1" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
+            <input id="f-l" type="number" placeholder="e.g. 30" min="1" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
           </div>
           <div>
             <label style="display:block; font-family:var(--mono); font-size:11px; color:var(--text-muted); margin-bottom:6px;">WIDTH (cm)</label>
-            <input id="f-w" type="number" value="30" min="1" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
+            <input id="f-w" type="number" placeholder="e.g. 30" min="1" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
           </div>
           <div>
             <label style="display:block; font-family:var(--mono); font-size:11px; color:var(--text-muted); margin-bottom:6px;">HEIGHT (cm)</label>
-            <input id="f-h" type="number" value="30" min="1" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
+            <input id="f-h" type="number" placeholder="e.g. 30" min="1" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
           </div>
           <div>
             <label style="display:block; font-family:var(--mono); font-size:11px; color:var(--gold); margin-bottom:6px;">ACTUAL KG</label>
-            <input id="f-kg" type="number" value="5" min="0.1" step="0.1" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
+            <input id="f-kg" type="number" placeholder="e.g. 5" min="0.1" step="0.1" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
           </div>
         </div>
+
+        <!-- Error Message -->
+        <div id="error-msg" style="display:none; color:#ef4444; font-size:0.85rem; margin-bottom:16px; font-weight:600; text-align:center;"></div>
 
         <button id="calc-btn" type="button" class="btn btn-primary" style="width:100%; padding:16px; font-size:1.1rem; margin-top:12px;">Calculate Estimate</button>
       </div>
@@ -67,11 +70,12 @@ import Layout from '../../layouts/Layout.astro';
       <div>
         <div id="empty-state" style="background:var(--bg-surface); border:1px dashed var(--line); border-radius:var(--r-md); padding:40px; text-align:center; color:var(--text-muted);">
           <div style="font-size:32px; margin-bottom:16px;">📦</div>
-          <p>Enter your package details and click Calculate to see your estimated shipping cost.</p>
+          <p>Enter your origin, destination, and package details to see your estimated shipping cost.</p>
         </div>
 
         <div id="result-panel" style="display:none; background:linear-gradient(160deg,var(--bg-card),var(--bg-surface)); border:1px solid var(--gold); border-radius:var(--r-md); padding:32px;">
           <div style="text-align:center; border-bottom:1px solid var(--line-light); padding-bottom:20px; margin-bottom:20px;">
+            <div id="res-route" style="font-size:0.9rem; color:var(--text-muted); font-weight:600; margin-bottom:8px;">- → -</div>
             <div style="font-family:var(--mono); font-size:11px; color:var(--gold); text-transform:uppercase; letter-spacing:1px;">Estimated Cost</div>
             <div id="res-total" style="font-family:var(--display); font-size:2.5rem; color:var(--white); font-weight:700; margin-top:8px;">₦0</div>
             <div id="res-time" style="font-size:0.85rem; color:var(--text-muted); margin-top:4px;">Transit: 3-5 Business Days</div>
@@ -111,13 +115,32 @@ import Layout from '../../layouts/Layout.astro';
       }
 
       const calcBtn = document.getElementById('calc-btn');
+      const errorEl = document.getElementById('error-msg');
       
       calcBtn.addEventListener('click', () => {
         const type = document.getElementById('f-type').value;
-        const l = Number(document.getElementById('f-l').value) || 0;
-        const w = Number(document.getElementById('f-w').value) || 0;
-        const h = Number(document.getElementById('f-h').value) || 0;
-        const actualKg = Number(document.getElementById('f-kg').value) || 0;
+        const origin = document.getElementById('f-origin').value.trim();
+        const dest = document.getElementById('f-dest').value.trim();
+        const l = Number(document.getElementById('f-l').value);
+        const w = Number(document.getElementById('f-w').value);
+        const h = Number(document.getElementById('f-h').value);
+        const actualKg = Number(document.getElementById('f-kg').value);
+
+        // Validation
+        if (!origin || !dest) {
+          errorEl.textContent = 'Please enter both Origin and Destination.';
+          errorEl.style.display = 'block';
+          return;
+        }
+        
+        if (!l || !w || !h || !actualKg) {
+          errorEl.textContent = 'Please enter valid package dimensions and weight.';
+          errorEl.style.display = 'block';
+          return;
+        }
+
+        // Hide error if validation passes
+        errorEl.style.display = 'none';
 
         // Rates & Divisors based on freight type
         let divisor = 5000; // Air standard
@@ -150,6 +173,7 @@ import Layout from '../../layouts/Layout.astro';
         document.getElementById('empty-state').style.display = 'none';
         document.getElementById('result-panel').style.display = 'block';
         
+        document.getElementById('res-route').textContent = `${origin} → ${dest}`;
         document.getElementById('res-total').textContent = fmt(total);
         document.getElementById('res-time').textContent = transit;
         document.getElementById('res-actual').textContent = actualKg + ' kg';
