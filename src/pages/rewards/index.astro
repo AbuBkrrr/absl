@@ -1,0 +1,178 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { supabase } from '../../lib/supabase';
+
+// Fetch initial data server-side
+const { data: loyalty } = await supabase.from('absl_rewards_loyalty').select('*');
+const { data: offers } = await supabase.from('absl_rewards_offers').select('*');
+const { data: discounts } = await supabase.from('absl_rewards_discounts').select('*');
+const { data: carbon } = await supabase.from('absl_rewards_carbon').select('*');
+---
+
+<Layout title="MileageMall Rewards - ABSL">
+  <div style="background: #f0f2f8; min-height: 100vh; padding: 40px 24px; font-family: 'Inter', sans-serif;">
+    
+    <div class="container" style="max-width: 900px; margin: 0 auto; background: white; border-radius: 24px; padding: 40px; box-shadow: 0 20px 40px rgba(0,0,0,0.05);">
+      
+      <!-- HEADER -->
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #eef2f6; padding-bottom:24px; margin-bottom:32px;">
+        <div>
+          <h1 style="font-size:2rem; font-weight:700; color:#0b1e3a; margin-bottom:8px;">
+            <span style="color:#1e5f9e;">✈️</span> MileageMall
+          </h1>
+          <div style="font-size:0.9rem; color:#3a5670; background:#e9edf4; padding:6px 16px; border-radius:100px; display:inline-block; font-weight:500;">
+            ⚡ One Hub. Every Airline. Max Rewards.
+          </div>
+        </div>
+      </div>
+
+      <!-- HERO DASHBOARD -->
+      <div id="dashboard-hero" style="background: #0b1e3a; color: white; border-radius: 24px; padding: 32px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 24px; margin-bottom: 32px;">
+        <div>
+          <div style="font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; color:#8ba0b9; margin-bottom:8px;">Total Loyalty Value</div>
+          <div style="font-size:3rem; font-weight:700; line-height:1;">125,847</div>
+          <div style="font-size:0.85rem; color:#8ba0b9; margin-top:8px;">miles across 4 airlines</div>
+        </div>
+        <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;" id="loyalty-accounts">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- TABS -->
+      <div style="display:flex; gap:12px; margin-bottom:24px;">
+        <button class="mm-tab active" data-tab="shop">🛍️ Shopping</button>
+        <button class="mm-tab" data-tab="deals">💸 Deals</button>
+        <button class="mm-tab" data-tab="carbon">🌱 Carbon</button>
+      </div>
+
+      <!-- SHOP PANEL -->
+      <div class="mm-panel active" id="panel-shop">
+        <div style="display:flex; gap:8px; margin-bottom:16px;" id="shop-filters">
+          <span class="mm-chip active" data-cat="All">All</span>
+          <span class="mm-chip" data-cat="Clothing">Clothing</span>
+          <span class="mm-chip" data-cat="Tech">Tech</span>
+        </div>
+        <div id="offers-list" style="display:grid; gap:16px;">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- DEALS PANEL -->
+      <div class="mm-panel" id="panel-deals" style="display:none;">
+        <div id="deals-list" style="display:grid; gap:16px;">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- CARBON PANEL -->
+      <div class="mm-panel" id="panel-carbon" style="display:none;">
+        <div id="carbon-list" style="display:grid; gap:16px;">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Pass server data to client -->
+  <script type="application/json" id="rewards-data" set:html={JSON.stringify({ loyalty, offers, discounts, carbon })} />
+
+  <script>
+    const data = JSON.parse(document.getElementById('rewards-data').textContent);
+    const css = {
+      card: "background:#fff; border:1px solid #e3eaf2; border-radius:16px; padding:20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; box-shadow:0 4px 12px rgba(0,0,0,0.02);",
+      title: "font-weight:700; font-size:1.1rem; color:#0b1e3a; margin-bottom:4px;",
+      desc: "font-size:0.85rem; color:#4a6a8a;",
+      btn: "background:#0b1e3a; color:#fff; padding:10px 20px; border-radius:40px; font-weight:600; text-decoration:none; font-size:0.85rem;",
+      btnGreen: "background:#0f7b4a; color:#fff; padding:10px 20px; border-radius:40px; font-weight:600; text-decoration:none; font-size:0.85rem;"
+    };
+
+    // 1. Render Loyalty Accounts
+    const accContainer = document.getElementById('loyalty-accounts');
+    data.loyalty.forEach(acc => {
+      accContainer.innerHTML += `
+        <span style="background:rgba(255,255,255,0.1); padding:8px 16px; border-radius:40px; font-size:0.8rem; font-weight:500;">
+          ✈️ ${acc.airline.split(' ')[0]} ${acc.points.toLocaleString()} mi
+        </span>
+      `;
+    });
+
+    // 2. Render Offers
+    function renderOffers(cat) {
+      const container = document.getElementById('offers-list');
+      const filtered = cat === 'All' ? data.offers : data.offers.filter(o => o.category === cat);
+      
+      // Group by retailer
+      const grouped = {};
+      filtered.forEach(o => {
+        if (!grouped[o.retailer]) grouped[o.retailer] = [];
+        grouped[o.retailer].push(o);
+      });
+
+      container.innerHTML = Object.keys(grouped).map(ret => {
+        const rows = grouped[ret].sort((a,b) => b.miles - a.miles);
+        const best = rows[0];
+        return `
+          <div style="${css.card}">
+            <div>
+              <div style="${css.title}">${ret} <span style="background:#d97d2b; color:#fff; padding:2px 10px; border-radius:20px; font-size:0.7rem; margin-left:8px;">${best.miles}x ${best.airline}</span></div>
+              <div style="${css.desc}">${rows.map(r => `✈️ ${r.airline} ${r.miles}x`).join(' · ')}</div>
+            </div>
+            <a href="${best.link}" target="_blank" style="${css.btn}">Shop Now</a>
+          </div>
+        `;
+      }).join('');
+    }
+    renderOffers('All');
+
+    // Filter listener
+    document.getElementById('shop-filters').addEventListener('click', (e) => {
+      if (e.target.classList.contains('mm-chip')) {
+        document.querySelectorAll('.mm-chip').forEach(c => c.classList.remove('active'));
+        e.target.classList.add('active');
+        renderOffers(e.target.dataset.cat);
+      }
+    });
+
+    // 3. Render Deals
+    document.getElementById('deals-list').innerHTML = data.discounts.map(d => `
+      <div style="${css.card}">
+        <div>
+          <div style="${css.title}">✈️ ${d.airline} · ${d.type}</div>
+          <div style="${css.desc}">${d.description} · <strong>${d.percentage}%</strong></div>
+        </div>
+        <a href="${d.link}" target="_blank" style="${css.btn}">View Deal</a>
+      </div>
+    `).join('');
+
+    // 4. Render Carbon
+    document.getElementById('carbon-list').innerHTML = data.carbon.map(c => `
+      <div style="${css.card}">
+        <div>
+          <div style="${css.title}">✈️ ${c.airline} · ${c.type}</div>
+          <div style="${css.desc}">${c.description} · $${c.cost_per_ton}/t · +${c.bonus_miles} mi</div>
+        </div>
+        <a href="${c.link}" target="_blank" style="${css.btnGreen}">Offset</a>
+      </div>
+    `).join('');
+
+    // 5. Tabs Logic
+    document.querySelectorAll('.mm-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.mm-tab').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.mm-panel').forEach(p => p.style.display = 'none');
+        
+        btn.classList.add('active');
+        document.getElementById(`panel-${btn.dataset.tab}`).style.display = 'block';
+      });
+    });
+  </script>
+
+  <style is:global>
+    .mm-tab { background: #fff; border: 1px solid #e3eaf2; border-radius: 40px; padding: 10px 24px; font-weight: 600; cursor: pointer; color: #0b1e3a; transition: 0.2s; }
+    .mm-tab:hover { border-color: #b6c9e0; }
+    .mm-tab.active { background: #0b1e3a; color: #fff; border-color: #0b1e3a; }
+    .mm-chip { background: #eef3fa; border-radius: 40px; padding: 6px 16px; font-size: 0.8rem; font-weight: 600; cursor: pointer; color: #0b1e3a; transition: 0.2s; }
+    .mm-chip.active { background: #1e5f9e; color: #fff; }
+  </style>
+</Layout>
