@@ -42,6 +42,18 @@ import AdminGuard from '../../components/AdminGuard.astro';
         <p style="color: var(--text-muted); font-size: 0.95rem;">Manually add airline miles for clients by email address. View all reward records.</p>
       </a>
 
-    </div>
+          <a href="/admin/users" style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 40px; text-decoration: none; transition: 0.2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--line-light)'">
+        <div style="font-size: 32px; margin-bottom: 16px;">👥</div>
+        <h2 style="font-size: 1.5rem; color: var(--white); margin-bottom: 8px;">Users & Admins</h2>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">List registered customers, view their lifetime spend, promote/demote admins.</p>
+      </a>
+
+      <a href="/admin/portfolio" style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 40px; text-decoration: none; transition: 0.2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--line-light)'">
+        <div style="font-size: 32px; margin-bottom: 16px;">🏗️</div>
+        <h2 style="font-size: 1.5rem; color: var(--white); margin-bottom: 8px;">Portfolio CMS</h2>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">Add, edit, or delete construction project cards shown on /construction.</p>
+      </a>
+
+</div>
   </div>
 </Layout>

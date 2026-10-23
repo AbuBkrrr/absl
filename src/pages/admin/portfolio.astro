@@ -1,0 +1,151 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import AdminGuard from '../../components/AdminGuard.astro';
+import { supabase } from '../../lib/supabase';
+
+const { data: projects } = await supabase
+  .from('absl_projects')
+  .select('*')
+  .order('order_index', { ascending: true })
+  .order('created_at', { ascending: false });
+const rows = projects || [];
+---
+
+<Layout title="Portfolio CMS - ABSL Admin">
+  <AdminGuard />
+  <div style="background: var(--bg-surface); padding: 60px 0; border-bottom: 1px solid var(--line-light);">
+    <div class="container" style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:16px;">
+      <div>
+        <h1 style="font-size:2.5rem; margin:0;">Portfolio CMS</h1>
+        <p style="color:var(--text-muted); margin-top:8px;">Manage construction project cards shown on /construction.</p>
+      </div>
+      <a href="/admin" class="btn btn-outline" style="padding:10px 24px;">&larr; Back to Admin</a>
+    </div>
+  </div>
+
+  <div class="container" style="padding: 40px 24px 80px;">
+
+    <!-- Add new project -->
+    <div style="background:var(--bg-surface); border:1px solid var(--line-light); border-radius:var(--r-md); padding:32px; margin-bottom:32px;">
+      <h2 id="form-title" style="font-size:1.2rem; color:var(--gold); margin-bottom:20px;">Add New Project</h2>
+      <input type="hidden" id="f-id" value="" />
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+        <input id="f-title" type="text" placeholder="Project Title (e.g. Ikoyi Duplex)" style="grid-column: 1 / -1; padding:12px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
+        <select id="f-category" style="padding:12px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;">
+          <option value="residential">Residential</option>
+          <option value="commercial">Commercial</option>
+          <option value="infrastructure">Infrastructure</option>
+        </select>
+        <input id="f-budget" type="text" placeholder="Budget (e.g. ₦45M)" style="padding:12px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
+        <input id="f-image" type="url" placeholder="Image URL (https://...)" style="grid-column: 1 / -1; padding:12px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
+        <textarea id="f-desc" placeholder="Project description" rows="3" style="grid-column: 1 / -1; padding:12px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px; font-family:inherit;"></textarea>
+      </div>
+      <button id="save-btn" class="btn btn-primary" style="margin-top:16px;">Add Project</button>
+    </div>
+
+    <!-- Existing projects -->
+    <h2 style="font-size:1.4rem; color:var(--white); margin-bottom:16px;">Existing Projects ({rows.length})</h2>
+    {rows.length === 0 ? (
+      <div style="background:var(--bg-card); border:1px dashed var(--line); border-radius:var(--r-md); padding:40px; text-align:center; color:var(--text-muted);">
+        No projects yet. Add one above.
+      </div>
+    ) : (
+      <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:20px;">
+        {rows.map(p => (
+          <div style="background:var(--bg-card); border:1px solid var(--line-light); border-radius:var(--r-md); overflow:hidden;">
+            <div style={`height:160px; background:url('${p.image_url}') center/cover;`}></div>
+            <div style="padding:20px;">
+              <div style="font-size:10px; color:var(--gold); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">{p.category}</div>
+              <h3 style="font-size:1.1rem; color:var(--white); margin-bottom:8px;">{p.title}</h3>
+              <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:12px; line-height:1.5; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">{p.description}</p>
+              <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--line-light); padding-top:12px;">
+                <span style="font-family:var(--mono); font-size:11px; color:var(--gold);">{p.budget || '—'}</span>
+                <div style="display:flex; gap:8px;">
+                  <button data-edit={JSON.stringify(p)} class="edit-btn" style="background:transparent; border:1px solid var(--gold); color:var(--gold); padding:4px 12px; border-radius:4px; cursor:pointer; font-size:11px;">Edit</button>
+                  <button data-del={p.id} class="del-btn" style="background:transparent; border:1px solid #EF4444; color:#EF4444; padding:4px 12px; border-radius:4px; cursor:pointer; font-size:11px;">Delete</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+
+  <script>
+    import { supabase } from '../../lib/supabase';
+
+    const formTitle = document.getElementById('form-title');
+    const saveBtn = document.getElementById('save-btn') as HTMLButtonElement;
+    const fId = document.getElementById('f-id') as HTMLInputElement;
+    const fTitle = document.getElementById('f-title') as HTMLInputElement;
+    const fCategory = document.getElementById('f-category') as HTMLSelectElement;
+    const fBudget = document.getElementById('f-budget') as HTMLInputElement;
+    const fImage = document.getElementById('f-image') as HTMLInputElement;
+    const fDesc = document.getElementById('f-desc') as HTMLTextAreaElement;
+
+    // Handle Edit Click
+    document.addEventListener('click', (e) => {
+      const target = e.target as HTMLElement;
+      if (target.classList.contains('edit-btn')) {
+        const p = JSON.parse(target.dataset.edit!);
+        formTitle.textContent = 'Edit Project';
+        saveBtn.textContent = 'Save Changes';
+        fId.value = p.id;
+        fTitle.value = p.title;
+        fCategory.value = p.category;
+        fBudget.value = p.budget || '';
+        fImage.value = p.image_url;
+        fDesc.value = p.description || '';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    });
+
+    // Handle Save (Add or Update)
+    saveBtn.addEventListener('click', async () => {
+      const id = fId.value;
+      const title = fTitle.value.trim();
+      const category = fCategory.value;
+      const budget = fBudget.value.trim();
+      const image_url = fImage.value.trim();
+      const description = fDesc.value.trim();
+
+      if (!title || !image_url) return alert('Title and Image URL are required.');
+
+      saveBtn.textContent = 'Saving...';
+      saveBtn.disabled = true;
+
+      let error;
+      if (id) {
+        const res = await supabase.from('absl_projects').update({ title, category, budget: budget || null, image_url, description: description || null }).eq('id', id);
+        error = res.error;
+      } else {
+        const res = await supabase.from('absl_projects').insert({ title, category, budget: budget || null, image_url, description: description || null, status: 'active' });
+        error = res.error;
+      }
+
+      if (error) {
+        alert(error.message);
+        saveBtn.textContent = id ? 'Save Changes' : 'Add Project';
+        saveBtn.disabled = false;
+      } else {
+        window.location.reload();
+      }
+    });
+
+    // Handle Delete
+    document.querySelectorAll('.del-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const target = e.target as HTMLButtonElement;
+        if (!confirm('Delete this project from the portfolio?')) return;
+        const res = await fetch('/api/projects/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: target.dataset.del })
+        });
+        if (res.ok) window.location.reload();
+        else alert('Failed to delete.');
+      });
+    });
+</script>
+</Layout>

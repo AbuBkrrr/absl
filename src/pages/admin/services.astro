@@ -20,7 +20,8 @@ const rows = packages || [];
 
     <!-- Add Service Form -->
     <div style="background:var(--bg-surface); border:1px solid var(--line-light); border-radius:var(--r-md); padding:32px; margin-bottom:32px;">
-      <h2 style="font-size:1.2rem; color:var(--gold); margin-bottom:16px;">Add New Package</h2>
+      <h2 id="form-title" style="font-size:1.2rem; color:var(--gold); margin-bottom:16px;">Add New Package</h2>
+        <input type="hidden" id="f-id" value="" />
       <div style="display:grid; grid-template-columns: 1fr 2fr 1fr 1fr; gap:16px;">
         <select id="f-category" style="padding:10px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;">
           <option value="travel">Travel & Tours</option>
@@ -50,7 +51,8 @@ const rows = packages || [];
               <td style="padding:16px; color:var(--gold); text-transform:uppercase; font-size:10px;">{p.category}</td>
               <td style="padding:16px; color:var(--white); font-weight:600;">{p.title}</td>
               <td style="padding:16px; text-align:right; color:var(--white); font-weight:700;">{Number(p.price).toLocaleString()}</td>
-              <td style="padding:16px; text-align:right;">
+              <td style="padding:16px; text-align:right; display:flex; gap:8px; justify-content:flex-end;">
+                <button data-edit='${JSON.stringify(p)}' class="edit-btn" style="background:transparent; border:1px solid var(--gold); color:var(--gold); padding:4px 10px; border-radius:4px; cursor:pointer;">Edit</button>
                 <button data-del="${p.id}" style="background:transparent; border:1px solid #ef4444; color:#ef4444; padding:4px 10px; border-radius:4px; cursor:pointer;">Delete</button>
               </td>
             </tr>
@@ -62,33 +64,77 @@ const rows = packages || [];
 
   <script>
     import { supabase } from '../../lib/supabase';
-    import { getToken } from '../../scripts/auth'; // We will create this next
 
-    document.getElementById('save-btn').addEventListener('click', async () => {
-      const category = document.getElementById('f-category').value;
-      const title = document.getElementById('f-title').value;
-      const price = Number(document.getElementById('f-price').value);
-      const description = document.getElementById('f-desc').value;
+    const formTitle = document.getElementById('form-title');
+    const fId = document.getElementById('f-id');
+    const fCategory = document.getElementById('f-category');
+    const fTitle = document.getElementById('f-title');
+    const fPrice = document.getElementById('f-price');
+    const fDesc = document.getElementById('f-desc');
+    const saveBtn = document.getElementById('save-btn');
+
+    // Handle Edit Click
+    document.addEventListener('click', (e) => {
+      const target = e.target;
+      if (target.classList.contains('edit-btn')) {
+        const pkg = JSON.parse(target.dataset.edit);
+        formTitle.textContent = 'Edit Package';
+        saveBtn.textContent = 'Update Package';
+        fId.value = pkg.id;
+        fCategory.value = pkg.category;
+        fTitle.value = pkg.title;
+        fPrice.value = pkg.price;
+        fDesc.value = pkg.description || '';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    });
+
+    // Handle Save (Add or Update)
+    saveBtn.addEventListener('click', async () => {
+      const id = fId.value;
+      const category = fCategory.value;
+      const title = fTitle.value;
+      const price = Number(fPrice.value);
+      const description = fDesc.value;
 
       if (!title || !price) return alert('Title and Price are required.');
 
-      const { error } = await supabase.from('absl_packages').insert({ category, title, price, description, status: 'active' });
-      if (error) alert(error.message);
-      else window.location.reload();
+      saveBtn.textContent = 'Saving...';
+      saveBtn.disabled = true;
+
+      let error;
+      if (id) {
+        // Update existing
+        const res = await supabase.from('absl_packages').update({ category, title, price, description }).eq('id', id);
+        error = res.error;
+      } else {
+        // Insert new
+        const res = await supabase.from('absl_packages').insert({ category, title, price, description, status: 'active' });
+        error = res.error;
+      }
+
+      if (error) {
+        alert(error.message);
+        saveBtn.textContent = id ? 'Update Package' : 'Add Package';
+        saveBtn.disabled = false;
+      } else {
+        window.location.reload();
+      }
     });
 
+    // Handle Delete
     document.addEventListener('click', async (e) => {
-      const t = e.target;
-      if (t.dataset.del) {
+      const target = e.target;
+      if (target.dataset.del) {
         if (!confirm('Delete this package?')) return;
         const res = await fetch('/api/services/delete', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: t.dataset.del })
+          body: JSON.stringify({ id: target.dataset.del })
         });
         if (res.ok) window.location.reload();
         else alert('Failed to delete.');
       }
     });
-  </script>
+</script>
 </Layout>

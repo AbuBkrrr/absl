@@ -1,0 +1,141 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import AdminGuard from '../../components/AdminGuard.astro';
+import { supabase } from '../../lib/supabase';
+
+const { data: profiles } = await supabase
+  .from('absl_profiles')
+  .select('id, email, full_name, is_admin, created_at')
+  .order('created_at', { ascending: false });
+
+const rows = profiles || [];
+
+// Count bookings per user email for quick context
+const { data: bookings } = await supabase.from('absl_bookings').select('customer_email, total_amount');
+const bookingMap: Record<string, { count: number; revenue: number }> = {};
+(bookings || []).forEach((b: any) => {
+  if (!b.customer_email) return;
+  if (!bookingMap[b.customer_email]) bookingMap[b.customer_email] = { count: 0, revenue: 0 };
+  bookingMap[b.customer_email].count += 1;
+  bookingMap[b.customer_email].revenue += Number(b.total_amount || 0);
+});
+---
+
+<Layout title="Users - ABSL Admin">
+  <AdminGuard />
+
+  <div style="background: var(--bg-surface); padding: 60px 0; border-bottom: 1px solid var(--line-light);">
+    <div class="container" style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:16px;">
+      <div>
+        <h1 style="font-size:2.5rem; margin:0;">Registered Users</h1>
+        <p style="color:var(--text-muted); margin-top:8px;">Manage customer accounts and admin privileges.</p>
+      </div>
+      <a href="/admin" class="btn btn-outline" style="padding:10px 24px;">&larr; Back to Admin</a>
+    </div>
+  </div>
+
+  <div class="container" style="padding: 40px 24px 80px;">
+
+    <div style="background:var(--bg-surface); border:1px solid var(--line-light); border-radius:var(--r-md); padding:20px; margin-bottom:24px; display:flex; gap:20px; flex-wrap:wrap;">
+      <div>
+        <div style="font-family:var(--mono); font-size:10px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Total Accounts</div>
+        <div style="font-family:var(--font-display); font-size:1.5rem; color:var(--gold); font-weight:700;">{rows.length}</div>
+      </div>
+      <div>
+        <div style="font-family:var(--mono); font-size:10px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Admins</div>
+        <div style="font-family:var(--font-display); font-size:1.5rem; color:var(--green); font-weight:700;">{rows.filter(r => r.is_admin).length}</div>
+      </div>
+      <div>
+        <div style="font-family:var(--mono); font-size:10px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Customers</div>
+        <div style="font-family:var(--font-display); font-size:1.5rem; color:var(--white); font-weight:700;">{rows.filter(r => !r.is_admin).length}</div>
+      </div>
+    </div>
+
+    <div style="background:var(--bg-card); border:1px solid var(--line-light); border-radius:var(--r-md); overflow:hidden;">
+      <table style="width:100%; border-collapse:collapse; font-family:var(--mono); font-size:12.5px;">
+        <thead>
+          <tr style="background:var(--bg-surface); text-align:left;">
+            <th style="padding:16px; color:var(--gold);">Email</th>
+            <th style="padding:16px; color:var(--gold);">Name</th>
+            <th style="padding:16px; color:var(--gold);">Bookings</th>
+            <th style="padding:16px; color:var(--gold); text-align:right;">Spend (₦)</th>
+            <th style="padding:16px; color:var(--gold);">Role</th>
+            <th style="padding:16px; color:var(--gold); text-align:right;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.length === 0 ? (
+            <tr><td colspan="6" style="padding:32px; text-align:center; color:var(--text-muted);">No registered users yet.</td></tr>
+          ) : (
+            rows.map(u => {
+              const stats = bookingMap[u.email] || { count: 0, revenue: 0 };
+              return (
+                <tr style="border-top:1px solid var(--line-light);">
+                  <td style="padding:16px; color:var(--white);">{u.email}</td>
+                  <td style="padding:16px; color:var(--text-muted);">{u.full_name || '—'}</td>
+                  <td style="padding:16px; color:var(--text-light);">{stats.count}</td>
+                  <td style="padding:16px; text-align:right; color:var(--gold); font-weight:700;">{stats.revenue.toLocaleString()}</td>
+                  <td style="padding:16px;">
+                    {u.is_admin ? (
+                      <span style="font-size:10px; padding:3px 10px; border-radius:4px; background:rgba(15,123,74,0.15); color:var(--green); text-transform:uppercase; font-weight:700;">Admin</span>
+                    ) : (
+                      <span style="font-size:10px; padding:3px 10px; border-radius:4px; background:var(--bg-surface); color:var(--text-muted); text-transform:uppercase; font-weight:700;">Customer</span>
+                    )}
+                  </td>
+                  <td style="padding:16px; text-align:right;">
+                    <button data-id={u.id} data-admin={u.is_admin ? '1' : '0'} class="toggle-btn" style="background:transparent; border:1px solid var(--gold); color:var(--gold); padding:4px 12px; border-radius:4px; cursor:pointer; font-size:11px; text-transform:uppercase;">
+                      {u.is_admin ? 'Demote' : 'Promote'}
+                    </button>
+                  </td>
+                </tr>
+              );
+            })
+          )}
+        </tbody>
+      </table>
+    </div>
+
+    <p style="color:var(--text-muted); font-size:0.8rem; margin-top:16px; font-family:var(--mono);">
+      ⚠️ You cannot demote yourself. Ask another admin to do it.
+    </p>
+  </div>
+
+  <script>
+    import { supabase } from '../../lib/supabase';
+
+    const { data: { user } } = await supabase.auth.getUser();
+
+    document.querySelectorAll('.toggle-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const target = e.target as HTMLButtonElement;
+        const id = target.dataset.id;
+        const isCurrentlyAdmin = target.dataset.admin === '1';
+
+        if (id === user?.id) {
+          alert('You cannot change your own admin status.');
+          return;
+        }
+
+        const action = isCurrentlyAdmin ? 'demote this admin to customer' : 'promote this user to admin';
+        if (!confirm(`Are you sure you want to ${action}?`)) return;
+
+        target.disabled = true;
+        target.textContent = '...';
+
+        const res = await fetch('/api/users/toggle-admin', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, is_admin: !isCurrentlyAdmin })
+        });
+
+        if (res.ok) {
+          window.location.reload();
+        } else {
+          alert('Failed: ' + (await res.text()));
+          target.disabled = false;
+          target.textContent = isCurrentlyAdmin ? 'Demote' : 'Promote';
+        }
+      });
+    });
+  </script>
+</Layout>
