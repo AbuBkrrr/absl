@@ -28,7 +28,7 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
         <input id="f-tracking" type="text" placeholder="Tracking Number (e.g. ABSL-123)" style="padding:12px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
         <input id="f-origin" type="text" placeholder="Origin (e.g. Lagos, NG)" style="padding:12px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
         <input id="f-dest" type="text" placeholder="Destination (e.g. London, UK)" style="padding:12px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
-        <button id="save-btn" class="btn btn-primary">Create Shipment</button>
+        <button id="save-btn" type="button" class="btn btn-primary" style="cursor:pointer; position:relative; z-index:10;">Create Shipment</button>
       </div>
       <div style="margin-top:16px;">
         <input id="f-location" type="text" placeholder="Current Location (e.g. Apapa Port)" style="width:100%; padding:12px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
@@ -58,7 +58,7 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
                 <td style="padding:16px;"><span style="font-size:10px; padding:3px 8px; border-radius:4px; background:var(--bg-surface); color:var(--gold); text-transform:uppercase;">{s.status}</span></td>
                 <td style="padding:16px; color:var(--text-light);">{s.current_location}</td>
                 <td style="padding:16px; text-align:right;">
-                  <button data-id={s.id} data-tracking={s.tracking_number} class="update-btn" style="background:transparent; border:1px solid var(--gold); color:var(--gold); padding:4px 12px; border-radius:4px; cursor:pointer; font-size:11px;">Update Status</button>
+                  <button data-id={s.id} data-tracking={s.tracking_number} class="update-btn" type="button" style="background:transparent; border:1px solid var(--gold); color:var(--gold); padding:4px 12px; border-radius:4px; cursor:pointer; font-size:11px;">Update Status</button>
                 </td>
               </tr>
             ))
@@ -71,86 +71,96 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
   <!-- Toast Container -->
   <div id="toast-container" style="position:fixed; bottom:24px; right:24px; z-index:9999; display:flex; flex-direction:column; gap:10px;"></div>
 
-  <script is:inline define:vars={{ supabaseUrl, supabaseAnonKey }}>
-    document.addEventListener('astro:page-load', async () => {
-      // Initialize Supabase Client
+  <script is:inline>
+    // Inject Supabase credentials securely
+    const SUPABASE_URL = "{supabaseUrl}";
+    const SUPABASE_ANON_KEY = "{supabaseAnonKey}";
+    
+    let supabaseClient = null;
+
+    async function getSupabase() {
+      if (supabaseClient) return supabaseClient;
       const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
-      const supabase = createClient(supabaseUrl, supabaseAnonKey);
+      supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      return supabaseClient;
+    }
 
-      // --- Toast Notification System ---
-      function showToast(message, type = 'success') {
-        const container = document.getElementById('toast-container');
-        const toast = document.createElement('div');
-        
-        const bgColor = type === 'success' ? 'var(--green)' : (type === 'error' ? '#ef4444' : 'var(--gold)');
-        const icon = type === 'success' ? '✓' : (type === 'error' ? '✕' : 'ℹ');
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+      const toast = document.createElement('div');
+      const bgColor = type === 'success' ? 'var(--green)' : (type === 'error' ? '#ef4444' : 'var(--gold)');
+      const icon = type === 'success' ? '✓' : (type === 'error' ? '✕' : 'ℹ');
 
-        toast.style.cssText = `
-          background: var(--bg-card); 
-          border: 1px solid ${bgColor}; 
-          color: var(--white); 
-          padding: 16px 24px; 
-          border-radius: var(--r-md); 
-          font-family: var(--font-body); 
-          font-weight: 600; 
-          box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          transform: translateY(100%);
-          opacity: 0;
-          transition: all 0.3s ease;
-        `;
-        
-        toast.innerHTML = `<span style="color:${bgColor}; font-size:1.2rem;">${icon}</span> ${message}`;
-        container.appendChild(toast);
+      toast.style.cssText = `
+        background: var(--bg-card); border: 1px solid ${bgColor}; color: var(--white); 
+        padding: 16px 24px; border-radius: var(--r-md); font-family: var(--font-body); 
+        font-weight: 600; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        display: flex; align-items: center; gap: 12px;
+        transform: translateY(100%); opacity: 0; transition: all 0.3s ease;
+      `;
+      
+      toast.innerHTML = `<span style="color:${bgColor}; font-size:1.2rem;">${icon}</span> ${message}`;
+      container.appendChild(toast);
 
-        // Animate in
-        setTimeout(() => { toast.style.transform = 'translateY(0)'; toast.style.opacity = '1'; }, 10);
+      setTimeout(() => { toast.style.transform = 'translateY(0)'; toast.style.opacity = '1'; }, 10);
+      setTimeout(() => {
+        toast.style.transform = 'translateY(100%)';
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
 
-        // Remove after 3 seconds
-        setTimeout(() => {
-          toast.style.transform = 'translateY(100%)';
-          toast.style.opacity = '0';
-          setTimeout(() => toast.remove(), 300);
-        }, 3000);
+    // Wait for DOM to be fully loaded
+    document.addEventListener('DOMContentLoaded', () => {
+      // 1. Handle Create Shipment
+      const saveBtn = document.getElementById('save-btn');
+      if (saveBtn) {
+        saveBtn.addEventListener('click', async (e) => {
+          e.preventDefault();
+          
+          const tracking = document.getElementById('f-tracking').value.trim();
+          const origin = document.getElementById('f-origin').value.trim();
+          const dest = document.getElementById('f-dest').value.trim();
+          const loc = document.getElementById('f-location').value.trim();
+          
+          if (!tracking || !origin || !dest) {
+            return showToast('Please fill all required fields.', 'error');
+          }
+
+          saveBtn.textContent = 'Creating...';
+          saveBtn.disabled = true;
+
+          try {
+            const supabase = await getSupabase();
+            const { error } = await supabase.from('absl_shipments').insert({
+              tracking_number: tracking,
+              origin: origin,
+              destination: dest,
+              current_location: loc || origin,
+              status: 'picked_up',
+              history: [{ status: 'picked_up', location: loc || origin, timestamp: new Date().toISOString() }]
+            });
+
+            if (error) throw error;
+            
+            showToast('Shipment created successfully!', 'success');
+            setTimeout(() => window.location.reload(), 1000);
+
+          } catch (err) {
+            showToast(err.message || 'Failed to create shipment.', 'error');
+            saveBtn.textContent = 'Create Shipment';
+            saveBtn.disabled = false;
+          }
+        });
       }
 
-      // Create Shipment
-      document.getElementById('save-btn')?.addEventListener('click', async () => {
-        const btn = document.getElementById('save-btn');
-        const tracking = document.getElementById('f-tracking').value.trim();
-        const origin = document.getElementById('f-origin').value.trim();
-        const dest = document.getElementById('f-dest').value.trim();
-        const loc = document.getElementById('f-location').value.trim();
-        
-        if (!tracking || !origin || !dest) return showToast('Please fill all required fields.', 'error');
-
-        btn.textContent = 'Creating...';
-        btn.disabled = true;
-
-        const { error } = await supabase.from('absl_shipments').insert({
-          tracking_number: tracking,
-          origin, destination: dest, current_location: loc || origin,
-          status: 'picked_up',
-          history: [{ status: 'picked_up', location: loc || origin, timestamp: new Date().toISOString() }]
-        });
-
-        if (error) {
-          showToast(error.message, 'error');
-          btn.textContent = 'Create Shipment';
-          btn.disabled = false;
-        } else {
-          showToast('Shipment created successfully!', 'success');
-          setTimeout(() => window.location.reload(), 1000);
-        }
-      });
-
-      // Update Status
+      // 2. Handle Update Status
       document.querySelectorAll('.update-btn').forEach(btn => {
         btn.addEventListener('click', async (e) => {
-          const id = e.target.dataset.id;
-          const tracking = e.target.dataset.tracking;
+          const target = e.target;
+          const id = target.dataset.id;
+          const tracking = target.dataset.tracking;
           
           const status = prompt(`Update status for ${tracking}:\n(picked_up, in_transit, customs, out_for_delivery, delivered)`);
           if (!status) return;
@@ -158,22 +168,25 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
           const location = prompt('Enter current location (e.g. Customs, London Hub):');
           if (!location) return;
 
-          e.target.textContent = 'Updating...';
-          e.target.disabled = true;
+          target.textContent = 'Updating...';
+          target.disabled = true;
 
-          const res = await fetch('/api/shipments/update', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id, status, location })
-          });
+          try {
+            const res = await fetch('/api/shipments/update', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ id, status, location })
+            });
 
-          if (res.ok) {
+            if (!res.ok) throw new Error('Server error');
+
             showToast('Status updated successfully!', 'success');
             setTimeout(() => window.location.reload(), 1000);
-          } else {
+
+          } catch (err) {
             showToast('Failed to update status.', 'error');
-            e.target.textContent = 'Update Status';
-            e.target.disabled = false;
+            target.textContent = 'Update Status';
+            target.disabled = false;
           }
         });
       });
