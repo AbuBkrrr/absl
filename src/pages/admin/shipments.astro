@@ -71,17 +71,15 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
   <!-- Toast Container -->
   <div id="toast-container" style="position:fixed; bottom:24px; right:24px; z-index:9999; display:flex; flex-direction:column; gap:10px;"></div>
 
-  <script is:inline>
-    // Inject Supabase credentials securely
-    const SUPABASE_URL = "{supabaseUrl}";
-    const SUPABASE_ANON_KEY = "{supabaseAnonKey}";
-    
+  <!-- Notice the define:vars directive here -->
+  <script is:inline define:vars={{ supabaseUrl, supabaseAnonKey }}>
     let supabaseClient = null;
 
     async function getSupabase() {
       if (supabaseClient) return supabaseClient;
       const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
-      supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      // Variables injected via define:vars
+      supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
       return supabaseClient;
     }
 
@@ -111,9 +109,7 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       }, 3000);
     }
 
-    // Wait for DOM to be fully loaded
     document.addEventListener('DOMContentLoaded', () => {
-      // 1. Handle Create Shipment
       const saveBtn = document.getElementById('save-btn');
       if (saveBtn) {
         saveBtn.addEventListener('click', async (e) => {
@@ -155,7 +151,6 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
         });
       }
 
-      // 2. Handle Update Status
       document.querySelectorAll('.update-btn').forEach(btn => {
         btn.addEventListener('click', async (e) => {
           const target = e.target;
