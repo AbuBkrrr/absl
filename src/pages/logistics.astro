@@ -69,36 +69,49 @@ const { data: packages } = await supabase
       </div>
 
       <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:32px;">
-        <div style="background:var(--bg-surface); padding:48px 32px; border:1px solid var(--line-light); border-radius:var(--r-md);">
+        
+        <!-- Air Freight (Clickable) -->
+        <a href="/logistics/quote?type=air" style="display:block; text-decoration:none; background:var(--bg-surface); padding:48px 32px; border:1px solid var(--line-light); border-radius:var(--r-md); transition:0.2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--line-light)'">
           <div style="font-size: 32px; margin-bottom: 24px;">✈️</div>
-          <h3 style="font-size: 1.5rem; margin-bottom: 16px;">Air Freight</h3>
+          <h3 style="font-size: 1.5rem; margin-bottom: 16px; color:var(--white);">Air Freight</h3>
           <p style="color:var(--text-muted); font-size: 0.95rem; line-height:1.8; margin-bottom:24px;">Time-critical shipments moved via our global air network. We offer express, standard, and chartered air freight solutions.</p>
-        </div>
-        <div style="background:var(--bg-surface); padding:48px 32px; border:1px solid var(--line-light); border-radius:var(--r-md);">
+        </a>
+
+        <!-- Ocean Freight (Clickable) -->
+        <a href="/logistics/quote?type=ocean" style="display:block; text-decoration:none; background:var(--bg-surface); padding:48px 32px; border:1px solid var(--line-light); border-radius:var(--r-md); transition:0.2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--line-light)'">
           <div style="font-size: 32px; margin-bottom: 24px;">🚢</div>
-          <h3 style="font-size: 1.5rem; margin-bottom: 16px;">Ocean Freight</h3>
+          <h3 style="font-size: 1.5rem; margin-bottom: 16px; color:var(--white);">Ocean Freight</h3>
           <p style="color:var(--text-muted); font-size: 0.95rem; line-height:1.8; margin-bottom:24px;">Cost-effective FCL and LCL ocean shipping. We handle port-to-port and door-to-door delivery with full visibility.</p>
-        </div>
-        <div style="background:var(--bg-surface); padding:48px 32px; border:1px solid var(--line-light); border-radius:var(--r-md);">
+        </a>
+
+        <!-- Ground & Road (Clickable) -->
+        <a href="/logistics/quote?type=ground" style="display:block; text-decoration:none; background:var(--bg-surface); padding:48px 32px; border:1px solid var(--line-light); border-radius:var(--r-md); transition:0.2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--line-light)'">
           <div style="font-size: 32px; margin-bottom: 24px;">🚛</div>
-          <h3 style="font-size: 1.5rem; margin-bottom: 16px;">Ground & Road Freight</h3>
+          <h3 style="font-size: 1.5rem; margin-bottom: 16px; color:var(--white);">Ground & Road Freight</h3>
           <p style="color:var(--text-muted); font-size: 0.95rem; line-height:1.8; margin-bottom:24px;">Reliable FTL and LTL trucking across Nigeria and West Africa. Our dedicated fleet ensures last-mile delivery.</p>
-        </div>
+        </a>
+
+        <!-- Warehousing (Not Clickable) -->
         <div style="background:var(--bg-surface); padding:48px 32px; border:1px solid var(--line-light); border-radius:var(--r-md);">
           <div style="font-size: 32px; margin-bottom: 24px;">🏢</div>
-          <h3 style="font-size: 1.5rem; margin-bottom: 16px;">Warehousing & Distribution</h3>
+          <h3 style="font-size: 1.5rem; margin-bottom: 16px; color:var(--white);">Warehousing & Distribution</h3>
           <p style="color:var(--text-muted); font-size: 0.95rem; line-height:1.8; margin-bottom:24px;">140,000 SQM of secure warehouse space. We offer fulfillment, inventory management, and cross-docking.</p>
         </div>
+
+        <!-- Customs Brokerage (Not Clickable) -->
         <div style="background:var(--bg-surface); padding:48px 32px; border:1px solid var(--line-light); border-radius:var(--r-md);">
           <div style="font-size: 32px; margin-bottom: 24px;">📋</div>
-          <h3 style="font-size: 1.5rem; margin-bottom: 16px;">Customs Brokerage</h3>
+          <h3 style="font-size: 1.5rem; margin-bottom: 16px; color:var(--white);">Customs Brokerage</h3>
           <p style="color:var(--text-muted); font-size: 0.95rem; line-height:1.8; margin-bottom:24px;">Licensed in-house customs team ensuring fast clearance and compliance with local and international trade regulations.</p>
         </div>
+
+        <!-- Supply Chain (Not Clickable) -->
         <div style="background:var(--bg-surface); padding:48px 32px; border:1px solid var(--line-light); border-radius:var(--r-md);">
           <div style="font-size: 32px; margin-bottom: 24px;">📊</div>
-          <h3 style="font-size: 1.5rem; margin-bottom: 16px;">Supply Chain Visibility</h3>
+          <h3 style="font-size: 1.5rem; margin-bottom: 16px; color:var(--white);">Supply Chain Visibility</h3>
           <p style="color:var(--text-muted); font-size: 0.95rem; line-height:1.8; margin-bottom:24px;">Real-time tracking, API integrations, and a customer portal to monitor your shipments from origin to destination.</p>
         </div>
+
       </div>
     </div>
   </section>
