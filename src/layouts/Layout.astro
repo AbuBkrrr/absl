@@ -241,7 +241,7 @@ const year = new Date().getFullYear();
             if (!b) return;
             try {
                 const cart = JSON.parse(localStorage.getItem('absl_cart') || '[]');
-                const n = cart.reduce((s, i) => s + Number(i.qty), 0);
+                const n = Math.round(cart.reduce((s, i) => s + Number(i.qty), 0));
                 b.textContent = n;
                 b.style.display = n > 0 ? 'flex' : 'none';
             } catch (e) {}

@@ -81,19 +81,27 @@ import Layout from '../../layouts/Layout.astro';
       checkoutForm.style.display = 'block';
 
       let total = 0;
-      itemsContainer.innerHTML = cart.map(item => {
-        const subtotal = Number(item.price) * Number(item.qty);
-        total += subtotal;
-        return `
-          <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-card); border:1px solid var(--line-light); border-radius:var(--r-md); padding:20px;">
-            <div>
-              <div style="font-weight:600; color:var(--white);">${item.title}</div>
-              <div style="font-size:0.85rem; color:var(--text-muted);">Qty: ${item.qty} × ₦${Number(item.price).toLocaleString()}</div>
+              itemsContainer.innerHTML = cart.map(item => {
+          const cleanQty = Math.round(Number(item.qty) * 100) / 100; // Round to 2 decimals
+          const subtotal = Number(item.price) * cleanQty;
+          total += subtotal;
+          return `
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; background:var(--bg-card); border:1px solid var(--line-light); border-radius:var(--r-md); padding:16px;">
+              <div style="display:flex; align-items:flex-start; gap:12px; flex:1; min-width:200px;">
+                <button onclick="removeItem('${item.id}')" style="background:rgba(239, 68, 68, 0.1); border:1px solid #EF4444; color:#EF4444; padding:8px; border-radius:4px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:0.2s; flex-shrink:0;" title="Remove Item">
+                  🗑️
+                </button>
+                <div>
+                  <div style="font-weight:600; color:var(--white); font-size:0.95rem; line-height:1.3;">${item.title}</div>
+                  <div style="font-size:0.85rem; color:var(--text-muted); margin-top:4px;">Qty: ${cleanQty} × ₦${Number(item.price).toLocaleString()}</div>
+                </div>
+              </div>
+              <div style="font-weight:700; color:var(--gold); font-size:1.1rem; text-align:right; flex-shrink:0; width:100%; margin-top:8px;">
+                ₦${subtotal.toLocaleString()}
+              </div>
             </div>
-            <div style="font-weight:700; color:var(--gold);">₦${subtotal.toLocaleString()}</div>
-          </div>
-        `;
-      }).join('');
+          `;
+        }).join('');
 
       totalEl.textContent = '₦' + total.toLocaleString();
 
@@ -137,5 +145,25 @@ import Layout from '../../layouts/Layout.astro';
         }
       });
     });
+  </script>
+  <script is:inline>
+    // Clean up old floating point issues in localStorage
+    const rawCart = localStorage.getItem('absl_cart');
+    if (rawCart) {
+      try {
+        let cart = JSON.parse(rawCart);
+        let changed = false;
+        cart = cart.map(item => {
+          const num = Number(item.qty);
+          if (isNaN(num)) return item;
+          const rounded = Math.round(num * 100) / 100;
+          if (rounded !== num) changed = true;
+          return { ...item, qty: rounded };
+        });
+        if (changed) {
+          localStorage.setItem('absl_cart', JSON.stringify(cart));
+        }
+      } catch (e) {}
+    }
   </script>
 </Layout>
