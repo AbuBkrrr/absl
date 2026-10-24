@@ -16,13 +16,13 @@ import Layout from '../layouts/Layout.astro';
         Continue with Google
       </button>
 
-      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 24px;">
+      <div id="divider" style="display: flex; align-items: center; gap: 10px; margin-bottom: 24px;">
         <div style="flex: 1; height: 1px; background: var(--line-light);"></div>
         <span style="font-family: var(--mono); font-size: 10px; color: var(--text-muted);">OR EMAIL</span>
         <div style="flex: 1; height: 1px; background: var(--line-light);"></div>
       </div>
 
-      <div style="display: flex; flex-direction: column; gap: 16px;">
+      <form id="auth-form" style="display: flex; flex-direction: column; gap: 16px;">
         <div id="name-group" style="display: none;">
           <label style="font-family: var(--mono); font-size: 11px; color: var(--text-muted);">FULL NAME</label>
           <input id="f-name" type="text" placeholder="John Doe" style="width:100%; padding:12px; margin-top:4px; background: var(--bg-surface); border:1px solid var(--line-light); border-radius: 4px; color: var(--white);" />
@@ -30,86 +30,153 @@ import Layout from '../layouts/Layout.astro';
 
         <div>
           <label style="font-family: var(--mono); font-size: 11px; color: var(--text-muted);">EMAIL ADDRESS</label>
-          <input id="f-email" type="email" placeholder="john@company.com" style="width:100%; padding:12px; margin-top:4px; background: var(--bg-surface); border:1px solid var(--line-light); border-radius: 4px; color: var(--white);" />
+          <input id="f-email" type="email" required placeholder="john@company.com" style="width:100%; padding:12px; margin-top:4px; background: var(--bg-surface); border:1px solid var(--line-light); border-radius: 4px; color: var(--white);" />
         </div>
 
-        <div>
-          <label style="font-family: var(--mono); font-size: 11px; color: var(--text-muted);">PASSWORD</label>
+        <div id="password-group">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <label style="font-family: var(--mono); font-size: 11px; color: var(--text-muted);">PASSWORD</label>
+            <button type="button" id="forgot-btn" style="background:none; border:none; color:var(--gold); font-size:0.8rem; cursor:pointer; text-decoration:underline;">Forgot?</button>
+          </div>
           <input id="f-password" type="password" placeholder="••••••••" style="width:100%; padding:12px; margin-top:4px; background: var(--bg-surface); border:1px solid var(--line-light); border-radius: 4px; color: var(--white);" />
         </div>
 
-        <button id="auth-btn" class="btn btn-primary" style="margin-top: 8px; width: 100%;">Sign In</button>
-      </div>
+        <button type="submit" id="auth-btn" class="btn btn-primary" style="margin-top: 8px; width: 100%;">Sign In</button>
+      </form>
 
       <div style="text-align: center; margin-top: 24px;">
         <button id="toggle-btn" style="background: none; border: none; color: var(--text-muted); font-size: 0.85rem; cursor: pointer; text-decoration: underline;">
           Don't have an account? Sign Up
         </button>
       </div>
-      
+
       <div id="error-msg" style="display: none; margin-top: 16px; padding: 12px; background: rgba(239,68,68,0.1); border: 1px solid #ef4444; color: #ef4444; font-size: 0.85rem; text-align: center; border-radius: 4px;"></div>
+      <div id="success-msg" style="display: none; margin-top: 16px; padding: 12px; background: rgba(16,185,129,0.1); border: 1px solid #10B981; color: #10B981; font-size: 0.85rem; text-align: center; border-radius: 4px;"></div>
     </div>
   </div>
 
   <script>
     import { supabase } from '../lib/supabase';
 
+    const authForm = document.getElementById('auth-form');
+    const title = document.getElementById('page-title');
+    const sub = document.getElementById('page-sub');
+    const nameGroup = document.getElementById('name-group');
+    const passwordGroup = document.getElementById('password-group');
+    const authBtn = document.getElementById('auth-btn');
+    const toggleBtn = document.getElementById('toggle-btn');
+    const forgotBtn = document.getElementById('forgot-btn');
+    const errorMsg = document.getElementById('error-msg');
+    const successMsg = document.getElementById('success-msg');
+    const googleBtn = document.getElementById('google-btn');
+    const divider = document.getElementById('divider');
+
+    let mode = 'login'; // 'login', 'signup', 'forgot'
+
+    function resetUI() {
+      errorMsg.style.display = 'none';
+      successMsg.style.display = 'none';
+      authBtn.disabled = false;
+    }
+
     // 1. Google Sign In
-    document.getElementById('google-btn').addEventListener('click', async () => {
+    googleBtn.addEventListener('click', async () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { 
-           redirectTo: 'http://localhost:4321/account' }
+        options: { redirectTo: window.location.origin + '/account' }
       });
       if (error) alert(error.message);
     });
 
-    // 2. Email/Password Auth
-    let isLogin = true;
-    const title = document.getElementById('page-title');
-    const sub = document.getElementById('page-sub');
-    const nameGroup = document.getElementById('name-group');
-    const authBtn = document.getElementById('auth-btn');
-    const toggleBtn = document.getElementById('toggle-btn');
-    const errorMsg = document.getElementById('error-msg');
-
+    // 2. Toggle Sign Up / Login
     toggleBtn.addEventListener('click', () => {
-      isLogin = !isLogin;
-      title.textContent = isLogin ? 'Client Portal' : 'Create Account';
-      sub.textContent = isLogin ? 'Sign in to manage your bookings and rewards.' : 'Join ABSL to track your corporate travel.';
-      nameGroup.style.display = isLogin ? 'none' : 'block';
-      authBtn.textContent = isLogin ? 'Sign In' : 'Create Account';
-      toggleBtn.textContent = isLogin ? "Don't have an account? Sign Up" : "Already have an account? Sign In";
-      errorMsg.style.display = 'none';
+      mode = mode === 'login' ? 'signup' : 'login';
+      resetUI();
+      
+      if (mode === 'signup') {
+        title.textContent = 'Create Account';
+        sub.textContent = 'Join ABSL to track your corporate travel.';
+        nameGroup.style.display = 'block';
+        passwordGroup.style.display = 'block';
+        forgotBtn.style.display = 'none';
+        authBtn.textContent = 'Create Account';
+        toggleBtn.textContent = "Already have an account? Sign In";
+        googleBtn.style.display = 'flex';
+        divider.style.display = 'flex';
+        document.getElementById('f-password').required = true;
+      } else {
+        title.textContent = 'Client Portal';
+        sub.textContent = 'Sign in to manage your bookings and rewards.';
+        nameGroup.style.display = 'none';
+        passwordGroup.style.display = 'block';
+        forgotBtn.style.display = 'block';
+        authBtn.textContent = 'Sign In';
+        toggleBtn.textContent = "Don't have an account? Sign Up";
+        googleBtn.style.display = 'flex';
+        divider.style.display = 'flex';
+        document.getElementById('f-password').required = true;
+      }
     });
 
-    authBtn.addEventListener('click', async () => {
-      const email = document.getElementById('f-email').value;
-      const password = document.getElementById('f-password').value;
-      const name = document.getElementById('f-name').value;
+    // 3. Forgot Password Flow
+    forgotBtn.addEventListener('click', () => {
+      mode = 'forgot';
+      resetUI();
+      title.textContent = 'Reset Password';
+      sub.textContent = 'Enter your email and we will send you a reset link.';
+      nameGroup.style.display = 'none';
+      passwordGroup.style.display = 'none';
+      authBtn.textContent = 'Send Reset Link';
+      toggleBtn.textContent = "Back to Sign In";
+      googleBtn.style.display = 'none';
+      divider.style.display = 'none';
+      document.getElementById('f-password').required = false;
+    });
+
+    // 4. Form Submit
+    authForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      resetUI();
       
+      const email = document.getElementById('f-email').value.trim();
+      const password = document.getElementById('f-password').value;
+      const name = document.getElementById('f-name').value.trim();
+
       authBtn.textContent = 'Processing...';
       authBtn.disabled = true;
 
       try {
-        if (isLogin) {
+        if (mode === 'login') {
           const { error } = await supabase.auth.signInWithPassword({ email, password });
           if (error) throw error;
-          window.location.href = '/account'; 
-        } else {
-          const { error } = await supabase.auth.signUp({ 
-            email, 
+          window.location.href = '/account';
+        } 
+        else if (mode === 'signup') {
+          const { error } = await supabase.auth.signUp({
+            email,
             password,
             options: { data: { full_name: name } }
           });
           if (error) throw error;
-          alert('Account created! You can now log in.');
-          window.location.reload();
+          successMsg.style.display = 'block';
+          successMsg.textContent = 'Account created! Check your email to verify, then sign in.';
+          authBtn.textContent = 'Create Account';
+          authBtn.disabled = false;
+        }
+        else if (mode === 'forgot') {
+          const { error } = await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: window.location.origin + '/reset-password',
+          });
+          if (error) throw error;
+          successMsg.style.display = 'block';
+          successMsg.textContent = 'Password reset link sent! Check your email inbox.';
+          authBtn.textContent = 'Send Reset Link';
+          authBtn.disabled = false;
         }
       } catch (err) {
-        errorMsg.textContent = err.message;
         errorMsg.style.display = 'block';
-        authBtn.textContent = isLogin ? 'Sign In' : 'Create Account';
+        errorMsg.textContent = err.message;
+        authBtn.textContent = mode === 'login' ? 'Sign In' : mode === 'signup' ? 'Create Account' : 'Send Reset Link';
         authBtn.disabled = false;
       }
     });
