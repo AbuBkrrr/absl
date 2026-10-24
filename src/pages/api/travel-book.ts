@@ -61,7 +61,7 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     // 4. Send Email to Admin (You)
-    await resend.emails.send({
+    const { data: adminData, error: adminError } = await resend.emails.send({
       from: 'ABSL System <system@absl.com.ng>',
       to: ['info@absl.com.ng'], // Change this to your actual admin email
       subject: `NEW BOOKING: ${service_type} - ${customer_name}`,
@@ -76,6 +76,12 @@ export const POST: APIRoute = async ({ request }) => {
         <p><a href="https://absl.com.ng/admin/travel">Go to Admin Dashboard</a></p>
       `
     });
+
+    if (adminError) {
+      console.error('Admin Email Failed:', adminError);
+    } else {
+      console.log('Admin Email Sent:', adminData);
+    }
 
     return new Response('OK', { status: 200 });
 

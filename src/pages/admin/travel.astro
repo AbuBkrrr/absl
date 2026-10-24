@@ -27,7 +27,7 @@ const rows = bookings || [];
             <th style="padding:16px; color:var(--gold);">Customer</th>
             <th style="padding:16px; color:var(--gold);">Contact</th>
             <th style="padding:16px; color:var(--gold);">Details</th>
-            <th style="padding:16px; color:var(--gold); text-align:right;">Status</th>
+            <th style="padding:16px; color:var(--gold);">Status</th>
           </tr>
         </thead>
         <tbody>
@@ -40,16 +40,19 @@ const rows = bookings || [];
                 <td style="padding:16px; color:var(--gold); font-weight:600;">{b.service_type}</td>
                 <td style="padding:16px; color:var(--white);">{b.customer_name}</td>
                 <td style="padding:16px; color:var(--text-muted);">
-                  {b.customer_email}<br/>
+                  <a href={`mailto:${b.customer_email}`} style="color:var(--gold); text-decoration:underline;">{b.customer_email}</a><br/>
                   <span style="font-size:11px;">{b.customer_phone}</span>
                 </td>
                 <td style="padding:16px; color:var(--text-light); font-size:11px; max-width: 250px; white-space: pre-wrap;">
                   {Object.entries(b.details).map(([key, val]) => `${key}: ${val}`).join('\n')}
                 </td>
-                <td style="padding:16px; text-align:right;">
-                  <span style="font-size:10px; padding:4px 10px; border-radius:4px; background:var(--bg-surface); color:var(--gold); text-transform:uppercase; font-weight:700;">
-                    {b.status}
-                  </span>
+                <td style="padding:16px;">
+                  <select data-id={b.id} class="status-select" style="padding:8px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px; font-family:var(--mono); font-size:12px;">
+                    <option value="pending" selected={b.status === 'pending'}>Pending</option>
+                    <option value="contacted" selected={b.status === 'contacted'}>Contacted</option>
+                    <option value="confirmed" selected={b.status === 'confirmed'}>Confirmed</option>
+                    <option value="cancelled" selected={b.status === 'cancelled'}>Cancelled</option>
+                  </select>
                 </td>
               </tr>
             ))
@@ -58,4 +61,32 @@ const rows = bookings || [];
       </table>
     </div>
   </div>
+
+  <script is:inline>
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.status-select').forEach(select => {
+        select.addEventListener('change', async (e) => {
+          const el = e.target;
+          const id = el.dataset.id;
+          const status = el.value;
+          
+          el.style.borderColor = 'var(--gold)';
+          
+          const res = await fetch('/api/travel-update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, status })
+          });
+
+          if (res.ok) {
+            el.style.borderColor = 'var(--green)';
+            setTimeout(() => el.style.borderColor = 'var(--line-light)', 1000);
+          } else {
+            alert('Failed to update status.');
+            el.style.borderColor = 'var(--line-light)';
+          }
+        });
+      });
+    });
+  </script>
 </Layout>

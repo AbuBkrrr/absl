@@ -161,4 +161,85 @@ if (user) {
       render();
     </script>
   </div>
+<script is:inline define:vars={{ flwKey: import.meta.env.PUBLIC_FLUTTERWAVE_PUBLIC_KEY }}>
+  document.addEventListener('DOMContentLoaded', () => {
+    const checkoutBtn = document.querySelector('button[type="submit"]') || document.getElementById('checkout-btn') || document.getElementById('place-order-btn');
+    
+    if (checkoutBtn) {
+      const newBtn = checkoutBtn.cloneNode(true);
+      checkoutBtn.parentNode.replaceChild(newBtn, checkoutBtn);
+
+      newBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+
+        const nameInput = document.querySelector('input[name="name"]') || document.getElementById('name');
+        const emailInput = document.querySelector('input[name="email"]') || document.getElementById('email');
+        const phoneInput = document.querySelector('input[name="phone"]') || document.getElementById('phone');
+
+        const name = nameInput ? nameInput.value : 'Customer';
+        const email = emailInput ? emailInput.value : 'customer@absl.com.ng';
+        const phone = phoneInput ? phoneInput.value : '0000000000';
+
+        if (!name || !email || !phone) {
+          return alert('Please fill in your Name, Email, and Phone number before checking out.');
+        }
+
+        const totalAmount = 50000; // Replace with dynamic cart total
+
+        if (typeof FlutterwaveCheckout === 'undefined') {
+          return alert('Payment gateway failed to load.');
+        }
+
+        FlutterwaveCheckout({
+          public_key: flwKey,
+          tx_ref: "ABSL-" + Math.floor((Math.random() * 1000000000) + 1),
+          amount: totalAmount,
+          currency: "NGN",
+          payment_options: "card, banktransfer, ussd",
+          customer: {
+            email: email,
+            phone_number: phone,
+            name: name,
+          },
+          customizations: {
+            title: "ABSL Payment",
+            description: "Payment for services",
+            logo: "https://absl.com.ng/absl-logo.png",
+          },
+          callback: async function (data) {
+            newBtn.textContent = 'Verifying Payment...';
+            newBtn.disabled = true;
+
+            try {
+              const verifyRes = await fetch('/api/verify-flutterwave', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ transaction_id: data.transaction_id })
+              });
+
+              const verifyData = await verifyRes.json();
+
+              if (verifyRes.ok && verifyData.status === 'success') {
+                alert(`Payment successful! Ref: ${data.tx_ref}`);
+                // Proceed to save the booking here
+                // window.location.href = '/success';
+              } else {
+                alert('Payment verification failed.');
+                newBtn.textContent = 'Place Order';
+                newBtn.disabled = false;
+              }
+            } catch (err) {
+              alert('Error verifying payment.');
+              newBtn.textContent = 'Place Order';
+              newBtn.disabled = false;
+            }
+          },
+          onclose: function() {
+            // Handle user closing modal
+          }
+        });
+      });
+    }
+  });
+</script>
 </Layout>
