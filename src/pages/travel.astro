@@ -285,18 +285,24 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
         submitBtn.textContent = 'Submitting...'; submitBtn.disabled = true;
 
         try {
-          const supabase = await getSupabase();
-          const { error } = await supabase.from('absl_travel_bookings').insert({
-            service_type: currentService,
-            customer_name: name,
-            customer_email: email,
-            customer_phone: phone,
-            details: currentDetails
+          const response = await fetch('/api/travel-book', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              service_type: currentService,
+              customer_name: name,
+              customer_email: email,
+              customer_phone: phone,
+              details: currentDetails
+            })
           });
 
-          if (error) throw error;
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(errorText || 'Failed to submit request');
+          }
 
-          alert(`Request submitted successfully!\n\nOur travel desk will contact you shortly regarding your ${currentService} request.`);
+          alert(`Request submitted successfully!\n\nA confirmation email has been sent to ${email}. Our travel desk will contact you shortly regarding your ${currentService} request.`);
           modal.style.display = 'none';
           
           document.getElementById('m-name').value = '';
