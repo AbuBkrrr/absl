@@ -2,6 +2,7 @@
 import Layout from '../../layouts/Layout.astro';
 import { supabase } from '../../lib/supabase';
 
+// Fetch global data server-side
 const { data: offers } = await supabase.from('absl_rewards_offers').select('*');
 const { data: discounts } = await supabase.from('absl_rewards_discounts').select('*');
 const { data: carbon } = await supabase.from('absl_rewards_carbon').select('*');
@@ -70,18 +71,63 @@ const { data: allLoyalty } = await supabase.from('absl_rewards_loyalty').select(
     </div>
   </div>
 
+  <!-- UNIVERSAL ACTION MODAL -->
+  <div id="action-modal" style="display:none; position:fixed; inset:0; background:rgba(11,30,58,0.8); z-index:9999; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+    <div style="background:#fff; border-radius:24px; width:100%; max-width:500px; padding:40px; text-align:center; position:relative;">
+      <button id="close-modal" style="position:absolute; top:20px; right:20px; background:none; border:none; font-size:24px; cursor:pointer; color:#8ba0b9;">✕</button>
+      
+      <div id="modal-icon" style="font-size:48px; margin-bottom:16px;"></div>
+      <h3 id="modal-title" style="font-size:1.5rem; color:#0b1e3a; font-weight:700; margin-bottom:8px;"></h3>
+      <p id="modal-desc" style="color:#4a6a8a; font-size:0.95rem; line-height:1.6; margin-bottom:24px;"></p>
+      
+      <div id="modal-details" style="background:#f0f2f8; border-radius:12px; padding:16px; text-align:left; margin-bottom:24px; font-size:0.9rem; color:#0b1e3a;">
+        <!-- Dynamic Details Go Here -->
+      </div>
+
+      <div style="display:flex; gap:12px;">
+        <button id="modal-cancel" style="flex:1; padding:14px; border-radius:40px; border:1px solid #d1d9e6; background:#fff; color:#4a6a8a; font-weight:600; cursor:pointer;">Cancel</button>
+        <button id="modal-confirm" style="flex:2; padding:14px; border-radius:40px; border:none; background:#0b1e3a; color:#fff; font-weight:700; cursor:pointer;">Confirm</button>
+      </div>
+    </div>
+  </div>
+
   <script type="application/json" id="rewards-data" set:html={JSON.stringify({ allLoyalty, offers, discounts, carbon })} />
 
   <script is:inline>
     document.addEventListener('DOMContentLoaded', () => {
       const data = JSON.parse(document.getElementById('rewards-data').textContent);
+      const modal = document.getElementById('action-modal');
       
+      // Modal Elements
+      const mIcon = document.getElementById('modal-icon');
+      const mTitle = document.getElementById('modal-title');
+      const mDesc = document.getElementById('modal-desc');
+      const mDetails = document.getElementById('modal-details');
+      const mConfirm = document.getElementById('modal-confirm');
+
+      function showModal(actionData) {
+        mIcon.textContent = actionData.icon;
+        mTitle.textContent = actionData.title;
+        mDesc.textContent = actionData.desc;
+        mDetails.innerHTML = actionData.details;
+        
+        mConfirm.onclick = () => {
+          alert('Action simulated! In a live environment, you would now be redirected or the transaction would process.');
+          modal.style.display = 'none';
+        };
+        
+        modal.style.display = 'flex';
+      }
+
+      document.getElementById('close-modal').onclick = () => modal.style.display = 'none';
+      document.getElementById('modal-cancel').onclick = () => modal.style.display = 'none';
+
       const css = {
-        card: "background:#fff; border:1px solid #e3eaf2; border-radius:16px; padding:20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; box-shadow:0 4px 12px rgba(0,0,0,0.02); transition: 0.2s;",
+        card: "background:#fff; border:1px solid #e3eaf2; border-radius:16px; padding:20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; box-shadow:0 4px 12px rgba(0,0,0,0.02);",
         title: "font-weight:700; font-size:1.1rem; color:#0b1e3a; margin-bottom:4px;",
         desc: "font-size:0.85rem; color:#4a6a8a;",
-        btn: "background:#0b1e3a; color:#fff; padding:10px 20px; border-radius:40px; font-weight:600; text-decoration:none; font-size:0.85rem;",
-        btnGreen: "background:#0f7b4a; color:#fff; padding:10px 20px; border-radius:40px; font-weight:600; text-decoration:none; font-size:0.85rem;",
+        btn: "background:#0b1e3a; color:#fff; padding:10px 20px; border-radius:40px; font-weight:600; text-decoration:none; font-size:0.85rem; cursor:pointer; border:none;",
+        btnGreen: "background:#0f7b4a; color:#fff; padding:10px 20px; border-radius:40px; font-weight:600; text-decoration:none; font-size:0.85rem; cursor:pointer; border:none;",
         badge: "background:#d97d2b; color:#fff; padding:2px 10px; border-radius:20px; font-size:0.7rem; margin-left:8px;"
       };
 
@@ -121,12 +167,12 @@ const { data: allLoyalty } = await supabase.from('absl_rewards_loyalty').select(
           const rows = grouped[ret].sort((a,b) => b.miles - a.miles);
           const best = rows[0];
           return `
-            <div style="${css.card}" onmouseover="this.style.borderColor='#1e5f9e'" onmouseout="this.style.borderColor='#e3eaf2'">
+            <div style="${css.card}">
               <div>
                 <div style="${css.title}">${ret} <span style="${css.badge}">Up to ${best.miles}x</span></div>
                 <div style="${css.desc}">${rows.map(r => `<span style="color:#1e5f9e; font-weight:600;">${r.airline}</span> ${r.miles}x`).join(' · ')}</div>
               </div>
-              <a href="${best.link}" target="_blank" style="${css.btn}">Shop & Earn</a>
+              <button class="shop-btn" data-retailer="${ret}" data-airline="${best.airline}" data-miles="${best.miles}" style="${css.btn}">Shop & Earn</button>
             </div>
           `;
         }).join('');
@@ -140,7 +186,7 @@ const { data: allLoyalty } = await supabase.from('absl_rewards_loyalty').select(
             <div style="${css.title}">${d.airline} <span style="${css.badge}">${d.percentage}% OFF</span></div>
             <div style="${css.desc}">${d.type} · ${d.description}</div>
           </div>
-          <a href="${d.link}" target="_blank" style="${css.btn}">View Deal</a>
+          <button class="deal-btn" data-airline="${d.airline}" data-desc="${d.description}" data-pct="${d.percentage}" style="${css.btn}">View Deal</button>
         </div>
       `).join('');
 
@@ -151,11 +197,57 @@ const { data: allLoyalty } = await supabase.from('absl_rewards_loyalty').select(
             <div style="${css.title}">${c.airline} <span style="background:#0f7b4a; color:#fff; padding:2px 10px; border-radius:20px; font-size:0.7rem; margin-left:8px;">+${c.bonus_miles} mi</span></div>
             <div style="${css.desc}">${c.type} · ${c.description} · $${c.cost_per_ton}/ton</div>
           </div>
-          <a href="${c.link}" target="_blank" style="${css.btnGreen}">Offset Now</a>
+          <button class="offset-btn" data-airline="${c.airline}" data-type="${c.type}" data-cost="${c.cost_per_ton}" data-bonus="${c.bonus_miles}" style="${css.btnGreen}">Offset Now</button>
         </div>
       `).join('');
 
-      // 5. Tab Switching Logic
+      // 5. Attach Modal Events
+      document.querySelectorAll('.shop-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const d = e.target.dataset;
+          showModal({
+            icon: '🛍️',
+            title: `Shop at ${d.retailer}`,
+            desc: `You are about to be redirected to ${d.retailer} to earn miles.`,
+            details: `
+              <div style="display:flex; justify-content:space-between; margin-bottom:8px;"><span>Airline Partner:</span> <strong>${d.airline}</strong></div>
+              <div style="display:flex; justify-content:space-between;"><span>Earning Rate:</span> <strong>${d.miles} miles per $1</strong></div>
+            `
+          });
+        });
+      });
+
+      document.querySelectorAll('.deal-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const d = e.target.dataset;
+          showModal({
+            icon: '✈️',
+            title: `${d.airline} Flight Deal`,
+            desc: `Exclusive discount available for ABSL users.`,
+            details: `
+              <div style="display:flex; justify-content:space-between; margin-bottom:8px;"><span>Route:</span> <strong>${d.desc}</strong></div>
+              <div style="display:flex; justify-content:space-between;"><span>Discount:</span> <strong style="color:#0f7b4a;">${d.pct}% OFF</strong></div>
+            `
+          });
+        });
+      });
+
+      document.querySelectorAll('.offset-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const d = e.target.dataset;
+          showModal({
+            icon: '🌱',
+            title: `Offset with ${d.airline}`,
+            desc: `Support ${d.type} to reduce your carbon footprint.`,
+            details: `
+              <div style="display:flex; justify-content:space-between; margin-bottom:8px;"><span>Cost:</span> <strong>$${d.cost} / ton CO₂</strong></div>
+              <div style="display:flex; justify-content:space-between;"><span>Bonus:</span> <strong style="color:#0f7b4a;">Earn +${d.bonus} miles</strong></div>
+            `
+          });
+        });
+      });
+
+      // 6. Tab Switching Logic
       document.querySelectorAll('.mm-tab').forEach(btn => {
         btn.addEventListener('click', () => {
           document.querySelectorAll('.mm-tab').forEach(b => {
@@ -169,7 +261,7 @@ const { data: allLoyalty } = await supabase.from('absl_rewards_loyalty').select(
         });
       });
 
-      // 6. Shop Filters Logic
+      // 7. Shop Filters Logic
       document.getElementById('shop-filters').addEventListener('click', (e) => {
         if (e.target.classList.contains('mm-chip')) {
           document.querySelectorAll('.mm-chip').forEach(c => {
@@ -180,10 +272,9 @@ const { data: allLoyalty } = await supabase.from('absl_rewards_loyalty').select(
         }
       });
 
-      // 7. Global Search Logic
+      // 8. Global Search Logic
       document.getElementById('global-search').addEventListener('input', (e) => {
         const term = e.target.value.toLowerCase();
-        // Switch to shop tab if searching
         document.querySelectorAll('.mm-tab').forEach(b => {
           b.classList.remove('active'); b.style.background = '#fff'; b.style.color = '#0b1e3a'; b.style.borderColor = '#e3eaf2';
         });
@@ -193,7 +284,6 @@ const { data: allLoyalty } = await supabase.from('absl_rewards_loyalty').select(
         shopTab.classList.add('active'); shopTab.style.background = '#0b1e3a'; shopTab.style.color = '#fff'; shopTab.style.borderColor = '#0b1e3a';
         document.getElementById('panel-shop').style.display = 'block';
 
-        // Reset category filter
         document.querySelectorAll('.mm-chip').forEach(c => { c.classList.remove('active'); c.style.background = '#eef3fa'; c.style.color = '#0b1e3a'; });
         document.querySelector('.mm-chip[data-cat="All"]').classList.add('active'); 
         document.querySelector('.mm-chip[data-cat="All"]').style.background = '#1e5f9e'; 
