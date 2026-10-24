@@ -644,4 +644,65 @@ const flwKey = import.meta.env.PUBLIC_FLUTTERWAVE_PUBLIC_KEY;
       </div>
     </div>
   </div>
+  <!-- HIDDEN CLEAN PDF SUMMARY TEMPLATE -->
+  <div id="pdf-summary-wrapper" style="position: fixed; left: -9999px; top: 0;">
+    <div id="pdf-summary-template" style="font-family: Arial, sans-serif; width: 800px; padding: 40px; background: #ffffff; color: #333333;">
+      
+      <!-- Header -->
+      <div style="border-bottom: 2px solid #1E5F9E; padding-bottom: 20px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <img src="/absl-logo.png" alt="ABSL Logo" style="height: 60px; margin-bottom: 10px;" />
+          <h1 style="margin: 0; color: #1E5F9E; font-size: 24px; font-weight: bold;">PROJECT SUMMARY</h1>
+        </div>
+        <div style="text-align: right; font-size: 13px; color: #555;">
+          <strong>Allstates Business Solutions & Logistics Ltd</strong><br>
+          Plot 105, Gidan Dan Asabe, Zoo Road, Kano.<br>
+          08033355060 | info@absl.com.ng
+        </div>
+      </div>
+
+      <!-- Project Details -->
+      <h3 style="color: #1E5F9E; border-bottom: 1px solid #ddd; padding-bottom: 5px;">Project Parameters</h3>
+      <table style="width: 100%; font-size: 14px; margin-bottom: 30px; border-collapse: collapse;">
+        <tr>
+          <td style="padding: 8px 0;"><strong>Total Floor Area:</strong> <span id="pdf-sqm">0</span> m²</td>
+          <td style="padding: 8px 0;"><strong>Floors:</strong> <span id="pdf-floors">0</span></td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0;"><strong>Build Quality:</strong> <span id="pdf-quality">Standard</span></td>
+          <td style="padding: 8px 0;"><strong>Furnishing:</strong> <span id="pdf-furnish">Excluded</span></td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0;"><strong>Date Generated:</strong> <span id="pdf-date">Date</span></td>
+          <td style="padding: 8px 0;"><strong>Ref No:</strong> <span id="pdf-ref">REF-0000</span></td>
+        </tr>
+      </table>
+
+      <!-- Grand Summary -->
+      <h3 style="color: #1E5F9E; border-bottom: 1px solid #ddd; padding-bottom: 5px;">Cost Breakdown</h3>
+      <table style="width: 100%; border-collapse: collapse; font-size: 15px; margin-bottom: 20px;">
+        <tr>
+          <td style="padding: 10px 0; border-bottom: 1px solid #eee;">Materials & Labor</td>
+          <td style="padding: 10px 0; border-bottom: 1px solid #eee; text-align: right;">₦<span id="pdf-materials">0</span></td>
+        </tr>
+        <tr>
+          <td style="padding: 10px 0; border-bottom: 1px solid #eee;">Professional Fees</td>
+          <td style="padding: 10px 0; border-bottom: 1px solid #eee; text-align: right;">₦<span id="pdf-fees">0</span></td>
+        </tr>
+        <tr>
+          <td style="padding: 10px 0; border-bottom: 1px solid #eee;">Finishing (Included)</td>
+          <td style="padding: 10px 0; border-bottom: 1px solid #eee; text-align: right;">₦<span id="pdf-finishing">0</span></td>
+        </tr>
+        <tr>
+          <td style="padding: 15px 0; font-weight: bold; font-size: 18px; color: #1E5F9E;">Total Project Cost</td>
+          <td style="padding: 15px 0; text-align: right; font-weight: bold; font-size: 18px; color: #1E5F9E;">₦<span id="pdf-total">0</span></td>
+        </tr>
+      </table>
+
+      <!-- Footer -->
+      <div style="margin-top: 50px; text-align: center; font-size: 12px; color: #888;">
+        <p>This is a computer-generated summary. For a formal Bill of Quantities (BOQ) or to request supply, please contact us.</p>
+      </div>
+    </div>
+  </div>
 </Layout>
