@@ -2,7 +2,6 @@
 import Layout from '../../layouts/Layout.astro';
 import { supabase } from '../../lib/supabase';
 
-// Fetch global data server-side
 const { data: offers } = await supabase.from('absl_rewards_offers').select('*');
 const { data: discounts } = await supabase.from('absl_rewards_discounts').select('*');
 const { data: carbon } = await supabase.from('absl_rewards_carbon').select('*');
@@ -11,46 +10,49 @@ const { data: allLoyalty } = await supabase.from('absl_rewards_loyalty').select(
 
 <Layout title="MileageMall Rewards - ABSL">
   <div style="background: #f0f2f8; min-height: 100vh; padding: 40px 24px; font-family: 'Inter', sans-serif;">
-    <div class="container" style="max-width: 900px; margin: 0 auto; background: white; border-radius: 24px; padding: 40px; box-shadow: 0 20px 40px rgba(0,0,0,0.05);">
+    <div class="container" style="max-width: 1000px; margin: 0 auto; background: white; border-radius: 24px; padding: 40px; box-shadow: 0 20px 40px rgba(0,0,0,0.05);">
       
       <!-- HEADER -->
-      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #eef2f6; padding-bottom:24px; margin-bottom:32px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #eef2f6; padding-bottom:24px; margin-bottom:32px; flex-wrap:wrap; gap:16px;">
         <div>
-          <h1 style="font-size:2rem; font-weight:700; color:#0b1e3a; margin-bottom:8px;">
+          <h1 style="font-size:2.2rem; font-weight:700; color:#0b1e3a; margin-bottom:8px;">
             <span style="color:#1e5f9e;">✈️</span> MileageMall
           </h1>
           <div style="font-size:0.9rem; color:#3a5670; background:#e9edf4; padding:6px 16px; border-radius:100px; display:inline-block; font-weight:500;">
             ⚡ One Hub. Every Airline. Max Rewards.
           </div>
         </div>
-        <div>
-          <a href="/login" style="background: #0b1e3a; color: white; padding: 10px 20px; border-radius: 20px; font-weight: 700; text-decoration: none; font-size: 0.85rem;">Sign In</a>
+        
+        <!-- Global Search -->
+        <div style="flex:1; max-width:400px;">
+          <input type="text" id="global-search" placeholder="Search airlines, retailers..." style="width:100%; padding:12px 20px; border-radius:40px; border:1px solid #d1d9e6; outline:none; font-family:inherit; font-size:0.95rem;" />
         </div>
       </div>
 
       <!-- HERO DASHBOARD -->
       <div style="background: #0b1e3a; color: white; border-radius: 24px; padding: 32px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 24px; margin-bottom: 32px;">
         <div>
-          <div style="font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; color:#8ba0b9; margin-bottom:8px;">Demo Mode · Total Loyalty Value</div>
+          <div style="font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; color:#8ba0b9; margin-bottom:8px;">Total Portfolio Value</div>
           <div id="total-miles" style="font-size:3rem; font-weight:700; line-height:1;">0</div>
           <div id="total-airlines" style="font-size:0.85rem; color:#8ba0b9; margin-top:8px;">miles across 0 airlines</div>
         </div>
-        <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;" id="loyalty-accounts"></div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:flex-end; max-width:500px;" id="loyalty-accounts"></div>
       </div>
 
       <!-- TABS -->
-      <div style="display:flex; gap:12px; margin-bottom:24px;" id="tabs-container">
-        <button class="mm-tab active" data-target="shop">🛍️ Shopping</button>
-        <button class="mm-tab" data-target="deals">💸 Deals</button>
-        <button class="mm-tab" data-target="carbon">🌱 Carbon</button>
+      <div style="display:flex; gap:12px; margin-bottom:24px; flex-wrap:wrap;" id="tabs-container">
+        <button class="mm-tab active" data-target="shop">🛍️ Shopping Multipliers</button>
+        <button class="mm-tab" data-target="deals">💸 Flight Deals</button>
+        <button class="mm-tab" data-target="carbon">🌱 Carbon Offset</button>
       </div>
 
       <!-- SHOP PANEL -->
       <div class="mm-panel" id="panel-shop" style="display:block;">
         <div style="display:flex; gap:8px; margin-bottom:16px;" id="shop-filters">
-          <span class="mm-chip active" data-cat="All">All</span>
-          <span class="mm-chip" data-cat="Clothing">Clothing</span>
+          <span class="mm-chip active" data-cat="All">All Categories</span>
           <span class="mm-chip" data-cat="Tech">Tech</span>
+          <span class="mm-chip" data-cat="Clothing">Clothing</span>
+          <span class="mm-chip" data-cat="Travel">Travel</span>
         </div>
         <div id="offers-list" style="display:grid; gap:16px;"></div>
       </div>
@@ -68,7 +70,6 @@ const { data: allLoyalty } = await supabase.from('absl_rewards_loyalty').select(
     </div>
   </div>
 
-  <!-- Pass server data to client safely -->
   <script type="application/json" id="rewards-data" set:html={JSON.stringify({ allLoyalty, offers, discounts, carbon })} />
 
   <script is:inline>
@@ -76,38 +77,40 @@ const { data: allLoyalty } = await supabase.from('absl_rewards_loyalty').select(
       const data = JSON.parse(document.getElementById('rewards-data').textContent);
       
       const css = {
-        card: "background:#fff; border:1px solid #e3eaf2; border-radius:16px; padding:20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; box-shadow:0 4px 12px rgba(0,0,0,0.02);",
+        card: "background:#fff; border:1px solid #e3eaf2; border-radius:16px; padding:20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; box-shadow:0 4px 12px rgba(0,0,0,0.02); transition: 0.2s;",
         title: "font-weight:700; font-size:1.1rem; color:#0b1e3a; margin-bottom:4px;",
         desc: "font-size:0.85rem; color:#4a6a8a;",
         btn: "background:#0b1e3a; color:#fff; padding:10px 20px; border-radius:40px; font-weight:600; text-decoration:none; font-size:0.85rem;",
-        btnGreen: "background:#0f7b4a; color:#fff; padding:10px 20px; border-radius:40px; font-weight:600; text-decoration:none; font-size:0.85rem;"
+        btnGreen: "background:#0f7b4a; color:#fff; padding:10px 20px; border-radius:40px; font-weight:600; text-decoration:none; font-size:0.85rem;",
+        badge: "background:#d97d2b; color:#fff; padding:2px 10px; border-radius:20px; font-size:0.7rem; margin-left:8px;"
       };
 
-      // 1. Render Loyalty Demo Data
-      const myLoyalty = data.allLoyalty.filter(l => l.user_id === null); // Demo data
-      const totalMiles = myLoyalty.reduce((s, r) => s + (r.points || 0), 0);
-      
+      // 1. Render Loyalty Balances
+      const totalMiles = data.allLoyalty.reduce((s, r) => s + (r.points || 0), 0);
       document.getElementById('total-miles').textContent = totalMiles.toLocaleString();
-      document.getElementById('total-airlines').textContent = `miles across ${myLoyalty.length} airlines`;
+      document.getElementById('total-airlines').textContent = `miles across ${data.allLoyalty.length} airlines`;
 
-      const accContainer = document.getElementById('loyalty-accounts');
-      accContainer.innerHTML = myLoyalty.map(acc => `
-        <span style="background:rgba(255,255,255,0.1); padding:8px 16px; border-radius:40px; font-size:0.8rem; font-weight:500;">
-          ✈️ ${acc.airline.split(' ')[0]} ${acc.points.toLocaleString()} mi
-        </span>
+      document.getElementById('loyalty-accounts').innerHTML = data.allLoyalty.map(acc => `
+        <div style="background:rgba(255,255,255,0.1); padding:8px 16px; border-radius:12px; font-size:0.8rem; font-weight:500; display:flex; flex-direction:column; gap:2px;">
+          <span style="color:#8ba0b9; font-size:0.7rem;">${acc.airline}</span>
+          <span style="color:white; font-weight:700;">${acc.points.toLocaleString()} mi</span>
+        </div>
       `).join('');
 
       // 2. Render Offers
-      function renderOffers(cat) {
+      function renderOffers(cat, searchTerm = '') {
         const container = document.getElementById('offers-list');
-        const filtered = cat === 'All' ? data.offers : data.offers.filter(o => o.category === cat);
+        let filtered = cat === 'All' ? data.offers : data.offers.filter(o => o.category === cat);
         
+        if (searchTerm) {
+          filtered = filtered.filter(o => o.retailer.toLowerCase().includes(searchTerm) || o.airline.toLowerCase().includes(searchTerm));
+        }
+
         if (filtered.length === 0) {
-          container.innerHTML = `<div style="color:#4a6a8a; text-align:center; padding:20px;">No offers found for this category.</div>`;
+          container.innerHTML = `<div style="color:#4a6a8a; text-align:center; padding:20px;">No offers found.</div>`;
           return;
         }
 
-        // Group by retailer
         const grouped = {};
         filtered.forEach(o => {
           if (!grouped[o.retailer]) grouped[o.retailer] = [];
@@ -118,12 +121,12 @@ const { data: allLoyalty } = await supabase.from('absl_rewards_loyalty').select(
           const rows = grouped[ret].sort((a,b) => b.miles - a.miles);
           const best = rows[0];
           return `
-            <div style="${css.card}">
+            <div style="${css.card}" onmouseover="this.style.borderColor='#1e5f9e'" onmouseout="this.style.borderColor='#e3eaf2'">
               <div>
-                <div style="${css.title}">${ret} <span style="background:#d97d2b; color:#fff; padding:2px 10px; border-radius:20px; font-size:0.7rem; margin-left:8px;">${best.miles}x ${best.airline}</span></div>
-                <div style="${css.desc}">${rows.map(r => `✈️ ${r.airline} ${r.miles}x`).join(' · ')}</div>
+                <div style="${css.title}">${ret} <span style="${css.badge}">Up to ${best.miles}x</span></div>
+                <div style="${css.desc}">${rows.map(r => `<span style="color:#1e5f9e; font-weight:600;">${r.airline}</span> ${r.miles}x`).join(' · ')}</div>
               </div>
-              <a href="${best.link}" target="_blank" style="${css.btn}">Shop Now</a>
+              <a href="${best.link}" target="_blank" style="${css.btn}">Shop & Earn</a>
             </div>
           `;
         }).join('');
@@ -134,8 +137,8 @@ const { data: allLoyalty } = await supabase.from('absl_rewards_loyalty').select(
       document.getElementById('deals-list').innerHTML = data.discounts.map(d => `
         <div style="${css.card}">
           <div>
-            <div style="${css.title}">✈️ ${d.airline} · ${d.type}</div>
-            <div style="${css.desc}">${d.description} · <strong>${d.percentage}%</strong></div>
+            <div style="${css.title}">${d.airline} <span style="${css.badge}">${d.percentage}% OFF</span></div>
+            <div style="${css.desc}">${d.type} · ${d.description}</div>
           </div>
           <a href="${d.link}" target="_blank" style="${css.btn}">View Deal</a>
         </div>
@@ -145,34 +148,23 @@ const { data: allLoyalty } = await supabase.from('absl_rewards_loyalty').select(
       document.getElementById('carbon-list').innerHTML = data.carbon.map(c => `
         <div style="${css.card}">
           <div>
-            <div style="${css.title}">✈️ ${c.airline} · ${c.type}</div>
-            <div style="${css.desc}">${c.description} · $${c.cost_per_ton}/t · +${c.bonus_miles} mi</div>
+            <div style="${css.title}">${c.airline} <span style="background:#0f7b4a; color:#fff; padding:2px 10px; border-radius:20px; font-size:0.7rem; margin-left:8px;">+${c.bonus_miles} mi</span></div>
+            <div style="${css.desc}">${c.type} · ${c.description} · $${c.cost_per_ton}/ton</div>
           </div>
-          <a href="${c.link}" target="_blank" style="${css.btnGreen}">Offset</a>
+          <a href="${c.link}" target="_blank" style="${css.btnGreen}">Offset Now</a>
         </div>
       `).join('');
 
       // 5. Tab Switching Logic
       document.querySelectorAll('.mm-tab').forEach(btn => {
         btn.addEventListener('click', () => {
-          // Reset all tabs
           document.querySelectorAll('.mm-tab').forEach(b => {
-            b.classList.remove('active');
-            b.style.background = '#fff';
-            b.style.color = '#0b1e3a';
-            b.style.borderColor = '#e3eaf2';
+            b.classList.remove('active'); b.style.background = '#fff'; b.style.color = '#0b1e3a'; b.style.borderColor = '#e3eaf2';
           });
-
-          // Hide all panels
           document.querySelectorAll('.mm-panel').forEach(p => p.style.display = 'none');
 
-          // Activate clicked tab
           btn.classList.add('active');
-          btn.style.background = '#0b1e3a';
-          btn.style.color = '#fff';
-          btn.style.borderColor = '#0b1e3a';
-
-          // Show target panel
+          btn.style.background = '#0b1e3a'; btn.style.color = '#fff'; btn.style.borderColor = '#0b1e3a';
           document.getElementById(`panel-${btn.dataset.target}`).style.display = 'block';
         });
       });
@@ -181,47 +173,42 @@ const { data: allLoyalty } = await supabase.from('absl_rewards_loyalty').select(
       document.getElementById('shop-filters').addEventListener('click', (e) => {
         if (e.target.classList.contains('mm-chip')) {
           document.querySelectorAll('.mm-chip').forEach(c => {
-            c.classList.remove('active');
-            c.style.background = '#eef3fa';
-            c.style.color = '#0b1e3a';
+            c.classList.remove('active'); c.style.background = '#eef3fa'; c.style.color = '#0b1e3a';
           });
-          
-          e.target.classList.add('active');
-          e.target.style.background = '#1e5f9e';
-          e.target.style.color = '#fff';
-          
+          e.target.classList.add('active'); e.target.style.background = '#1e5f9e'; e.target.style.color = '#fff';
           renderOffers(e.target.dataset.cat);
         }
+      });
+
+      // 7. Global Search Logic
+      document.getElementById('global-search').addEventListener('input', (e) => {
+        const term = e.target.value.toLowerCase();
+        // Switch to shop tab if searching
+        document.querySelectorAll('.mm-tab').forEach(b => {
+          b.classList.remove('active'); b.style.background = '#fff'; b.style.color = '#0b1e3a'; b.style.borderColor = '#e3eaf2';
+        });
+        document.querySelectorAll('.mm-panel').forEach(p => p.style.display = 'none');
+        
+        const shopTab = document.querySelector('.mm-tab[data-target="shop"]');
+        shopTab.classList.add('active'); shopTab.style.background = '#0b1e3a'; shopTab.style.color = '#fff'; shopTab.style.borderColor = '#0b1e3a';
+        document.getElementById('panel-shop').style.display = 'block';
+
+        // Reset category filter
+        document.querySelectorAll('.mm-chip').forEach(c => { c.classList.remove('active'); c.style.background = '#eef3fa'; c.style.color = '#0b1e3a'; });
+        document.querySelector('.mm-chip[data-cat="All"]').classList.add('active'); 
+        document.querySelector('.mm-chip[data-cat="All"]').style.background = '#1e5f9e'; 
+        document.querySelector('.mm-chip[data-cat="All"]').style.color = '#fff';
+
+        renderOffers('All', term);
       });
     });
   </script>
 
   <style is:global>
-    .mm-tab { 
-      background: #fff; 
-      border: 1px solid #e3eaf2; 
-      border-radius: 40px; 
-      padding: 10px 24px; 
-      font-weight: 600; 
-      cursor: pointer; 
-      color: #0b1e3a; 
-      transition: 0.2s; 
-      font-family: 'Inter', sans-serif;
-    }
+    .mm-tab { background: #fff; border: 1px solid #e3eaf2; border-radius: 40px; padding: 10px 24px; font-weight: 600; cursor: pointer; color: #0b1e3a; transition: 0.2s; font-family: 'Inter', sans-serif; }
     .mm-tab:hover { border-color: #b6c9e0; }
     .mm-tab.active { background: #0b1e3a; color: #fff; border-color: #0b1e3a; }
-    
-    .mm-chip { 
-      background: #eef3fa; 
-      border-radius: 40px; 
-      padding: 6px 16px; 
-      font-size: 0.8rem; 
-      font-weight: 600; 
-      cursor: pointer; 
-      color: #0b1e3a; 
-      transition: 0.2s; 
-      font-family: 'Inter', sans-serif;
-    }
+    .mm-chip { background: #eef3fa; border-radius: 40px; padding: 6px 16px; font-size: 0.8rem; font-weight: 600; cursor: pointer; color: #0b1e3a; transition: 0.2s; font-family: 'Inter', sans-serif; }
     .mm-chip.active { background: #1e5f9e; color: #fff; }
   </style>
 </Layout>
