@@ -1,0 +1,74 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+<Layout title="Manager Portal - ABSL">
+  <div style="min-height: 80vh; display: flex; align-items: center; justify-content: center; padding: 40px 24px;">
+    <div style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 48px; width: 100%; max-width: 450px; position: relative; overflow: hidden;">
+      
+      <!-- Top accent line -->
+      <div style="position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: var(--gold);"></div>
+
+      <div style="text-align: center; margin-bottom: 32px;">
+        <div style="font-size: 32px; margin-bottom: 12px;">🔐</div>
+        <h1 style="font-family: var(--font-display); font-size: 2rem; color: var(--white); margin-bottom: 8px;">Manager Portal</h1>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Restricted access for ABSL Staff and Managers.</p>
+      </div>
+
+      <form id="admin-login-form" style="display: flex; flex-direction: column; gap: 16px;">
+        <div>
+          <label style="font-family: var(--mono); font-size: 11px; color: var(--gold);">EMAIL ADDRESS</label>
+          <input id="a-email" type="email" required placeholder="admin@absl.com.ng" style="width:100%; padding:12px; margin-top:4px; background: var(--bg-surface); border:1px solid var(--line-light); border-radius: 4px; color: var(--white);" />
+        </div>
+
+        <div>
+          <label style="font-family: var(--mono); font-size: 11px; color: var(--gold);">PASSWORD</label>
+          <input id="a-password" type="password" required placeholder="••••••••" style="width:100%; padding:12px; margin-top:4px; background: var(--bg-surface); border:1px solid var(--line-light); border-radius: 4px; color: var(--white);" />
+        </div>
+
+        <button type="submit" id="a-submit" class="btn btn-primary" style="margin-top: 8px; width: 100%;">Secure Sign In</button>
+      </form>
+
+      <div id="a-error" style="display: none; margin-top: 16px; padding: 12px; background: rgba(239,68,68,0.1); border: 1px solid #ef4444; color: #ef4444; font-size: 0.85rem; text-align: center; border-radius: 4px;"></div>
+    </div>
+  </div>
+
+  <script>
+    import { supabase } from '../lib/supabase';
+
+    const form = document.getElementById('admin-login-form');
+    const btn = document.getElementById('a-submit');
+    const errorMsg = document.getElementById('a-error');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorMsg.style.display = 'none';
+      btn.textContent = 'Authenticating...';
+      btn.disabled = true;
+
+      const email = document.getElementById('a-email').value.trim();
+      const password = document.getElementById('a-password').value;
+
+      try {
+        const { data: authData, error: authError } = await supabase.auth.signInWithPassword({ email, password });
+        if (authError) throw authError;
+
+        // Check if the user actually has admin privileges
+        const { data: profile } = await supabase.from('absl_profiles').select('role, is_admin').eq('id', authData.user.id).single();
+
+        if (!profile || (profile.role === 'customer' && !profile.is_admin)) {
+          await supabase.auth.signOut();
+          throw new Error('Access Denied: You do not have admin privileges.');
+        }
+
+        // Success, redirect to Admin Dashboard
+        window.location.href = '/admin';
+
+      } catch (err) {
+        errorMsg.style.display = 'block';
+        errorMsg.textContent = err.message;
+        btn.textContent = 'Secure Sign In';
+        btn.disabled = false;
+      }
+    });
+  </script>
+</Layout>
