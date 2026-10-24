@@ -9,7 +9,7 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
     <div class="container" style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:16px;">
       <div>
         <h1 style="font-size:2.5rem; margin:0;">Estimator Settings</h1>
-        <p style="color:var(--text-muted); margin-top:8px;">Update base rates, quantities, and multipliers for the construction calculator.</p>
+        <p style="color:var(--text-muted); margin-top:8px;">Update base rates for the construction calculator.</p>
       </div>
       <a href="/admin" class="btn btn-outline" style="padding:10px 24px;">&larr; Back to Admin</a>
     </div>
@@ -18,16 +18,15 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
   <div class="container" style="padding: 40px 24px 80px;">
     <div style="background:var(--bg-surface); border:1px solid var(--line-light); border-radius:var(--r-md); padding:32px; margin-bottom:32px;">
       
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; border-bottom:1px solid var(--line-light); padding-bottom:16px;">
         <h2 style="font-size:1.4rem; color:var(--gold); margin:0;">Configuration Data</h2>
-        <button id="save-btn" class="btn btn-primary">Save All Changes</button>
+        <button id="publish-btn" class="btn btn-primary" style="background:var(--gold); color:var(--bg-main); font-weight:700;">🚀 Publish Updates</button>
       </div>
 
-      <div id="loading" style="text-align:center; color:var(--text-muted); padding:20px;">Loading settings...</div>
-      
-      <div id="settings-form" style="display:none;">
+      <div id="settings-form">
+        
         <!-- Phase 1 Materials -->
-        <h3 style="font-size:1.2rem; color:var(--white); border-bottom:1px solid var(--line-light); padding-bottom:8px; margin-bottom:16px;">Phase 1: Materials</h3>
+        <h3 style="font-size:1.2rem; color:var(--white); margin-bottom:16px;">Phase 1: Materials</h3>
         <div style="overflow-x:auto; margin-bottom:32px;">
           <table style="width:100%; border-collapse:collapse; font-family:var(--mono); font-size:12.5px;">
             <thead>
@@ -42,7 +41,7 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
         </div>
 
         <!-- Phase 2 Handover -->
-        <h3 style="font-size:1.2rem; color:var(--white); border-bottom:1px solid var(--line-light); padding-bottom:8px; margin-bottom:16px;">Phase 2: Finishing & Handover</h3>
+        <h3 style="font-size:1.2rem; color:var(--white); margin-bottom:16px;">Phase 2: Finishing & Handover</h3>
         <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:16px; margin-bottom:32px;">
           <div>
             <label style="display:block; font-size:11px; color:var(--text-muted); margin-bottom:4px;">Cleaning Rate (₦/sqm)</label>
@@ -75,7 +74,7 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
         </div>
 
         <!-- Phase 3 Utilities -->
-        <h3 style="font-size:1.2rem; color:var(--white); border-bottom:1px solid var(--line-light); padding-bottom:8px; margin-bottom:16px;">Phase 3: Monthly Utilities</h3>
+        <h3 style="font-size:1.2rem; color:var(--white); margin-bottom:16px;">Phase 3: Monthly Utilities</h3>
         <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:16px;">
           <div>
             <label style="display:block; font-size:11px; color:var(--text-muted); margin-bottom:4px;">Electricity (₦/kWh)</label>
@@ -103,7 +102,27 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 
   <script is:inline define:vars={{ supabaseUrl, supabaseAnonKey }}>
     let supabaseClient = null;
-    let globalSettings = null;
+    
+    // Default fallback data in case DB is empty
+    let globalSettings = {
+      materials: [
+        { id: 'cement', name: 'Cement', unit: 'bags', qtyPerSqm: 0.45, basePrice: 12500 },
+        { id: 'rebar', name: 'Rebar', unit: 'tons', qtyPerSqm: 0.018, basePrice: 1250000 },
+        { id: 'sand', name: 'Sand', unit: 'tons', qtyPerSqm: 0.040, basePrice: 45000 },
+        { id: 'gravel', name: 'Gravel', unit: 'tons', qtyPerSqm: 0.035, basePrice: 55000 },
+        { id: 'blocks', name: 'Blocks', unit: 'pcs', qtyPerSqm: 9.5, basePrice: 650 },
+        { id: 'roofing', name: 'Roofing Sheets', unit: 'sheets', qtyPerSqm: 0.18, basePrice: 8500 },
+        { id: 'timber', name: 'Timber', unit: 'planks', qtyPerSqm: 0.25, basePrice: 4500 },
+        { id: 'tiles', name: 'Tiles', unit: 'sqm', qtyPerSqm: 1.08, basePrice: 6500 },
+        { id: 'paint', name: 'Paint', unit: 'buckets', qtyPerSqm: 0.045, basePrice: 45000 },
+        { id: 'doors', name: 'Doors', unit: 'units', qtyPerSqm: 0.018, basePrice: 85000 },
+        { id: 'windows', name: 'Windows', unit: 'units', qtyPerSqm: 0.035, basePrice: 65000 },
+        { id: 'electrical', name: 'Electrical Wiring', unit: 'm', qtyPerSqm: 2.8, basePrice: 850 },
+        { id: 'plumbing', name: 'Plumbing', unit: 'sqm', qtyPerSqm: 1, basePrice: 12000 }
+      ],
+      phase2: { cleaningRate: 1500, livingRoomSet: 850000, bedroomSet: 650000, kitchenAppliances: 950000, curtainsRate: 8500, laborMultiplier: 0.40, archFeeMultiplier: 0.10 },
+      utilities: { electricityPerKwh: 225, waterPerM3: 350, gasCylinder: 15500, wasteDisposal: 5000 }
+    };
 
     async function getSupabase() {
       if (supabaseClient) return supabaseClient;
@@ -122,18 +141,9 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       setTimeout(() => toast.remove(), 3000);
     }
 
-    document.addEventListener('DOMContentLoaded', async () => {
-      const supabase = await getSupabase();
-      const { data, error } = await supabase.from('absl_estimator_settings').select('*').eq('id', 'default').single();
-
-      if (error || !data) {
-        document.getElementById('loading').textContent = 'Error loading settings.';
-        return;
-      }
-
-      globalSettings = data.settings;
+    function renderForm() {
       const s = globalSettings;
-
+      
       // Render Materials
       const tbody = document.getElementById('materials-body');
       tbody.innerHTML = s.materials.map((m, idx) => `
@@ -161,23 +171,31 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       document.getElementById('u-water').value = s.utilities.waterPerM3;
       document.getElementById('u-gas').value = s.utilities.gasCylinder;
       document.getElementById('u-waste').value = s.utilities.wasteDisposal;
+    }
 
-      document.getElementById('loading').style.display = 'none';
-      document.getElementById('settings-form').style.display = 'block';
+    document.addEventListener('DOMContentLoaded', async () => {
+      const supabase = await getSupabase();
+      const { data, error } = await supabase.from('absl_estimator_settings').select('*').eq('id', 'default').single();
+
+      if (data && data.settings) {
+        globalSettings = data.settings;
+      }
+      
+      renderForm();
     });
 
-    document.getElementById('save-btn').addEventListener('click', async () => {
-      const btn = document.getElementById('save-btn');
-      btn.textContent = 'Saving...'; btn.disabled = true;
+    document.getElementById('publish-btn').addEventListener('click', async () => {
+      const btn = document.getElementById('publish-btn');
+      btn.textContent = 'Publishing...'; btn.disabled = true;
 
-      // Update Materials
+      // Update Materials in memory
       document.querySelectorAll('.mat-input').forEach(input => {
         const idx = input.dataset.index;
         const field = input.dataset.field;
         globalSettings.materials[idx][field] = Number(input.value);
       });
 
-      // Update Phase 2
+      // Update Phase 2 in memory
       globalSettings.phase2.cleaningRate = Number(document.getElementById('p2-clean').value);
       globalSettings.phase2.livingRoomSet = Number(document.getElementById('p2-living').value);
       globalSettings.phase2.bedroomSet = Number(document.getElementById('p2-bedroom').value);
@@ -186,21 +204,27 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       globalSettings.phase2.laborMultiplier = Number(document.getElementById('p2-labor').value);
       globalSettings.phase2.archFeeMultiplier = Number(document.getElementById('p2-arch').value);
 
-      // Update Utilities
+      // Update Utilities in memory
       globalSettings.utilities.electricityPerKwh = Number(document.getElementById('u-elec').value);
       globalSettings.utilities.waterPerM3 = Number(document.getElementById('u-water').value);
       globalSettings.utilities.gasCylinder = Number(document.getElementById('u-gas').value);
       globalSettings.utilities.wasteDisposal = Number(document.getElementById('u-waste').value);
 
       const supabase = await getSupabase();
-      const { error } = await supabase.from('absl_estimator_settings').update({ settings: globalSettings }).eq('id', 'default');
+      
+      // Use UPSERT to create the row if it doesn't exist, or update it if it does
+      const { error } = await supabase.from('absl_estimator_settings').upsert({ 
+        id: 'default', 
+        settings: globalSettings,
+        updated_at: new Date().toISOString()
+      });
 
       if (error) {
-        showToast('Failed to save settings: ' + error.message, 'error');
-        btn.textContent = 'Save All Changes'; btn.disabled = false;
+        showToast('Failed to publish: ' + error.message, 'error');
+        btn.textContent = '🚀 Publish Updates'; btn.disabled = false;
       } else {
-        showToast('Settings updated successfully!');
-        btn.textContent = 'Save All Changes'; btn.disabled = false;
+        showToast('✅ Successfully published to Construction page!');
+        btn.textContent = '🚀 Publish Updates'; btn.disabled = false;
       }
     });
   </script>
