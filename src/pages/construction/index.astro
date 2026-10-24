@@ -2,6 +2,7 @@
 import Layout from '../../layouts/Layout.astro';
 import { supabase } from '../../lib/supabase';
 
+// Fetch dynamic settings from Supabase
 const { data: configData } = await supabase.from('absl_estimator_settings').select('*').eq('id', 'default').single();
 const settings = configData ? configData.settings : null;
 const flwKey = import.meta.env.PUBLIC_FLUTTERWAVE_PUBLIC_KEY;
@@ -46,7 +47,7 @@ const flwKey = import.meta.env.PUBLIC_FLUTTERWAVE_PUBLIC_KEY;
                 <input type="checkbox" id="furnishToggle" checked>
                 <span class="bp-slider"></span>
               </label>
-              <span style="font-family:var(--body); font-size:13px; font-weight:600;" id="furnishLabel">Included</span>
+              <span style="font-family:var(--font-body); font-size:13px; font-weight:600;" id="furnishLabel">Included</span>
             </div>
           </div>
         </div>
@@ -86,6 +87,7 @@ const flwKey = import.meta.env.PUBLIC_FLUTTERWAVE_PUBLIC_KEY;
           <div>
             <div class="bp-eyebrow">Phase 02 — Handover</div>
             <div class="bp-title">Finishing & Furnishing</div>
+            <div class="bp-sub">Cleaning, furniture, labor and professional fees applied on top of the materials subtotal.</div>
           </div>
           <div class="bp-num">SHEET 02 / 03</div>
         </div>
@@ -102,6 +104,7 @@ const flwKey = import.meta.env.PUBLIC_FLUTTERWAVE_PUBLIC_KEY;
           <div>
             <div class="bp-eyebrow">Phase 03 — Recurring</div>
             <div class="bp-title">Monthly Utility Burn</div>
+            <div class="bp-sub">Ongoing running costs once the building is occupied — not included in the one-time construction total.</div>
           </div>
           <div class="bp-num">SHEET 03 / 03</div>
         </div>
@@ -190,19 +193,38 @@ const flwKey = import.meta.env.PUBLIC_FLUTTERWAVE_PUBLIC_KEY;
 
   <script is:inline>
     document.addEventListener('DOMContentLoaded', () => {
-      const settings = JSON.parse(document.getElementById('settings-data').textContent);
+      const parsedSettings = JSON.parse(document.getElementById('settings-data').textContent);
       const flwKey = JSON.parse(document.getElementById('flw-key').textContent);
       
+      // Fallback to prevent crashes if DB fails
+      const settings = parsedSettings || {
+        materials: [
+          { id: 'cement', name: 'Cement', unit: 'bags', qtyPerSqm: 0.45, basePrice: 12500 },
+          { id: 'rebar', name: 'Rebar', unit: 'tons', qtyPerSqm: 0.018, basePrice: 1250000 },
+          { id: 'sand', name: 'Sand', unit: 'tons', qtyPerSqm: 0.040, basePrice: 45000 },
+          { id: 'gravel', name: 'Gravel', unit: 'tons', qtyPerSqm: 0.035, basePrice: 55000 },
+          { id: 'blocks', name: 'Blocks', unit: 'pcs', qtyPerSqm: 9.5, basePrice: 650 },
+          { id: 'roofing', name: 'Roofing Sheets', unit: 'sheets', qtyPerSqm: 0.18, basePrice: 8500 },
+          { id: 'timber', name: 'Timber', unit: 'planks', qtyPerSqm: 0.25, basePrice: 4500 },
+          { id: 'tiles', name: 'Tiles', unit: 'sqm', qtyPerSqm: 1.08, basePrice: 6500 },
+          { id: 'paint', name: 'Paint', unit: 'buckets', qtyPerSqm: 0.045, basePrice: 45000 },
+          { id: 'doors', name: 'Doors', unit: 'units', qtyPerSqm: 0.018, basePrice: 85000 },
+          { id: 'windows', name: 'Windows', unit: 'units', qtyPerSqm: 0.035, basePrice: 65000 },
+          { id: 'electrical', name: 'Electrical Wiring', unit: 'm', qtyPerSqm: 2.8, basePrice: 850 },
+          { id: 'plumbing', name: 'Plumbing', unit: 'sqm', qtyPerSqm: 1, basePrice: 12000 }
+        ],
+        phase2: { cleaningRate: 1500, livingRoomSet: 850000, bedroomSet: 650000, kitchenAppliances: 950000, curtainsRate: 8500, laborMultiplier: 0.40, archFeeMultiplier: 0.10 },
+        utilities: { electricityPerKwh: 225, waterPerM3: 350, gasCylinder: 15500, wasteDisposal: 5000 }
+      };
+
       let currentState = { area: 120, floors: 1, quality: 'mid', furnish: true, overrides: JSON.parse(localStorage.getItem('absl_budget_overrides')) || {} };
-      let currentMaterials = []; // Store calculated materials for invoice
+      let currentMaterials = [];
 
       const QUALITY_QTY_MULT = { basic: 0.85, mid: 1.0, luxury: 1.15 };
       const QUALITY_PRICE_MULT = { basic: 1.0, mid: 1.0, luxury: 1.30 };
       const QUALITY_WATTS_SQM = { basic: 35, mid: 50, luxury: 70 };
 
-      function cd() { return settings; }
       function fmtMoney(v) { return '₦' + Math.round(v).toLocaleString(); }
-      function fmtQty(v, round) { return round === 'up' ? Math.max(1, Math.ceil(v)).toLocaleString() : v.toFixed(2); }
       function floorMultiplier() { return 1 + (currentState.floors - 1) * 0.07; }
       function totalSqm() { return currentState.area; }
 
@@ -231,12 +253,12 @@ const flwKey = import.meta.env.PUBLIC_FLUTTERWAVE_PUBLIC_KEY;
           currentMaterials.push({ id: m.id, name: m.name, unit: m.unit, qty: displayQty, price: price });
 
           tbody.innerHTML += `
-            <tr style="border-bottom:1px solid var(--line-light);">
-              <td style="padding:12px 8px; color:var(--text-light);">${m.name}<br><span style="font-size:10px; color:var(--text-muted);">${m.unit}</span></td>
-              <td style="padding:12px 8px; text-align:center; color:var(--text-muted);">${displayQty.toLocaleString()}</td>
-              <td style="padding:12px 8px; text-align:right; color:var(--text-muted);">${fmtMoney(basePrice)}</td>
+            <tr style="border-bottom:1px solid var(--line-soft);">
+              <td style="padding:12px 8px; color:var(--ink);">${m.name}<br><span style="font-size:10px; color:var(--ink-muted);">${m.unit}</span></td>
+              <td style="padding:12px 8px; text-align:center; color:var(--ink-muted);">${displayQty.toLocaleString()}</td>
+              <td style="padding:12px 8px; text-align:right; color:var(--ink-muted);">${fmtMoney(basePrice)}</td>
               <td style="padding:12px 8px; text-align:right;">
-                <input type="number" data-id="${m.id}" class="price-input" value="${price.toFixed(2)}" style="width:90px; padding:6px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px; text-align:right;" />
+                <input type="number" data-id="${m.id}" class="price-input" value="${price.toFixed(2)}" style="width:90px; padding:6px; background:var(--navy-800); border:1px solid var(--line); color:var(--gold); border-radius:4px; text-align:right; font-family:var(--mono); font-size:12px;" />
               </td>
               <td style="padding:12px 8px; text-align:right; color:var(--gold); font-weight:600;">${fmtMoney(rowSub)}</td>
             </tr>
@@ -272,8 +294,8 @@ const flwKey = import.meta.env.PUBLIC_FLUTTERWAVE_PUBLIC_KEY;
 
         const labor = matSubtotal * p2.laborMultiplier;
         const arch = matSubtotal * p2.archFeeMultiplier;
-        p2Html += `<div class="bp-line-row" style="color:var(--gold);"><span class="bp-line-name">Labor</span><span class="bp-line-meta">${(p2.laborMultiplier*100).toFixed(0)}%</span><span class="bp-line-meta col-price"></span><span class="bp-line-total">${fmtMoney(labor)}</span></div>`;
-        p2Html += `<div class="bp-line-row" style="color:var(--gold);"><span class="bp-line-name">Architect Fee</span><span class="bp-line-meta">${(p2.archFeeMultiplier*100).toFixed(0)}%</span><span class="bp-line-meta col-price"></span><span class="bp-line-total">${fmtMoney(arch)}</span></div>`;
+        p2Html += `<div class="bp-line-row"><span class="bp-line-name" style="color:var(--gold);">Labor</span><span class="bp-line-meta">${(p2.laborMultiplier*100).toFixed(0)}%</span><span class="bp-line-meta col-price"></span><span class="bp-line-total">${fmtMoney(labor)}</span></div>`;
+        p2Html += `<div class="bp-line-row"><span class="bp-line-name" style="color:var(--gold);">Architect Fee</span><span class="bp-line-meta">${(p2.archFeeMultiplier*100).toFixed(0)}%</span><span class="bp-line-meta col-price"></span><span class="bp-line-total">${fmtMoney(arch)}</span></div>`;
         p2Subtotal += labor + arch;
 
         document.getElementById('phase2List').innerHTML = p2Html;
@@ -309,8 +331,8 @@ const flwKey = import.meta.env.PUBLIC_FLUTTERWAVE_PUBLIC_KEY;
       }
 
       // Input Listeners
-      document.getElementById('sqmSlider').addEventListener('input', e => { currentState.area = Number(e.target.value); render(); });
-      document.getElementById('floorsSlider').addEventListener('input', e => { currentState.floors = Number(e.target.value); render(); });
+      document.getElementById('sqmSlider').addEventListener('input', e => { currentState.area = Number(e.target.value); document.getElementById('sqmVal').textContent = currentState.area + ' m²'; render(); });
+      document.getElementById('floorsSlider').addEventListener('input', e => { currentState.floors = Number(e.target.value); document.getElementById('floorsVal').textContent = currentState.floors; render(); });
       
       document.querySelectorAll('.bp-segmented button').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -446,21 +468,23 @@ const flwKey = import.meta.env.PUBLIC_FLUTTERWAVE_PUBLIC_KEY;
       });
     });
   </script>
-  
+
   <style is:global>
     .bp-wrap { --navy-950: #0a1628; --navy-900: #0e1d34; --navy-850: #11223c; --navy-800: #132846; --navy-700: #1c3358; --gold: #f5a623; --ink: #edf1f7; --ink-muted: #8a96ac; --line: rgba(245, 166, 35, 0.16); --line-soft: rgba(255, 255, 255, 0.06); --display: "Space Grotesk", sans-serif; --body: "Inter", sans-serif; --mono: "IBM Plex Mono", monospace; font-family: var(--body); background: var(--navy-950); color: var(--ink); padding: 40px 20px 80px; border-radius: 16px; margin-top: 20px; }
     .bp-container { max-width: 1180px; margin: 0 auto; }
     .bp-sheet { background:var(--navy-900); border:1px solid var(--line-soft); border-radius:14px; padding:26px; margin-bottom:24px; }
-    .bp-sheet-head { display:flex; justify-content:space-between; margin-bottom:20px; border-bottom:1px solid var(--line-soft); padding-bottom:16px; }
+    .bp-sheet-head { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:20px; border-bottom:1px solid var(--line-soft); padding-bottom:16px; flex-wrap:wrap; gap:16px; }
     .bp-eyebrow { font-family:var(--mono); font-size:11px; color:var(--gold); text-transform:uppercase; }
     .bp-title { font-family:var(--display); font-size:20px; color:var(--ink); margin-top:4px; }
-    .bp-num { font-family:var(--mono); font-size:11px; color:var(--ink-muted); border:1px solid var(--line); padding:4px 12px; border-radius:20px; }
+    .bp-sub { color: var(--ink-muted); font-size: 0.85rem; margin-top: 4px; max-width: 520px; }
+    .bp-num { font-family:var(--mono); font-size:11px; color:var(--ink-muted); border:1px solid var(--line); padding:4px 12px; border-radius:20px; white-space:nowrap; }
     .bp-inputs-grid { display:grid; grid-template-columns:1.3fr 1fr 1.2fr 1fr; gap:24px; }
     .bp-field label { font-family:var(--mono); font-size:11px; color:var(--ink-muted); display:flex; justify-content:space-between; margin-bottom:8px; }
     input[type=range] { width:100%; height:4px; background:var(--navy-700); border-radius:2px; outline:none; }
     input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:18px; height:18px; border-radius:50%; background:var(--gold); cursor:pointer; }
     .bp-segmented { display:flex; border:1px solid var(--line); border-radius:8px; overflow:hidden; }
-    .bp-segmented button { flex:1; background:transparent; border:none; color:var(--ink-muted); padding:10px; cursor:pointer; font-weight:600; }
+    .bp-segmented button { flex:1; background:transparent; border:none; color:var(--ink-muted); padding:10px; cursor:pointer; font-weight:600; border-right:1px solid var(--line); }
+    .bp-segmented button:last-child { border-right: none; }
     .bp-segmented button.active { background:var(--gold); color:var(--navy-950); }
     .bp-toggle-row { display:flex; align-items:center; gap:12px; }
     .bp-switch input { display:none; }
@@ -468,23 +492,28 @@ const flwKey = import.meta.env.PUBLIC_FLUTTERWAVE_PUBLIC_KEY;
     .bp-slider::before { content:""; position:absolute; width:18px; height:18px; left:4px; top:4px; background:var(--ink-muted); border-radius:50%; transition:.2s; }
     .bp-switch input:checked + .bp-slider { background:rgba(245,166,35,0.2); }
     .bp-switch input:checked + .bp-slider::before { transform:translateX(20px); background:var(--gold); }
-    .bp-manual-input { width:100%; background:var(--navy-800); border:1px solid var(--line); color:var(--gold); padding:8px; text-align:center; margin-top:8px; border-radius:4px; }
+    .bp-manual-input { width:100%; background:var(--navy-800); border:1px solid var(--line); color:var(--gold); padding:8px; text-align:center; margin-top:8px; border-radius:4px; font-family: var(--mono); }
     .bp-table-scroll { overflow-x:auto; }
     .bp-table { width:100%; border-collapse:collapse; font-family:var(--mono); font-size:13px; }
     .bp-table th { background:var(--navy-850); color:var(--ink-muted); padding:12px; text-align:left; font-size:11px; }
     .bp-table td { padding:12px; border-bottom:1px solid var(--line-soft); }
+    .bp-table td.num { text-align: right; }
     .bp-line-list { display:flex; flex-direction:column; }
     .bp-line-row { display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:14px; padding:12px 0; border-bottom:1px solid var(--line-soft); align-items:center; }
     .bp-line-name { font-weight:600; }
-    .bp-line-meta { color:var(--ink-muted); text-align:right; }
-    .bp-line-total { color:var(--gold); text-align:right; font-weight:700; }
+    .bp-line-meta { color:var(--ink-muted); text-align:right; font-family: var(--mono); font-size: 12px; }
+    .bp-line-total { color:var(--gold); text-align:right; font-weight:700; font-family: var(--mono); }
     .bp-subtotal-bar { display:flex; justify-content:space-between; margin-top:16px; padding:16px; background:var(--navy-850); border:1px solid var(--line); border-radius:8px; font-family:var(--mono); }
+    .bp-subtotal-bar .amount { color: var(--gold); font-weight: 700; font-size: 1.1rem; }
     .bp-summary-grid { display:grid; grid-template-columns:1.2fr 1fr; gap:24px; }
     .bp-grand-card { background:linear-gradient(160deg,var(--navy-850),var(--navy-900)); border:1px solid var(--gold); border-radius:14px; padding:30px; text-align:center; }
+    .bp-grand-card .g-label { font-family: var(--mono); font-size: 11px; color: var(--gold); letter-spacing: 1px; text-transform: uppercase; }
     .bp-grand-card .g-amount { font-family:var(--display); font-size:2.5rem; font-weight:700; margin:10px 0; }
+    .bp-grand-card .g-sub { font-family: var(--mono); font-size: 12px; color: var(--ink-muted); margin-bottom: 20px; }
     .bp-legend { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:20px; text-align:left; font-family:var(--mono); font-size:11px; }
+    .bp-legend-item b { margin-left: auto; }
     .bp-legend-dot { width:10px; height:10px; border-radius:3px; display:inline-block; margin-right:8px; }
     .bp-btn-pdf { width:100%; display:flex; align-items:center; justify-content:center; gap:8px; }
-    @media(max-width:768px) { .bp-inputs-grid { grid-template-columns:1fr 1fr; } .bp-summary-grid { grid-template-columns:1fr; } .bp-line-row { grid-template-columns:1fr 1fr; } .bp-line-row .col-price { display:none; } }
+    @media(max-width:768px) { .bp-inputs-grid { grid-template-columns:1fr 1fr; } .bp-summary-grid { grid-template-columns:1fr; } .bp-line-row { grid-template-columns:1.3fr 1fr 1fr; } .bp-line-row .col-price { display:none; } }
   </style>
 </Layout>
