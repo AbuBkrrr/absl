@@ -1,0 +1,150 @@
+---
+import Layout from '../../layouts/Layout.astro';
+const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+---
+
+<Layout title="Rewards Manager - ABSL Admin">
+  <div style="background: var(--bg-surface); padding: 60px 0; border-bottom: 1px solid var(--line-light);">
+    <div class="container" style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:16px;">
+      <div>
+        <h1 style="font-size:2.5rem; margin:0;">Rewards Manager</h1>
+        <p style="color:var(--text-muted); margin-top:8px;">Add or update airline shopping multipliers in real-time.</p>
+      </div>
+      <a href="/admin" class="btn btn-outline" style="padding:10px 24px;">&larr; Back to Admin</a>
+    </div>
+  </div>
+
+  <div class="container" style="padding: 40px 24px 80px;">
+    
+    <!-- Add New Offer Form -->
+    <div style="background:var(--bg-surface); border:1px solid var(--line-light); border-radius:var(--r-md); padding:32px; margin-bottom:32px;">
+      <h2 style="font-size:1.2rem; color:var(--gold); margin-bottom:20px;">Add / Update Multiplier</h2>
+      <div style="display:grid; grid-template-columns: 2fr 2fr 1fr 1fr 1fr; gap:16px;">
+        <input id="f-retailer" type="text" placeholder="Retailer (e.g. Apple)" style="padding:12px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
+        <input id="f-airline" type="text" placeholder="Airline (e.g. Delta)" style="padding:12px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
+        <input id="f-miles" type="number" placeholder="Miles (e.g. 4)" style="padding:12px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
+        <select id="f-cat" style="padding:12px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;">
+          <option value="Tech">Tech</option>
+          <option value="Clothing">Clothing</option>
+          <option value="Travel">Travel</option>
+        </select>
+        <button id="add-btn" class="btn btn-primary">Save Offer</button>
+      </div>
+    </div>
+
+    <!-- Existing Offers Table -->
+    <div style="background:var(--bg-card); border:1px solid var(--line-light); border-radius:var(--r-md); overflow:hidden;">
+      <table style="width:100%; border-collapse:collapse; font-family:var(--mono); font-size:12.5px;">
+        <thead>
+          <tr style="background:var(--bg-surface); text-align:left;">
+            <th style="padding:16px; color:var(--gold);">Retailer</th>
+            <th style="padding:16px; color:var(--gold);">Airline</th>
+            <th style="padding:16px; color:var(--gold); text-align:center;">Multiplier</th>
+            <th style="padding:16px; color:var(--gold);">Category</th>
+            <th style="padding:16px; color:var(--gold);">Last Updated</th>
+            <th style="padding:16px; color:var(--gold); text-align:right;">Action</th>
+          </tr>
+        </thead>
+        <tbody id="offers-body">
+          <tr><td colspan="6" style="padding:32px; text-align:center; color:var(--text-muted);">Loading offers...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="toast-container" style="position:fixed; bottom:24px; right:24px; z-index:9999; display:flex; flex-direction:column; gap:10px;"></div>
+
+  <script is:inline define:vars={{ supabaseUrl, supabaseAnonKey }}>
+    let supabaseClient = null;
+    async function getSupabase() {
+      if (supabaseClient) return supabaseClient;
+      const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+      supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+      return supabaseClient;
+    }
+
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      const bgColor = type === 'success' ? 'var(--green)' : (type === 'error' ? '#ef4444' : 'var(--gold)');
+      toast.style.cssText = `background: var(--bg-card); border: 1px solid ${bgColor}; color: var(--white); padding: 16px 24px; border-radius: var(--r-md); font-family: var(--font-body); font-weight: 600; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transform: translateY(100%); opacity: 0; transition: all 0.3s ease;`;
+      toast.innerHTML = `${message}`;
+      container.appendChild(toast);
+      setTimeout(() => { toast.style.transform = 'translateY(0)'; toast.style.opacity = '1'; }, 10);
+      setTimeout(() => { toast.style.transform = 'translateY(100%)'; toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
+    }
+
+    async function loadOffers() {
+      const tbody = document.getElementById('offers-body');
+      const supabase = await getSupabase();
+      const { data, error } = await supabase.from('absl_rewards_offers').select('*').order('updated_at', { ascending: false });
+
+      if (error) {
+        tbody.innerHTML = `<tr><td colspan="6" style="padding:32px; text-align:center; color:#ef4444;">Error loading offers.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = data.map(o => {
+        const date = new Date(o.updated_at).toLocaleDateString();
+        return `
+          <tr style="border-top:1px solid var(--line-light);">
+            <td style="padding:16px; color:var(--white); font-weight:600;">${o.retailer}</td>
+            <td style="padding:16px; color:var(--gold);">${o.airline}</td>
+            <td style="padding:16px; text-align:center; color:var(--white); font-weight:700;">${o.miles}x</td>
+            <td style="padding:16px; color:var(--text-muted);">${o.category}</td>
+            <td style="padding:16px; color:var(--text-muted);">${date}</td>
+            <td style="padding:16px; text-align:right;">
+              <button data-id="${o.id}" class="del-btn" style="background:transparent; border:1px solid #ef4444; color:#ef4444; padding:4px 12px; border-radius:4px; cursor:pointer; font-size:11px;">Delete</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      document.querySelectorAll('.del-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          if (!confirm('Delete this offer?')) return;
+          const id = e.target.dataset.id;
+          const supabase = await getSupabase();
+          const { error } = await supabase.from('absl_rewards_offers').delete().eq('id', id);
+          if (error) showToast('Failed to delete', 'error');
+          else { showToast('Offer deleted'); loadOffers(); }
+        });
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadOffers();
+
+      document.getElementById('add-btn').addEventListener('click', async () => {
+        const retailer = document.getElementById('f-retailer').value.trim();
+        const airline = document.getElementById('f-airline').value.trim();
+        const miles = Number(document.getElementById('f-miles').value);
+        const category = document.getElementById('f-cat').value;
+
+        if (!retailer || !airline || !miles) return showToast('Please fill all fields', 'error');
+
+        const btn = document.getElementById('add-btn');
+        btn.textContent = 'Saving...'; btn.disabled = true;
+
+        const supabase = await getSupabase();
+        // Use upsert to update if it exists, or insert if it's new
+        const { error } = await supabase.from('absl_rewards_offers').upsert({
+          retailer, airline, miles, category, link: 'https://example.com'
+        }, { onConflict: 'retailer,airline' });
+
+        if (error) {
+          showToast(error.message, 'error');
+          btn.textContent = 'Save Offer'; btn.disabled = false;
+        } else {
+          showToast('Offer saved successfully!');
+          document.getElementById('f-retailer').value = '';
+          document.getElementById('f-airline').value = '';
+          document.getElementById('f-miles').value = '';
+          btn.textContent = 'Save Offer'; btn.disabled = false;
+          loadOffers();
+        }
+      });
+    });
+  </script>
+</Layout>
