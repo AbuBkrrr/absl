@@ -72,7 +72,7 @@ const year = new Date().getFullYear();
         .logo { display: flex; align-items: center; text-decoration: none; flex-shrink: 0; }
         .logo img { height: 90px; width: auto; object-fit: contain; }
         
-        .nav-links { display: flex; gap: 24px; align-items: center; font-size: 0.9rem; font-weight: 500; }
+        .menu-toggle { display: none; }`n        .hamburger { display: none; cursor: pointer; font-size: 28px; color: var(--white); }`n        .nav-links { display: flex; gap: 24px; align-items: center; font-size: 0.9rem; font-weight: 500; }
         .nav-links a { color: var(--text-light); text-transform: uppercase; letter-spacing: 1px; font-size: 0.8rem; white-space: nowrap; }
         .nav-links a:hover { color: var(--gold); }
         
@@ -118,6 +118,10 @@ const year = new Date().getFullYear();
             <a href="/" class="logo">
                 <img src="/absl-logo.png" alt="ABSL Logo" />
             </a>
+            
+            <input type="checkbox" id="menu-toggle" class="menu-toggle" />
+            <label for="menu-toggle" class="hamburger">☰</label>
+
             <div class="nav-links">
                 <a href="/">Home</a>
                 <a href="/travel">Travel & Tours</a>
