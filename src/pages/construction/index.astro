@@ -153,7 +153,7 @@ const flwKey = import.meta.env.PUBLIC_FLUTTERWAVE_PUBLIC_KEY;
             </div>
             <div class="bp-field">
               <label>Floors <span class="val" id="floorsVal">1</span></label>
-              <input type="range" id="floorsSlider" min="1" max="5" step="1" value="1">
+              <input type="range" id="floorsSlider" min="1" max="100" step="1" value="1">
               <input type="text" inputmode="numeric" class="bp-manual-input" id="floorsManual" value="1">
             </div>
             <div class="bp-field">
@@ -428,10 +428,36 @@ const flwKey = import.meta.env.PUBLIC_FLUTTERWAVE_PUBLIC_KEY;
         `;
       }
 
-      // Input Listeners
-      document.getElementById('sqmSlider').addEventListener('input', e => { currentState.area = Number(e.target.value); document.getElementById('sqmVal').textContent = currentState.area + ' m²'; render(); });
-      document.getElementById('floorsSlider').addEventListener('input', e => { currentState.floors = Number(e.target.value); document.getElementById('floorsVal').textContent = currentState.floors; render(); });
-      
+      // --- INPUT SYNC & RENDER LISTENERS ---
+      const sqmSlider = document.getElementById('sqmSlider');
+      const sqmManual = document.getElementById('sqmManual');
+      const floorsSlider = document.getElementById('floorsSlider');
+      const floorsManual = document.getElementById('floorsManual');
+      const furnishToggle = document.getElementById('furnishToggle');
+
+      function updateSqm(val) {
+        const num = Math.min(5000, Math.max(50, Number(val) || 50));
+        currentState.area = num;
+        sqmSlider.value = num;
+        sqmManual.value = num;
+        document.getElementById('sqmVal').textContent = num + ' m²';
+        render();
+      }
+
+      function updateFloors(val) {
+        const num = Math.min(100, Math.max(1, Number(val) || 1));
+        currentState.floors = num;
+        floorsSlider.value = num;
+        floorsManual.value = num;
+        document.getElementById('floorsVal').textContent = num;
+        render();
+      }
+
+      sqmSlider.addEventListener('input', e => updateSqm(e.target.value));
+      sqmManual.addEventListener('input', e => updateSqm(e.target.value));
+      floorsSlider.addEventListener('input', e => updateFloors(e.target.value));
+      floorsManual.addEventListener('input', e => updateFloors(e.target.value));
+
       document.querySelectorAll('.bp-segmented button').forEach(btn => {
         btn.addEventListener('click', () => {
           document.querySelectorAll('.bp-segmented button').forEach(b => { b.classList.remove('active'); b.style.background='transparent'; b.style.color='var(--ink-muted)'; });
@@ -441,7 +467,7 @@ const flwKey = import.meta.env.PUBLIC_FLUTTERWAVE_PUBLIC_KEY;
         });
       });
 
-      document.getElementById('furnishToggle').addEventListener('change', e => {
+      furnishToggle.addEventListener('change', e => {
         currentState.furnish = e.target.checked;
         document.getElementById('furnishLabel').textContent = e.target.checked ? 'Included' : 'Excluded';
         render();
@@ -526,8 +552,14 @@ const flwKey = import.meta.env.PUBLIC_FLUTTERWAVE_PUBLIC_KEY;
           customer: { email, phone_number: phone, name },
           customizations: {
             title: "ABSL Material Supply",
-            description: "Payment for building materials",
+            description: `Project: ${currentState.area}m², ${currentState.floors} Floor(s), ${currentState.quality.toUpperCase()}`,
             logo: "https://absl.com.ng/absl-logo.png"
+          },
+          meta: {
+            area: currentState.area,
+            floors: currentState.floors,
+            quality: currentState.quality,
+            furnishing: currentState.furnish
           },
           callback: async (data) => {
             document.getElementById('pay-btn').textContent = 'Verifying...';
