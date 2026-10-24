@@ -172,34 +172,19 @@ const year = new Date().getFullYear();
         </div>
     </footer>
 
-    <script>
-        import { cartCount } from '../scripts/cart';
+        <script is:inline>
         function updateBadge() {
             const b = document.getElementById('cart-badge');
             if (!b) return;
-            const n = cartCount();
-            b.textContent = n;
-            b.style.display = n > 0 ? 'flex' : 'none';
+            try {
+                const cart = JSON.parse(localStorage.getItem('absl_cart') || '[]');
+                const n = cart.reduce((s, i) => s + Number(i.qty), 0);
+                b.textContent = n;
+                b.style.display = n > 0 ? 'flex' : 'none';
+            } catch (e) {}
         }
         updateBadge();
         window.addEventListener('absl-cart-updated', updateBadge);
-
-        // Mobile Menu Logic
-        const menuBtn = document.getElementById('menu-btn');
-        const closeMenuBtn = document.getElementById('close-menu-btn');
-        const mobileDrawer = document.getElementById('mobile-drawer');
-
-        if (menuBtn && mobileDrawer && closeMenuBtn) {
-            menuBtn.addEventListener('click', () => {
-                mobileDrawer.classList.add('active');
-                document.body.style.overflow = 'hidden'; // Prevent background scrolling
-            });
-
-            closeMenuBtn.addEventListener('click', () => {
-                mobileDrawer.classList.remove('active');
-                document.body.style.overflow = '';
-            });
-        }
     </script>
     <Analytics />
 </body>

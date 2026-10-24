@@ -506,7 +506,7 @@ const flwKey = import.meta.env.PUBLIC_FLUTTERWAVE_PUBLIC_KEY;
 
         selectedItems.forEach(m => {
           const existingItem = cart.find(i => i.id === m.id);
-          if (existingItem) { existingItem.qty += m.qty; } 
+          if (existingItem) { existingItem.qty = Math.round(existingItem.qty + m.qty); } 
           else { cart.push({ id: m.id, title: m.name + ' (Material)', price: m.price, category: 'Materials', maxQty: 9999, qty: m.qty }); }
         });
 
