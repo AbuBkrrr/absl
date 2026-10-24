@@ -317,7 +317,13 @@ const flwKey = import.meta.env.PUBLIC_FLUTTERWAVE_PUBLIC_KEY;
   <script is:inline define:vars={{ settings, flwKey }}>
     document.addEventListener('DOMContentLoaded', () => {
       
-      let currentState = { area: 120, floors: 1, quality: 'mid', furnish: true, overrides: JSON.parse(localStorage.getItem('absl_budget_overrides')) || {} };
+      // Fetch and clean overrides (removing any 0 values that break the math)
+      let savedOverrides = JSON.parse(localStorage.getItem('absl_budget_overrides')) || {};
+      for (const key in savedOverrides) {
+        if (savedOverrides[key] <= 0) delete savedOverrides[key];
+      }
+      
+      let currentState = { area: 120, floors: 1, quality: 'mid', furnish: true, overrides: savedOverrides };
       let currentMaterials = []; // Store calculated materials for invoice
 
       const QUALITY_QTY_MULT = { basic: 0.85, mid: 1.0, luxury: 1.15 };
@@ -325,7 +331,11 @@ const flwKey = import.meta.env.PUBLIC_FLUTTERWAVE_PUBLIC_KEY;
       const QUALITY_WATTS_SQM = { basic: 35, mid: 50, luxury: 70 };
 
       function fmtMoney(v) { return '₦' + Math.round(v).toLocaleString(); }
-      function floorMultiplier() { return 1 + (currentState.floors - 1) * 0.07; }
+      function floorMultiplier() { 
+        // A more realistic scaling for multi-story buildings. 
+        // Adds 15% complexity per floor to account for structural steel, foundation, and hoisting.
+        return 1 + (currentState.floors - 1) * 0.15; 
+      }
       function totalSqm() { return currentState.area; }
 
       function render() {
@@ -344,7 +354,8 @@ const flwKey = import.meta.env.PUBLIC_FLUTTERWAVE_PUBLIC_KEY;
           const displayQty = ['bags','pcs','sheets','planks','buckets','units'].includes(m.unit) ? Math.max(1, Math.ceil(qty)) : qty;
           const basePrice = m.basePrice * qPrice;
           const override = currentState.overrides[m.id];
-          const price = override !== undefined ? override : basePrice;
+          // Only use the override if it's a valid number greater than 0
+          const price = (override !== undefined && override > 0) ? override : basePrice;
           const rowSub = displayQty * price;
           matSubtotal += rowSub;
 
