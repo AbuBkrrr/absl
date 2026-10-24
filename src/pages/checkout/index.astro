@@ -57,6 +57,13 @@ import Layout from '../../layouts/Layout.astro';
   </div>
 
   <script is:inline>
+        window.removeItem = function(id) {
+      let cart = JSON.parse(localStorage.getItem('absl_cart') || '[]');
+      cart = cart.filter(item => String(item.id) !== String(id));
+      localStorage.setItem('absl_cart', JSON.stringify(cart));
+      window.dispatchEvent(new Event('absl-cart-updated'));
+      window.location.reload();
+    };
     document.addEventListener('DOMContentLoaded', () => {
       const cart = JSON.parse(localStorage.getItem('absl_cart') || '[]');
       const itemsContainer = document.getElementById('cart-items');
