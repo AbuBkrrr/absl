@@ -1,5 +1,10 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import { supabase } from '../../lib/supabase';
+
+// Fetch the dynamic settings from Supabase
+const { data: configData } = await supabase.from('absl_estimator_settings').select('*').eq('id', 'default').single();
+const settings = configData ? configData.settings : null;
 ---
 
 <Layout title="Construction Lifecycle Estimator - ABSL">
@@ -263,8 +268,11 @@ import Layout from '../../layouts/Layout.astro';
             </div>
             <div class="bp-chart-card">
               <canvas id="breakdownChart" height="260"></canvas>
-              <button class="bp-btn-reset" id="resetBtn">Reset all overrides for this country</button>
-              <button class="bp-btn-pdf" id="pdfBtn">📄 Download PDF Summary</button>
+              <div style="display:flex; flex-direction:column; gap:10px; margin-top:20px;">
+                <a href="/contact?subject=Professional+BOQ+Request" class="bp-btn-pdf" style="background:#0b1e3a; color:#fff; border:none; text-align:center; padding:14px; border-radius:8px; font-weight:700; text-decoration:none; font-family:var(--mono); font-size:11.5px;">🤝 Contact us for a more professional BOQ</a>
+                <a href="/contact?subject=Building+Materials+Supply" class="bp-btn-pdf" style="background:#d97d2b; color:#fff; border:none; text-align:center; padding:14px; border-radius:8px; font-weight:700; text-decoration:none; font-family:var(--mono); font-size:11.5px;">🧱 Request ABSL to Supply Building Materials</a>
+              </div>
+              <button class="bp-btn-pdf" id="pdfBtn" style="margin-top:16px;">📄 Download PDF Summary</button>
             </div>
           </div>
         </section>
@@ -277,7 +285,7 @@ import Layout from '../../layouts/Layout.astro';
     </div>
   </div>
 
-  <script is:inline>
+  <script is:inline define:vars={{ settings }}>
     // Injecting the required data structure for Nigeria
     const countryData = {
       NG: {
