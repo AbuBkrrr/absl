@@ -1,2 +1,15 @@
-<!-- AdminGuard temporarily disabled for pre-launch building -->
-<div style="display:none;"></div>
+<script>
+  import { supabase } from '../lib/supabase';
+  (async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { window.location.href = '/login'; return; }
+    
+    const { data: profile } = await supabase.from('absl_profiles').select('role, is_admin').eq('id', user.id).single();
+    
+    // Allow access if they have a role other than 'customer' OR the legacy is_admin flag is true
+    if (profile?.role === 'customer' || (!profile?.role && !profile?.is_admin)) {
+      alert('Access Denied: You do not have admin privileges.');
+      window.location.href = '/';
+    }
+  })();
+</script>
