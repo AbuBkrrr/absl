@@ -6,13 +6,11 @@ import { supabase } from '../../lib/supabase';
 const { data: offers } = await supabase.from('absl_rewards_offers').select('*');
 const { data: discounts } = await supabase.from('absl_rewards_discounts').select('*');
 const { data: carbon } = await supabase.from('absl_rewards_carbon').select('*');
-// Fetch ALL loyalty data (we filter client-side based on who is logged in)
 const { data: allLoyalty } = await supabase.from('absl_rewards_loyalty').select('*');
 ---
 
 <Layout title="MileageMall Rewards - ABSL">
   <div style="background: #f0f2f8; min-height: 100vh; padding: 40px 24px; font-family: 'Inter', sans-serif;">
-    
     <div class="container" style="max-width: 900px; margin: 0 auto; background: white; border-radius: 24px; padding: 40px; box-shadow: 0 20px 40px rgba(0,0,0,0.05);">
       
       <!-- HEADER -->
@@ -25,32 +23,30 @@ const { data: allLoyalty } = await supabase.from('absl_rewards_loyalty').select(
             ⚡ One Hub. Every Airline. Max Rewards.
           </div>
         </div>
-        <div id="auth-header">
-          <a href="/login" style="background: #0b1e3a; color: white; padding: 8px 16px; border-radius: 20px; font-weight: 700; text-decoration: none; font-size: 0.8rem;">Sign In</a>
+        <div>
+          <a href="/login" style="background: #0b1e3a; color: white; padding: 10px 20px; border-radius: 20px; font-weight: 700; text-decoration: none; font-size: 0.85rem;">Sign In</a>
         </div>
       </div>
 
       <!-- HERO DASHBOARD -->
-      <div id="dashboard-hero" style="background: #0b1e3a; color: white; border-radius: 24px; padding: 32px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 24px; margin-bottom: 32px;">
+      <div style="background: #0b1e3a; color: white; border-radius: 24px; padding: 32px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 24px; margin-bottom: 32px;">
         <div>
-          <div id="welcome-text" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; color:#8ba0b9; margin-bottom:8px;">Total Loyalty Value</div>
+          <div style="font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; color:#8ba0b9; margin-bottom:8px;">Demo Mode · Total Loyalty Value</div>
           <div id="total-miles" style="font-size:3rem; font-weight:700; line-height:1;">0</div>
           <div id="total-airlines" style="font-size:0.85rem; color:#8ba0b9; margin-top:8px;">miles across 0 airlines</div>
         </div>
-        <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;" id="loyalty-accounts">
-          <!-- Populated by JS -->
-        </div>
+        <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;" id="loyalty-accounts"></div>
       </div>
 
       <!-- TABS -->
-      <div style="display:flex; gap:12px; margin-bottom:24px;">
-        <button class="mm-tab active" data-tab="shop">🛍️ Shopping</button>
-        <button class="mm-tab" data-tab="deals">💸 Deals</button>
-        <button class="mm-tab" data-tab="carbon">🌱 Carbon</button>
+      <div style="display:flex; gap:12px; margin-bottom:24px;" id="tabs-container">
+        <button class="mm-tab active" data-target="shop">🛍️ Shopping</button>
+        <button class="mm-tab" data-target="deals">💸 Deals</button>
+        <button class="mm-tab" data-target="carbon">🌱 Carbon</button>
       </div>
 
       <!-- SHOP PANEL -->
-      <div class="mm-panel active" id="panel-shop">
+      <div class="mm-panel" id="panel-shop" style="display:block;">
         <div style="display:flex; gap:8px; margin-bottom:16px;" id="shop-filters">
           <span class="mm-chip active" data-cat="All">All</span>
           <span class="mm-chip" data-cat="Clothing">Clothing</span>
@@ -72,132 +68,160 @@ const { data: allLoyalty } = await supabase.from('absl_rewards_loyalty').select(
     </div>
   </div>
 
+  <!-- Pass server data to client safely -->
   <script type="application/json" id="rewards-data" set:html={JSON.stringify({ allLoyalty, offers, discounts, carbon })} />
 
   <script is:inline>
-document.addEventListener("astro:page-load", () => {
-    import { supabase } from '../../lib/supabase';
-
-    const data = JSON.parse(document.getElementById('rewards-data').textContent);
-    const css = {
-      card: "background:#fff; border:1px solid #e3eaf2; border-radius:16px; padding:20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; box-shadow:0 4px 12px rgba(0,0,0,0.02);",
-      title: "font-weight:700; font-size:1.1rem; color:#0b1e3a; margin-bottom:4px;",
-      desc: "font-size:0.85rem; color:#4a6a8a;",
-      btn: "background:#0b1e3a; color:#fff; padding:10px 20px; border-radius:40px; font-weight:600; text-decoration:none; font-size:0.85rem;",
-      btnGreen: "background:#0f7b4a; color:#fff; padding:10px 20px; border-radius:40px; font-weight:600; text-decoration:none; font-size:0.85rem;"
-    };
-
-    // 1. Check Auth & Render Loyalty
-    async function initAuth() {
-      const { data: { user } } = await supabase.auth.getUser();
+    document.addEventListener('DOMContentLoaded', () => {
+      const data = JSON.parse(document.getElementById('rewards-data').textContent);
       
-      const header = document.getElementById('auth-header');
-      const welcome = document.getElementById('welcome-text');
-      const accContainer = document.getElementById('loyalty-accounts');
-      
-      let myLoyalty = [];
+      const css = {
+        card: "background:#fff; border:1px solid #e3eaf2; border-radius:16px; padding:20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; box-shadow:0 4px 12px rgba(0,0,0,0.02);",
+        title: "font-weight:700; font-size:1.1rem; color:#0b1e3a; margin-bottom:4px;",
+        desc: "font-size:0.85rem; color:#4a6a8a;",
+        btn: "background:#0b1e3a; color:#fff; padding:10px 20px; border-radius:40px; font-weight:600; text-decoration:none; font-size:0.85rem;",
+        btnGreen: "background:#0f7b4a; color:#fff; padding:10px 20px; border-radius:40px; font-weight:600; text-decoration:none; font-size:0.85rem;"
+      };
 
-      if (user) {
-        // User is logged in
-        header.innerHTML = `<span style="font-weight:600; color:#4a6a8a; margin-right:16px;">${user.email}</span><button id="logout-btn" style="background: transparent; border: 1px solid #e3eaf2; color: #4a6a8a; padding: 6px 12px; border-radius: 20px; cursor: pointer;">Log Out</button>`;
-        document.getElementById('logout-btn').addEventListener('click', async () => {
-          await supabase.auth.signOut();
-          window.location.reload();
-        });
-        
-        welcome.textContent = 'Welcome Back · Total Loyalty Value';
-        myLoyalty = data.allLoyalty.filter(l => l.user_id === user.id);
-      } else {
-        // Demo Mode
-        welcome.textContent = 'Demo Mode · Total Loyalty Value';
-        myLoyalty = data.allLoyalty.filter(l => l.user_id === null); // show demo data
-      }
-
-      // Render Hero
+      // 1. Render Loyalty Demo Data
+      const myLoyalty = data.allLoyalty.filter(l => l.user_id === null); // Demo data
       const totalMiles = myLoyalty.reduce((s, r) => s + (r.points || 0), 0);
+      
       document.getElementById('total-miles').textContent = totalMiles.toLocaleString();
       document.getElementById('total-airlines').textContent = `miles across ${myLoyalty.length} airlines`;
 
+      const accContainer = document.getElementById('loyalty-accounts');
       accContainer.innerHTML = myLoyalty.map(acc => `
         <span style="background:rgba(255,255,255,0.1); padding:8px 16px; border-radius:40px; font-size:0.8rem; font-weight:500;">
           ✈️ ${acc.airline.split(' ')[0]} ${acc.points.toLocaleString()} mi
         </span>
       `).join('');
-    }
-    initAuth();
 
-    // 2. Render Offers
-    function renderOffers(cat) {
-      const container = document.getElementById('offers-list');
-      const filtered = cat === 'All' ? data.offers : data.offers.filter(o => o.category === cat);
-      const grouped = {};
-      filtered.forEach(o => {
-        if (!grouped[o.retailer]) grouped[o.retailer] = [];
-        grouped[o.retailer].push(o);
-      });
+      // 2. Render Offers
+      function renderOffers(cat) {
+        const container = document.getElementById('offers-list');
+        const filtered = cat === 'All' ? data.offers : data.offers.filter(o => o.category === cat);
+        
+        if (filtered.length === 0) {
+          container.innerHTML = `<div style="color:#4a6a8a; text-align:center; padding:20px;">No offers found for this category.</div>`;
+          return;
+        }
 
-      container.innerHTML = Object.keys(grouped).map(ret => {
-        const rows = grouped[ret].sort((a,b) => b.miles - a.miles);
-        const best = rows[0];
-        return `
-          <div style="${css.card}">
-            <div>
-              <div style="${css.title}">${ret} <span style="background:#d97d2b; color:#fff; padding:2px 10px; border-radius:20px; font-size:0.7rem; margin-left:8px;">${best.miles}x ${best.airline}</span></div>
-              <div style="${css.desc}">${rows.map(r => `✈️ ${r.airline} ${r.miles}x`).join(' · ')}</div>
+        // Group by retailer
+        const grouped = {};
+        filtered.forEach(o => {
+          if (!grouped[o.retailer]) grouped[o.retailer] = [];
+          grouped[o.retailer].push(o);
+        });
+
+        container.innerHTML = Object.keys(grouped).map(ret => {
+          const rows = grouped[ret].sort((a,b) => b.miles - a.miles);
+          const best = rows[0];
+          return `
+            <div style="${css.card}">
+              <div>
+                <div style="${css.title}">${ret} <span style="background:#d97d2b; color:#fff; padding:2px 10px; border-radius:20px; font-size:0.7rem; margin-left:8px;">${best.miles}x ${best.airline}</span></div>
+                <div style="${css.desc}">${rows.map(r => `✈️ ${r.airline} ${r.miles}x`).join(' · ')}</div>
+              </div>
+              <a href="${best.link}" target="_blank" style="${css.btn}">Shop Now</a>
             </div>
-            <a href="${best.link}" target="_blank" style="${css.btn}">Shop Now</a>
-          </div>
-        `;
-      }).join('');
-    }
-    renderOffers('All');
-
-    document.getElementById('shop-filters').addEventListener('click', (e) => {
-      if (e.target.classList.contains('mm-chip')) {
-        document.querySelectorAll('.mm-chip').forEach(c => c.classList.remove('active'));
-        e.target.classList.add('active');
-        renderOffers(e.target.dataset.cat);
+          `;
+        }).join('');
       }
-    });
+      renderOffers('All');
 
-    // 3. Render Deals & Carbon
-    document.getElementById('deals-list').innerHTML = data.discounts.map(d => `
-      <div style="${css.card}">
-        <div>
-          <div style="${css.title}">✈️ ${d.airline} · ${d.type}</div>
-          <div style="${css.desc}">${d.description} · <strong>${d.percentage}%</strong></div>
+      // 3. Render Deals
+      document.getElementById('deals-list').innerHTML = data.discounts.map(d => `
+        <div style="${css.card}">
+          <div>
+            <div style="${css.title}">✈️ ${d.airline} · ${d.type}</div>
+            <div style="${css.desc}">${d.description} · <strong>${d.percentage}%</strong></div>
+          </div>
+          <a href="${d.link}" target="_blank" style="${css.btn}">View Deal</a>
         </div>
-        <a href="${d.link}" target="_blank" style="${css.btn}">View Deal</a>
-      </div>
-    `).join('');
+      `).join('');
 
-    document.getElementById('carbon-list').innerHTML = data.carbon.map(c => `
-      <div style="${css.card}">
-        <div>
-          <div style="${css.title}">✈️ ${c.airline} · ${c.type}</div>
-          <div style="${css.desc}">${c.description} · $${c.cost_per_ton}/t · +${c.bonus_miles} mi</div>
+      // 4. Render Carbon
+      document.getElementById('carbon-list').innerHTML = data.carbon.map(c => `
+        <div style="${css.card}">
+          <div>
+            <div style="${css.title}">✈️ ${c.airline} · ${c.type}</div>
+            <div style="${css.desc}">${c.description} · $${c.cost_per_ton}/t · +${c.bonus_miles} mi</div>
+          </div>
+          <a href="${c.link}" target="_blank" style="${css.btnGreen}">Offset</a>
         </div>
-        <a href="${c.link}" target="_blank" style="${css.btnGreen}">Offset</a>
-      </div>
-    `).join('');
+      `).join('');
 
-    // 4. Tabs
-    document.querySelectorAll('.mm-tab').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.mm-tab').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.mm-panel').forEach(p => p.style.display = 'none');
-        btn.classList.add('active');
-        document.getElementById(`panel-${btn.dataset.tab}`).style.display = 'block';
+      // 5. Tab Switching Logic
+      document.querySelectorAll('.mm-tab').forEach(btn => {
+        btn.addEventListener('click', () => {
+          // Reset all tabs
+          document.querySelectorAll('.mm-tab').forEach(b => {
+            b.classList.remove('active');
+            b.style.background = '#fff';
+            b.style.color = '#0b1e3a';
+            b.style.borderColor = '#e3eaf2';
+          });
+
+          // Hide all panels
+          document.querySelectorAll('.mm-panel').forEach(p => p.style.display = 'none');
+
+          // Activate clicked tab
+          btn.classList.add('active');
+          btn.style.background = '#0b1e3a';
+          btn.style.color = '#fff';
+          btn.style.borderColor = '#0b1e3a';
+
+          // Show target panel
+          document.getElementById(`panel-${btn.dataset.target}`).style.display = 'block';
+        });
+      });
+
+      // 6. Shop Filters Logic
+      document.getElementById('shop-filters').addEventListener('click', (e) => {
+        if (e.target.classList.contains('mm-chip')) {
+          document.querySelectorAll('.mm-chip').forEach(c => {
+            c.classList.remove('active');
+            c.style.background = '#eef3fa';
+            c.style.color = '#0b1e3a';
+          });
+          
+          e.target.classList.add('active');
+          e.target.style.background = '#1e5f9e';
+          e.target.style.color = '#fff';
+          
+          renderOffers(e.target.dataset.cat);
+        }
       });
     });
-  });
-</script>
+  </script>
 
   <style is:global>
-    .mm-tab { background: #fff; border: 1px solid #e3eaf2; border-radius: 40px; padding: 10px 24px; font-weight: 600; cursor: pointer; color: #0b1e3a; transition: 0.2s; }
+    .mm-tab { 
+      background: #fff; 
+      border: 1px solid #e3eaf2; 
+      border-radius: 40px; 
+      padding: 10px 24px; 
+      font-weight: 600; 
+      cursor: pointer; 
+      color: #0b1e3a; 
+      transition: 0.2s; 
+      font-family: 'Inter', sans-serif;
+    }
     .mm-tab:hover { border-color: #b6c9e0; }
     .mm-tab.active { background: #0b1e3a; color: #fff; border-color: #0b1e3a; }
-    .mm-chip { background: #eef3fa; border-radius: 40px; padding: 6px 16px; font-size: 0.8rem; font-weight: 600; cursor: pointer; color: #0b1e3a; transition: 0.2s; }
+    
+    .mm-chip { 
+      background: #eef3fa; 
+      border-radius: 40px; 
+      padding: 6px 16px; 
+      font-size: 0.8rem; 
+      font-weight: 600; 
+      cursor: pointer; 
+      color: #0b1e3a; 
+      transition: 0.2s; 
+      font-family: 'Inter', sans-serif;
+    }
     .mm-chip.active { background: #1e5f9e; color: #fff; }
   </style>
 </Layout>
