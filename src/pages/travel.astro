@@ -6,7 +6,7 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 
 <Layout title="Travel & Tours - ABSL">
   <!-- HERO SECTION -->
-  <section style="position:relative; padding: 100px 0 100px; background: linear-gradient(rgba(10, 17, 40, 0.85), rgba(10, 17, 40, 0.95)), url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=2074&auto=format&fit=crop'); background-size: cover; background-position: center; border-bottom: 1px solid var(--line);">
+  <section style="position:relative; padding: 100px 0 80px; background: linear-gradient(rgba(10, 17, 40, 0.85), rgba(10, 17, 40, 0.95)), url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=2074&auto=format&fit=crop'); background-size: cover; background-position: center; border-bottom: 1px solid var(--line);">
     <div class="container" style="position:relative; z-index:2;">
       <div style="text-align:center; max-width: 800px; margin: 0 auto 48px;">
         <h1 style="font-size: 4rem; line-height: 1.1; margin-bottom: 24px;">Your Gateway to the World.</h1>
@@ -43,6 +43,7 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
             <div>
               <label style="display:block; font-family:var(--mono); font-size:10px; color:var(--gold); margin-bottom:6px;">PASSENGERS</label>
               <select class="t-input" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px; outline:none;">
+                <option value="" disabled selected>Select Passengers</option>
                 <option>1 Adult</option><option>2 Adults</option><option>3 Adults</option><option>Family</option>
               </select>
             </div>
@@ -68,6 +69,7 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
             <div>
               <label style="display:block; font-family:var(--mono); font-size:10px; color:var(--gold); margin-bottom:6px;">GUESTS</label>
               <select class="t-input" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px; outline:none;">
+                <option value="" disabled selected>Select Guests</option>
                 <option>1 Room, 1 Guest</option><option>1 Room, 2 Guests</option><option>2 Rooms, 4 Guests</option>
               </select>
             </div>
@@ -80,13 +82,13 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
           <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:16px;">
             <div>
               <label style="display:block; font-family:var(--mono); font-size:10px; color:var(--gold); margin-bottom:6px;">DESTINATION COUNTRY</label>
-              <select class="t-input" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px; outline:none;">
-                <option>UK</option><option>USA</option><option>Canada</option><option>Schengen</option><option>UAE</option>
-              </select>
+              <input type="text" list="country-list" placeholder="Type country (e.g. Canada)" class="t-input" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px; outline:none;" />
+              <datalist id="country-list"></datalist>
             </div>
             <div>
               <label style="display:block; font-family:var(--mono); font-size:10px; color:var(--gold); margin-bottom:6px;">PURPOSE OF TRAVEL</label>
               <select class="t-input" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px; outline:none;">
+                <option value="" disabled selected>Select Purpose</option>
                 <option>Tourism</option><option>Business</option><option>Study</option><option>Work</option>
               </select>
             </div>
@@ -135,6 +137,7 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
             <div>
               <label style="display:block; font-family:var(--mono); font-size:10px; color:var(--gold); margin-bottom:6px;">VEHICLE TYPE</label>
               <select class="t-input" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px; outline:none;">
+                <option value="" disabled selected>Select Vehicle</option>
                 <option>SUV (With Driver)</option><option>Sedan (With Driver)</option><option>Luxury Bus</option><option>Self-Drive</option>
               </select>
             </div>
@@ -142,6 +145,19 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
           <button class="btn btn-primary search-btn" data-service="Car Hire" style="width:100%; margin-top:16px; padding:14px;">Reserve Vehicle</button>
         </div>
 
+      </div>
+    </div>
+  </section>
+
+  <!-- MILEAGE MALL PROMO -->
+  <section style="background: var(--bg-surface); border-bottom: 1px solid var(--line-light); padding: 40px 0;">
+    <div class="container">
+      <div style="display:flex; justify-content:space-between; align-items:center; background: var(--bg-main); border:1px solid var(--gold); border-radius: var(--r-md); padding: 32px; flex-wrap:wrap; gap:24px;">
+        <div>
+          <h3 style="color: var(--white); font-size:1.8rem; margin-bottom:8px;">✈️ MileageMall Rewards</h3>
+          <p style="color: var(--text-muted); max-width: 600px;">Earn miles while you travel, book flights, and shop. Track your airline loyalty programs, find shopping multipliers, and offset your carbon footprint — all in one hub.</p>
+        </div>
+        <a href="/rewards" class="btn btn-primary" style="padding:16px 32px; font-size:1.1rem; flex-shrink:0;">Launch Rewards Dashboard</a>
       </div>
     </div>
   </section>
@@ -187,6 +203,17 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
     }
 
     document.addEventListener('DOMContentLoaded', () => {
+      // Populate Country List safely via JS
+      const countries = ["Afghanistan","Albania","Algeria","Andorra","Angola","Antigua and Barbuda","Argentina","Armenia","Australia","Austria","Azerbaijan","Bahamas","Bahrain","Bangladesh","Barbados","Belarus","Belgium","Belize","Benin","Bhutan","Bolivia","Bosnia and Herzegovina","Botswana","Brazil","Brunei","Bulgaria","Burkina Faso","Burundi","Cabo Verde","Cambodia","Cameroon","Canada","Central African Republic","Chad","Chile","China","Colombia","Comoros","Congo","Costa Rica","Croatia","Cuba","Cyprus","Czech Republic","Denmark","Djibouti","Dominica","Dominican Republic","Ecuador","Egypt","El Salvador","Equatorial Guinea","Eritrea","Estonia","Eswatini","Ethiopia","Fiji","Finland","France","Gabon","Gambia","Georgia","Germany","Ghana","Greece","Grenada","Guatemala","Guinea","Guinea-Bissau","Guyana","Haiti","Honduras","Hungary","Iceland","India","Indonesia","Iran","Iraq","Ireland","Israel","Italy","Jamaica","Japan","Jordan","Kazakhstan","Kenya","Kiribati","Kuwait","Kyrgyzstan","Laos","Latvia","Lebanon","Lesotho","Liberia","Libya","Liechtenstein","Lithuania","Luxembourg","Madagascar","Malawi","Malaysia","Maldives","Mali","Malta","Marshall Islands","Mauritania","Mauritius","Mexico","Micronesia","Moldova","Monaco","Mongolia","Montenegro","Morocco","Mozambique","Myanmar","Namibia","Nauru","Nepal","Netherlands","New Zealand","Nicaragua","Niger","Nigeria","North Korea","North Macedonia","Norway","Oman","Pakistan","Palau","Palestine","Panama","Papua New Guinea","Paraguay","Peru","Philippines","Poland","Portugal","Qatar","Romania","Russia","Rwanda","Saint Kitts and Nevis","Saint Lucia","Saint Vincent and the Grenadines","Samoa","San Marino","Sao Tome and Principe","Saudi Arabia","Senegal","Serbia","Seychelles","Sierra Leone","Singapore","Slovakia","Slovenia","Solomon Islands","Somalia","South Africa","South Korea","South Sudan","Spain","Sri Lanka","Sudan","Suriname","Sweden","Switzerland","Syria","Taiwan","Tajikistan","Tanzania","Thailand","Timor-Leste","Togo","Tonga","Trinidad and Tobago","Tunisia","Turkey","Turkmenistan","Tuvalu","Uganda","Ukraine","United Arab Emirates","United Kingdom","United States","Uruguay","Uzbekistan","Vanuatu","Vatican City","Venezuela","Vietnam","Yemen","Zambia","Zimbabwe"];
+      const datalist = document.getElementById('country-list');
+      if (datalist) {
+        countries.forEach(c => {
+          const opt = document.createElement('option');
+          opt.value = c;
+          datalist.appendChild(opt);
+        });
+      }
+
       // Tab Switching Logic
       const tabs = document.querySelectorAll('.travel-tab');
       const panels = document.querySelectorAll('.travel-panel');
@@ -204,7 +231,6 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
         });
       });
 
-      // Set first tab active style
       if(tabs.length > 0) {
         tabs[0].style.background = 'rgba(197, 160, 89, 0.1)';
         tabs[0].style.color = 'var(--gold)';
@@ -217,18 +243,32 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 
       document.querySelectorAll('.search-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
-          currentService = e.target.dataset.service;
-          document.getElementById('modal-service-name').textContent = currentService;
-
-          // Capture the inputs from the active panel
-          const activePanel = e.target.closest('.travel-panel');
+          currentService = e.currentTarget.dataset.service;
+          const activePanel = e.currentTarget.closest('.travel-panel');
           const inputs = activePanel.querySelectorAll('.t-input');
           currentDetails = {};
-          
-          inputs.forEach((input, index) => {
-            currentDetails[input.previousElementSibling.textContent.trim()] = input.value;
+          let isValid = true;
+
+          // Validate all fields
+          inputs.forEach((input) => {
+            const label = input.previousElementSibling.textContent.trim();
+            const val = input.value.trim();
+            
+            if (!val) {
+              isValid = false;
+              input.style.borderColor = '#ef4444'; // Highlight empty fields red
+            } else {
+              input.style.borderColor = 'var(--line-light)'; // Reset
+            }
+            currentDetails[label] = val;
           });
 
+          if (!isValid) {
+            alert('Please fill in all fields before proceeding.');
+            return;
+          }
+
+          document.getElementById('modal-service-name').textContent = currentService;
           modal.style.display = 'flex';
         });
       });
@@ -259,7 +299,6 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
           alert(`Request submitted successfully!\n\nOur travel desk will contact you shortly regarding your ${currentService} request.`);
           modal.style.display = 'none';
           
-          // Clear fields
           document.getElementById('m-name').value = '';
           document.getElementById('m-email').value = '';
           document.getElementById('m-phone').value = '';
