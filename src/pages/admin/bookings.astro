@@ -42,8 +42,8 @@ const rows = bookings || [];
             rows.map(b => (
               <tr style="border-top:1px solid var(--line-light);">
                 <td style="padding:16px; color:var(--text-muted);">{new Date(b.created_at).toLocaleDateString()}</td>
-                <td style="padding:16px; color:var(--white); font-weight:600;">{b.client_name}</td>
-                <td style="padding:16px; color:var(--text-muted);">{b.client_phone}</td>
+                <td style="padding:16px; color:var(--white); font-weight:600;">{b.customer_name}</td>
+                <td style="padding:16px; color:var(--text-muted);">{b.customer_phone}</td>
                 <td style="padding:16px; text-align:right; color:var(--gold); font-weight:700;">{Number(b.total_amount).toLocaleString()}</td>
                 <td style="padding:16px;">
                   <select data-id={b.id} class="status-select" style="padding:6px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;">
