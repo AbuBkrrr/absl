@@ -147,7 +147,7 @@ const flwKey = import.meta.env.PUBLIC_FLUTTERWAVE_PUBLIC_KEY;
           </div>
           <div class="bp-inputs-grid">
             <div class="bp-field">
-              <label>Floor Area <span class="val" id="sqmVal">120 m²</span></label>
+              <label>Floor Area (Per Floor) <span class="val" id="sqmVal">120 m²</span></label>
               <input type="range" id="sqmSlider" min="50" max="5000" step="10" value="120">
               <input type="text" inputmode="numeric" class="bp-manual-input" id="sqmManual" value="120">
             </div>
@@ -331,15 +331,10 @@ const flwKey = import.meta.env.PUBLIC_FLUTTERWAVE_PUBLIC_KEY;
       const QUALITY_WATTS_SQM = { basic: 35, mid: 50, luxury: 70 };
 
       function fmtMoney(v) { return '₦' + Math.round(v).toLocaleString(); }
-      function floorMultiplier() { 
-        // A more realistic scaling for multi-story buildings. 
-        // Adds 15% complexity per floor to account for structural steel, foundation, and hoisting.
-        return 1 + (currentState.floors - 1) * 0.15; 
-      }
-      function totalSqm() { return currentState.area; }
+
+      function totalSqm() { return currentState.area * currentState.floors; }
 
       function render() {
-        const fMult = floorMultiplier();
         const qQty = QUALITY_QTY_MULT[currentState.quality];
         const qPrice = QUALITY_PRICE_MULT[currentState.quality];
         
@@ -350,7 +345,8 @@ const flwKey = import.meta.env.PUBLIC_FLUTTERWAVE_PUBLIC_KEY;
         currentMaterials = [];
 
         settings.materials.forEach(m => {
-          const qty = m.qtyPerSqm * totalSqm() * fMult * qQty;
+          // Quantity is based on total square meters across all floors
+          const qty = m.qtyPerSqm * totalSqm() * qQty;
           const displayQty = ['bags','pcs','sheets','planks','buckets','units'].includes(m.unit) ? Math.max(1, Math.ceil(qty)) : qty;
           const basePrice = m.basePrice * qPrice;
           const override = currentState.overrides[m.id];
