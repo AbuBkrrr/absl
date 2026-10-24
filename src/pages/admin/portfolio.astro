@@ -68,8 +68,9 @@ const rows = projects || [];
     </div>
   </div>
 
-  <script>
-    // Image Preview Logic
+    <script>
+    import { supabase } from '../../lib/supabase';
+
     const fileInput = document.getElementById('f-img-file');
     const imgPreview = document.getElementById('img-preview');
     const previewEl = document.getElementById('preview-el');
@@ -84,7 +85,6 @@ const rows = projects || [];
       }
     });
 
-    // Helper function to compress the image using Canvas
     async function compressImage(file) {
       return new Promise((resolve) => {
         const reader = new FileReader();
@@ -94,10 +94,9 @@ const rows = projects || [];
           img.src = event.target.result;
           img.onload = () => {
             const canvas = document.createElement('canvas');
-            const MAX_WIDTH = 1200; // Standard web size
+            const MAX_WIDTH = 1200; 
             const scaleSize = MAX_WIDTH / img.width;
             
-            // Only resize if it's larger than MAX_WIDTH
             if (img.width > MAX_WIDTH) {
               canvas.width = MAX_WIDTH;
               canvas.height = img.height * scaleSize;
@@ -108,7 +107,6 @@ const rows = projects || [];
             
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            // Compress to JPEG at 70% quality
             canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.7); 
           };
         };
@@ -130,16 +128,8 @@ const rows = projects || [];
       btn.disabled = true;
 
       try {
-        // Load Supabase Browser Client
-        const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
-        const supabase = createClient(
-          import.meta.env.PUBLIC_SUPABASE_URL,
-          import.meta.env.PUBLIC_SUPABASE_ANON_KEY
-        );
-
         let image_url = null;
 
-        // 1. If there's a file, compress and upload it
         if (file) {
           btn.textContent = 'Compressing Image...';
           const compressedBlob = await compressImage(file);
@@ -147,13 +137,13 @@ const rows = projects || [];
           btn.textContent = 'Uploading Image...';
           const fileName = `project_${Date.now()}.jpg`;
           
+          // Using the imported authenticated supabase client
           const { data: uploadData, error: uploadError } = await supabase.storage
             .from('portfolio')
             .upload(fileName, compressedBlob, { contentType: 'image/jpeg' });
 
           if (uploadError) throw new Error('Upload failed: ' + uploadError.message);
 
-          // Get public URL
           const { data: { publicUrl } } = supabase.storage
             .from('portfolio')
             .getPublicUrl(fileName);
@@ -161,7 +151,6 @@ const rows = projects || [];
           image_url = publicUrl;
         }
 
-        // 2. Save project to database
         btn.textContent = 'Saving...';
         const { error: dbError } = await supabase.from('absl_projects').insert({
           title, category, team_members, project_date, image_url, description
@@ -178,7 +167,6 @@ const rows = projects || [];
       }
     });
 
-    // Delete logic
     document.addEventListener('click', async (e) => {
       if (e.target.classList.contains('del-btn')) {
         if (!confirm('Delete this project?')) return;
