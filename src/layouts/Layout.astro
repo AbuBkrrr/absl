@@ -45,6 +45,7 @@ const year = new Date().getFullYear();
         * { box-sizing: border-box; margin: 0; padding: 0; }
         html { scroll-behavior: smooth; }
         body {
+            overflow-x: hidden;
             background-color: var(--bg-main);
             color: var(--text-light);
             font-family: var(--font-body);
@@ -112,6 +113,22 @@ const year = new Date().getFullYear();
             .menu-toggle:checked ~ .nav-links { display: flex; }
             .footer-grid { grid-template-columns: 1fr; }
             .top-bar .container { flex-direction: column; text-align: center; gap: 8px; }
+        }
+            /* Mobile Form Overrides */
+        @media (max-width: 768px) {
+            .hero-search-form {
+                flex-direction: column !important;
+            }
+            .hero-search-form > div {
+                border-right: none !important;
+                border-bottom: 1px solid var(--line-light);
+                width: 100% !important;
+            }
+            .btn {
+                width: 100%;
+                max-width: 100%;
+                box-sizing: border-box;
+            }
         }
     </style>
 </head>
