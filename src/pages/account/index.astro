@@ -16,7 +16,7 @@ const { data: profile } = await supabase
   .eq('id', user.id)
   .single();
 
-if (profile?.is_admin) {
+if ((profile?.role && profile.role !== "customer") || profile?.is_admin) {
   return Astro.redirect('/admin');
 }
 
