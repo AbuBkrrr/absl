@@ -57,11 +57,17 @@ const rows = messages || [];
                   </span>
                 </td>
                 <td style="padding:16px; text-align:right; white-space:nowrap;">
-                  {m.status !== 'read' ? (
-                    <button data-id={m.id} class="mark-read-btn" style="background:transparent; border:1px solid var(--green); color:var(--green); padding:6px 12px; border-radius:4px; cursor:pointer; font-size:11px;">Mark as Read</button>
-                  ) : (
-                    <span style="color:var(--text-muted); font-size:11px;">✓ Read</span>
-                  )}
+                  <div style="display:flex; gap:8px; justify-content:flex-end; align-items:center;">
+                    <!-- Reply Button -->
+                    <a href={`mailto:${m.email}?subject=Re: ${encodeURIComponent(m.subject || 'Inquiry from ABSL')}&body=Hi ${encodeURIComponent(m.full_name)},%0D%0A%0D%0A`} style="background:rgba(197, 160, 89, 0.15); border:1px solid var(--gold); color:var(--gold); padding:6px 12px; border-radius:4px; font-size:11px; text-decoration:none; font-weight:600; transition: 0.2s;" onmouseover="this.style.background='var(--gold)'; this.style.color='var(--white)'" onmouseout="this.style.background='rgba(197, 160, 89, 0.15)'; this.style.color='var(--gold)'">Reply</a>
+                    
+                    <!-- Mark as Read Button -->
+                    {m.status !== 'read' ? (
+                      <button data-id={m.id} class="mark-read-btn" style="background:transparent; border:1px solid var(--green); color:var(--green); padding:6px 12px; border-radius:4px; cursor:pointer; font-size:11px;">Mark as Read</button>
+                    ) : (
+                      <span style="color:var(--text-muted); font-size:11px;">✓ Read</span>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))
