@@ -567,4 +567,81 @@ const flwKey = import.meta.env.PUBLIC_FLUTTERWAVE_PUBLIC_KEY;
       });
     });
   </script>
+  <!-- PDF Generation Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <!-- HIDDEN INVOICE TEMPLATE FOR PDF GENERATION -->
+  <div id="invoice-wrapper" style="position: fixed; left: -9999px; top: 0;">
+    <div id="invoice-template" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; width: 800px; padding: 40px; background: #ffffff; color: #333333;">
+      
+      <!-- Header -->
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #1E5F9E; padding-bottom: 20px; margin-bottom: 30px;">
+        <div>
+          <img src="/absl-logo.png" alt="ABSL Logo" style="height: 60px; margin-bottom: 10px;" />
+          <h1 style="margin: 0; color: #1E5F9E; font-size: 28px; font-weight: 800; letter-spacing: 1px;">INVOICE</h1>
+        </div>
+        <div style="text-align: right; font-size: 14px; line-height: 1.6;">
+          <strong>Allstates Business Solutions & Logistics Ltd</strong><br>
+          Plot 105, Gidan Dan Asabe, Zoo Road, Kano.<br>
+          08033355060<br>
+          info@absl.com.ng
+        </div>
+      </div>
+
+      <!-- Meta & Customer Details -->
+      <div style="display: flex; justify-content: space-between; margin-bottom: 40px;">
+        <div style="width: 50%;">
+          <h3 style="color: #888888; font-size: 12px; text-transform: uppercase; margin-bottom: 8px;">Billed To:</h3>
+          <div style="font-size: 15px; line-height: 1.6;">
+            <strong id="inv-customer-name">Customer Name</strong><br>
+            <span id="inv-customer-email">Email</span><br>
+            <span id="inv-customer-phone">Phone</span>
+          </div>
+        </div>
+        <div style="width: 40%; text-align: right; font-size: 14px; line-height: 1.6;">
+          <p style="margin: 0;"><strong>Invoice No:</strong> <span id="inv-number">INV-0000</span></p>
+          <p style="margin: 0;"><strong>Date:</strong> <span id="inv-date">Date</span></p>
+          <p style="margin: 0;"><strong>Status:</strong> <span id="inv-status" style="color: #d97706; font-weight: bold;">UNPAID</span></p>
+        </div>
+      </div>
+
+      <!-- Items Table -->
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 14px;">
+        <thead>
+          <tr style="background: #f3f4f6; color: #1E5F9E; text-align: left;">
+            <th style="padding: 12px; border-bottom: 2px solid #e5e7eb;">Description</th>
+            <th style="padding: 12px; border-bottom: 2px solid #e5e7eb; text-align: center;">Qty</th>
+            <th style="padding: 12px; border-bottom: 2px solid #e5e7eb; text-align: right;">Unit Price (₦)</th>
+            <th style="padding: 12px; border-bottom: 2px solid #e5e7eb; text-align: right;">Total (₦)</th>
+          </tr>
+        </thead>
+        <tbody id="inv-items-list">
+          <!-- Items inserted by JS -->
+        </tbody>
+      </table>
+
+      <!-- Totals -->
+      <div style="display: flex; justify-content: flex-end; margin-bottom: 40px;">
+        <table style="width: 300px; font-size: 14px;">
+          <tr>
+            <td style="padding: 8px 0; color: #666;">Subtotal:</td>
+            <td style="padding: 8px 0; text-align: right; font-weight: bold;" id="inv-subtotal">₦0</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0; color: #666;">Handling & Logistics (10%):</td>
+            <td style="padding: 8px 0; text-align: right; font-weight: bold;" id="inv-fee">₦0</td>
+          </tr>
+          <tr>
+            <td style="padding: 12px 0; border-top: 2px solid #e5e7eb; color: #1E5F9E; font-size: 18px; font-weight: 800;">Total:</td>
+            <td style="padding: 12px 0; border-top: 2px solid #e5e7eb; text-align: right; color: #1E5F9E; font-size: 18px; font-weight: 800;" id="inv-total">₦0</td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- Footer -->
+      <div style="border-top: 1px solid #e5e7eb; padding-top: 20px; text-align: center; font-size: 12px; color: #888;">
+        <p>Thank you for choosing ABSL. For payment details or inquiries, contact info@absl.com.ng.</p>
+        <p>This is a computer-generated document. No signature is required.</p>
+      </div>
+    </div>
+  </div>
 </Layout>
