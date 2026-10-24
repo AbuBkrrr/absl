@@ -9,24 +9,112 @@ import Layout from '../layouts/Layout.astro';
     </div>
   </div>
 
-  <div class="container" style="padding: 80px 24px; max-width: 800px;">
-    <div style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 48px;">
-      <h2 style="font-size: 1.8rem; margin-bottom: 24px; color: var(--gold);">Reach out to us</h2>
+  <div class="container" style="padding: 80px 24px;">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: start;">
       
-      <div style="margin-bottom: 24px;">
-        <div style="font-family: var(--mono); font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">Email</div>
-        <a href="mailto:info@absl.com.ng" style="font-size: 1.2rem; color: var(--white);">info@absl.com.ng</a>
-      </div>
-      
-      <div style="margin-bottom: 24px;">
-        <div style="font-family: var(--mono); font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">Phone</div>
-        <a href="tel:08033355060" style="font-size: 1.2rem; color: var(--white);">08033355060</a>
+      <!-- Contact Form -->
+      <div style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 48px;">
+        <h2 style="font-size: 1.8rem; margin-bottom: 24px; color: var(--gold);">Send us a message</h2>
+        
+        <form id="contact-form" style="display: flex; flex-direction: column; gap: 20px;">
+          <div>
+            <label style="display:block; font-family: var(--mono); font-size: 11px; color: var(--text-muted); margin-bottom: 6px;">FULL NAME *</label>
+            <input id="c-name" type="text" required style="width:100%; padding:12px; background: var(--bg-surface); border:1px solid var(--line-light); border-radius: 4px; color: var(--white);" />
+          </div>
+          
+          <div>
+            <label style="display:block; font-family: var(--mono); font-size: 11px; color: var(--text-muted); margin-bottom: 6px;">EMAIL ADDRESS *</label>
+            <input id="c-email" type="email" required style="width:100%; padding:12px; background: var(--bg-surface); border:1px solid var(--line-light); border-radius: 4px; color: var(--white);" />
+          </div>
+          
+          <div>
+            <label style="display:block; font-family: var(--mono); font-size: 11px; color: var(--text-muted); margin-bottom: 6px;">SUBJECT</label>
+            <input id="c-subject" type="text" placeholder="e.g. Booking Inquiry" style="width:100%; padding:12px; background: var(--bg-surface); border:1px solid var(--line-light); border-radius: 4px; color: var(--white);" />
+          </div>
+          
+          <div>
+            <label style="display:block; font-family: var(--mono); font-size: 11px; color: var(--text-muted); margin-bottom: 6px;">MESSAGE *</label>
+            <textarea id="c-message" required rows="5" style="width:100%; padding:12px; background: var(--bg-surface); border:1px solid var(--line-light); border-radius: 4px; color: var(--white); font-family: var(--font-body);"></textarea>
+          </div>
+
+          <button type="submit" id="c-submit" class="btn btn-primary" style="margin-top: 8px; width: 100%;">Send Message</button>
+          
+          <div id="c-alert" style="display: none; padding: 12px; text-align: center; border-radius: 4px; font-size: 0.9rem;"></div>
+        </form>
       </div>
 
-      <div>
-        <div style="font-family: var(--mono); font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">Address</div>
-        <p style="font-size: 1.1rem; color: var(--white);">Plot 105, Gidan Dan Asabe, Zoo Road, Kano, Nigeria.</p>
+      <!-- Contact Information -->
+      <div style="padding: 20px 0;">
+        <h2 style="font-size: 1.8rem; margin-bottom: 32px; color: var(--white);">Our Details</h2>
+        
+        <div style="margin-bottom: 32px;">
+          <div style="font-family: var(--mono); font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">Email</div>
+          <a href="mailto:info@absl.com.ng" style="font-size: 1.2rem; color: var(--white);">info@absl.com.ng</a>
+        </div>
+
+        <div style="margin-bottom: 32px;">
+          <div style="font-family: var(--mono); font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">Phone</div>
+          <a href="tel:08033355060" style="font-size: 1.2rem; color: var(--white);">08033355060</a>
+        </div>
+
+        <div style="margin-bottom: 32px;">
+          <div style="font-family: var(--mono); font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">Address</div>
+          <p style="font-size: 1.1rem; color: var(--white); line-height: 1.5;">Plot 105, Gidan Dan Asabe,<br>Zoo Road, Kano, Nigeria.</p>
+        </div>
+        
+        <div style="background: var(--bg-surface); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 24px;">
+          <h3 style="font-size: 1.1rem; color: var(--gold); margin-bottom: 8px;">Corporate Desk Hours</h3>
+          <p style="color: var(--text-muted); font-size: 0.9rem;">Monday - Friday: 8:00 AM - 6:00 PM<br>Saturday: 9:00 AM - 2:00 PM</p>
+        </div>
       </div>
+
     </div>
   </div>
+
+  <script is:inline>
+    document.getElementById('contact-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const btn = document.getElementById('c-submit');
+      const alertBox = document.getElementById('c-alert');
+      
+      const name = document.getElementById('c-name').value.trim();
+      const email = document.getElementById('c-email').value.trim();
+      const subject = document.getElementById('c-subject').value.trim();
+      const message = document.getElementById('c-message').value.trim();
+
+      btn.textContent = 'Sending...';
+      btn.disabled = true;
+      alertBox.style.display = 'none';
+
+      try {
+        const res = await fetch('/api/contact', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, subject, message })
+        });
+
+        if (!res.ok) throw new Error(await res.text());
+
+        // Success
+        alertBox.style.display = 'block';
+        alertBox.style.background = 'rgba(16, 185, 129, 0.1)';
+        alertBox.style.color = '#10B981';
+        alertBox.style.border = '1px solid #10B981';
+        alertBox.textContent = 'Message sent successfully! We will get back to you soon.';
+        
+        document.getElementById('contact-form').reset();
+      } catch (err) {
+        // Error
+        alertBox.style.display = 'block';
+        alertBox.style.background = 'rgba(239, 68, 68, 0.1)';
+        alertBox.style.color = '#EF4444';
+        alertBox.style.border = '1px solid #EF4444';
+        alertBox.textContent = 'Failed to send: ' + err.message;
+      } finally {
+        btn.textContent = 'Send Message';
+        btn.disabled = false;
+      }
+    });
+  </script>
 </Layout>
