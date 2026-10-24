@@ -4,7 +4,7 @@ import { supabase } from '../../lib/supabase';
 export const POST: APIRoute = async ({ request }) => {
   try {
     const body = await request.json();
-    const { name, email, subject, message } = body;
+    const { name, email, whatsapp, subject, message } = body;
 
     if (!name || !email || !message) {
       return new Response('Name, email, and message are required.', { status: 400 });
@@ -12,6 +12,7 @@ export const POST: APIRoute = async ({ request }) => {
 
     const { error } = await supabase.from('absl_contact_messages').insert({
       full_name: name,
+      whatsapp_number: whatsapp || null,
       email: email,
       subject: subject || 'General Inquiry',
       message: message

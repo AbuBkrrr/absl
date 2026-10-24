@@ -26,6 +26,10 @@ import Layout from '../layouts/Layout.astro';
             <label style="display:block; font-family: var(--mono); font-size: 11px; color: var(--text-muted); margin-bottom: 6px;">EMAIL ADDRESS *</label>
             <input id="c-email" type="email" required style="width:100%; padding:12px; background: var(--bg-surface); border:1px solid var(--line-light); border-radius: 4px; color: var(--white);" />
           </div>
+          <div>
+            <label style="display:block; font-family: var(--mono); font-size: 11px; color: var(--text-muted); margin-bottom: 6px;">WHATSAPP NUMBER</label>
+            <input id="c-whatsapp" type="tel" placeholder="+234..." style="width:100%; padding:12px; background: var(--bg-surface); border:1px solid var(--line-light); border-radius: 4px; color: var(--white);" />
+          </div>
           
           <div>
             <label style="display:block; font-family: var(--mono); font-size: 11px; color: var(--text-muted); margin-bottom: 6px;">SUBJECT</label>
@@ -80,6 +84,7 @@ import Layout from '../layouts/Layout.astro';
       
       const name = document.getElementById('c-name').value.trim();
       const email = document.getElementById('c-email').value.trim();
+      const whatsapp = document.getElementById('c-whatsapp').value.trim();
       const subject = document.getElementById('c-subject').value.trim();
       const message = document.getElementById('c-message').value.trim();
 
@@ -91,7 +96,7 @@ import Layout from '../layouts/Layout.astro';
         const res = await fetch('/api/contact', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, email, subject, message })
+          body: JSON.stringify({ name, email, whatsapp, subject, message })
         });
 
         if (!res.ok) throw new Error(await res.text());
