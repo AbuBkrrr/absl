@@ -496,7 +496,7 @@ const flwKey = import.meta.env.PUBLIC_FLUTTERWAVE_PUBLIC_KEY;
         });
         if (selectedItems.length === 0) return alert('Please select at least one material.');
 
-        let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+        let cart = JSON.parse(localStorage.getItem('absl_cart') || '[]');
         
         cart.push({
           id: 'proj-' + Date.now(),
@@ -510,7 +510,7 @@ const flwKey = import.meta.env.PUBLIC_FLUTTERWAVE_PUBLIC_KEY;
           else { cart.push({ id: m.id, title: m.name + ' (Material)', price: m.price, category: 'Materials', maxQty: 9999, qty: m.qty }); }
         });
 
-        localStorage.setItem('cart', JSON.stringify(cart));
+        localStorage.setItem('absl_cart', JSON.stringify(cart));
         window.dispatchEvent(new Event('absl-cart-updated'));
         alert('Materials added to cart!');
         window.location.href = '/checkout';
