@@ -22,7 +22,15 @@ const { data: bookings } = await supabase
   .eq('customer_email', user.email)
   .order('created_at', { ascending: false });
 
+// Fetch Inventory (Warehouse)
+const { data: inventory } = await supabase
+  .from('absl_inventory')
+  .select('*')
+  .eq('user_id', user.id)
+  .order('created_at', { ascending: false });
+
 const rows = bookings || [];
+const inventoryItems = inventory || [];
 ---
 
 <Layout title="Client Dashboard - ABSL">
@@ -37,15 +45,19 @@ const rows = bookings || [];
   </div>
 
   <div class="container" style="padding: 60px 24px;">
+    
+    <!-- ========================================== -->
+    <!-- MY BOOKINGS SECTION                        -->
+    <!-- ========================================== -->
     <h2 style="font-size:1.8rem; color:var(--white); margin-bottom:24px;">My Bookings & Orders</h2>
     
     {rows.length === 0 ? (
-      <div style="background:var(--bg-card); border:1px dashed var(--line); padding:40px; text-align:center; border-radius:var(--r-md);">
+      <div style="background:var(--bg-card); border:1px dashed var(--line); padding:40px; text-align:center; border-radius:var(--r-md); margin-bottom: 60px;">
         <p style="color:var(--text-muted); margin-bottom:16px;">You have no active bookings yet.</p>
         <a href="/travel" class="btn btn-primary">Start Booking</a>
       </div>
     ) : (
-      <div style="display:flex; flex-direction:column; gap:24px;">
+      <div style="display:flex; flex-direction:column; gap:24px; margin-bottom: 60px;">
         {rows.map(b => (
           <div style="background:var(--bg-card); border:1px solid var(--line-light); border-radius:var(--r-md); overflow:hidden;">
             
@@ -84,5 +96,48 @@ const rows = bookings || [];
         ))}
       </div>
     )}
+
+    <!-- ========================================== -->
+    <!-- INVENTORY DASHBOARD SECTION                -->
+    <!-- ========================================== -->
+    <h2 style="font-size:1.8rem; color:var(--white); margin-bottom:8px;">My Inventory</h2>
+    <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:24px;">Real-time stock levels stored at our 140,000 SQM facilities.</p>
+
+    <div style="background:var(--bg-card); border:1px solid var(--line-light); border-radius:var(--r-md); overflow:hidden;">
+      {inventoryItems.length === 0 ? (
+        <div style="padding:40px; text-align:center;">
+          <p style="color:var(--text-muted);">You currently have no inventory stored with ABSL.</p>
+        </div>
+      ) : (
+        <table style="width:100%; border-collapse:collapse; font-family:var(--mono); font-size:12.5px;">
+          <thead>
+            <tr style="background:var(--bg-surface); text-align:left;">
+              <th style="padding:16px; color:var(--gold);">SKU / Item</th>
+              <th style="padding:16px; color:var(--gold); text-align:center;">Quantity</th>
+              <th style="padding:16px; color:var(--gold);">Location</th>
+              <th style="padding:16px; color:var(--gold);">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {inventoryItems.map(item => (
+              <tr style="border-top:1px solid var(--line-light);">
+                <td style="padding:16px; color:var(--white);">
+                  <div style="font-weight:600;">{item.sku}</div>
+                  <div style="font-size:11px; color:var(--text-muted);">{item.description}</div>
+                </td>
+                <td style="padding:16px; text-align:center; color:var(--white); font-weight:700;">{item.quantity}</td>
+                <td style="padding:16px; color:var(--text-muted);">{item.location || 'Warehouse A'}</td>
+                <td style="padding:16px;">
+                  <span style="font-size:10px; padding:4px 10px; border-radius:4px; background:rgba(16, 185, 129, 0.15); color:#10B981; text-transform:uppercase; font-weight:700;">
+                    {item.status || 'In Stock'}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+
   </div>
 </Layout>
