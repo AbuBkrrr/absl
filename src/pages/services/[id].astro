@@ -27,6 +27,7 @@ if (error || !pkg) return Astro.redirect('/services');
           data-id={String(pkg.id)}
           data-title={pkg.title}
           data-price={Number(pkg.price)}
+          data-points={Number(pkg.loyalty_points || 0)}
           data-category={pkg.category}>
           Add to Cart
         </button>
@@ -43,6 +44,7 @@ if (error || !pkg) return Astro.redirect('/services');
         id: btn.dataset.id,
         title: btn.dataset.title,
         price: Number(btn.dataset.price),
+        points: Number(btn.dataset.points) || 0,
         category: btn.dataset.category,
         qty: 1
       };

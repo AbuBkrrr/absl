@@ -1,4 +1,4 @@
----
+﻿---
 import Layout from '../../layouts/Layout.astro';
 import AdminGuard from '../../components/AdminGuard.astro';
 import { createClient } from '../../lib/supabase';
@@ -31,6 +31,7 @@ const rows = packages || [];
         </select>
         <input id="f-title" type="text" placeholder="Package Title (e.g. Dubai Visa)" style="padding:10px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
         <input id="f-price" type="number" placeholder="Price (₦)" style="padding:10px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
+        <input id="f-points" type="number" placeholder="Reward Miles (e.g. 500)" style="padding:10px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
         <button id="save-btn" class="btn btn-primary">Add Package</button>
       </div>
       <textarea id="f-desc" placeholder="Package Description" style="width:100%; margin-top:16px; padding:10px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;"></textarea>
@@ -43,6 +44,7 @@ const rows = packages || [];
             <th style="padding:16px; color:var(--gold);">Category</th>
             <th style="padding:16px; color:var(--gold);">Title</th>
             <th style="padding:16px; color:var(--gold); text-align:right;">Price (₦)</th>
+            <th style="padding:16px; color:var(--gold); text-align:right;">Miles</th>
             <th style="padding:16px; color:var(--gold); text-align:right;">Action</th>
           </tr>
         </thead>
@@ -52,6 +54,7 @@ const rows = packages || [];
               <td style="padding:16px; color:var(--gold); text-transform:uppercase; font-size:10px;">{p.category}</td>
               <td style="padding:16px; color:var(--white); font-weight:600;">{p.title}</td>
               <td style="padding:16px; text-align:right; color:var(--white); font-weight:700;">{Number(p.price).toLocaleString()}</td>
+              <td style="padding:16px; text-align:right; color:var(--gold); font-weight:700;">{p.loyalty_points || 0}</td>
               <td style="padding:16px; text-align:right; display:flex; gap:8px; justify-content:flex-end;">
                 <button data-edit='${JSON.stringify(p)}' class="edit-btn" style="background:transparent; border:1px solid var(--gold); color:var(--gold); padding:4px 10px; border-radius:4px; cursor:pointer;">Edit</button>
                 <button data-del="${p.id}" style="background:transparent; border:1px solid #ef4444; color:#ef4444; padding:4px 10px; border-radius:4px; cursor:pointer;">Delete</button>
@@ -71,6 +74,7 @@ const rows = packages || [];
     const fCategory = document.getElementById('f-category');
     const fTitle = document.getElementById('f-title');
     const fPrice = document.getElementById('f-price');
+    const fPoints = document.getElementById('f-points');
     const fDesc = document.getElementById('f-desc');
     const saveBtn = document.getElementById('save-btn');
 
@@ -85,6 +89,7 @@ const rows = packages || [];
         fCategory.value = pkg.category;
         fTitle.value = pkg.title;
         fPrice.value = pkg.price;
+        fPoints.value = pkg.loyalty_points || 0;
         fDesc.value = pkg.description || '';
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
@@ -96,6 +101,7 @@ const rows = packages || [];
       const category = fCategory.value;
       const title = fTitle.value;
       const price = Number(fPrice.value);
+      const loyalty_points = Number(fPoints.value) || 0;
       const description = fDesc.value;
 
       if (!title || !price) return alert('Title and Price are required.');
@@ -106,11 +112,11 @@ const rows = packages || [];
       let error;
       if (id) {
         // Update existing
-        const res = await supabase.from('absl_packages').update({ category, title, price, description }).eq('id', id);
+        const res = await supabase.from('absl_packages').update({ category, title, price, description, loyalty_points }).eq('id', id);
         error = res.error;
       } else {
         // Insert new
-        const res = await supabase.from('absl_packages').insert({ category, title, price, description, status: 'active' });
+        const res = await supabase.from('absl_packages').insert({ category, title, price, description, loyalty_points, status: 'active' });
         error = res.error;
       }
 

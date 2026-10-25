@@ -44,7 +44,11 @@ export const POST: APIRoute = async ({ request }) => {
     // 2. Auto-accrue loyalty miles (1 mile per ₦1,000 spent)
     let milesEarned = 0;
     if (userId && total > 0) {
-      milesEarned = Math.floor(total / 1000);
+      // 1. Calculate custom points from the cart items
+      const customPoints = body.cart.reduce((sum: number, item: any) => sum + ((item.points || 0) * Number(item.qty)), 0);
+      
+      // 2. Use custom points if set, otherwise fallback to 1 mile per ₦1,000
+      milesEarned = customPoints > 0 ? customPoints : Math.floor(total / 1000);
       if (milesEarned > 0) {
         const expiryDate = new Date();
         expiryDate.setFullYear(expiryDate.getFullYear() + 2);
