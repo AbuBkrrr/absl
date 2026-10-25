@@ -1,21 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import AdminGuard from '../../components/AdminGuard.astro';
-import { supabase } from '../../lib/supabase';
-
-const { data: { user } } = await supabase.auth.getUser();
-const { data: profile } = await supabase.from('absl_profiles').select('role, is_admin').eq('id', user?.id).single();
-
-// Fallback: if they have the legacy is_admin flag but no role, treat them as manager
-const role = profile?.role || (profile?.is_admin ? 'manager' : 'customer');
-
-let allowedTabs = [];
-if (role === 'manager') {
-  allowedTabs = ['analytics', 'bookings', 'services', 'loyalty', 'users', 'portfolio', 'support', 'shipments', 'warehouse', 'travel', 'rewards', 'estimator', 'settings'];
-} else if (role !== 'customer') {
-  const { data: perms } = await supabase.from('absl_role_permissions').select('allowed_tabs').eq('role_name', role).single();
-  allowedTabs = perms?.allowed_tabs || [];
-}
 ---
 
 <Layout title="Admin Dashboard - ABSL">
@@ -25,119 +10,144 @@ if (role === 'manager') {
     <div class="container" style="display:flex; justify-content:space-between; align-items:flex-end;">
       <div>
         <h1 style="font-size:2.5rem; color:var(--white); margin:0;">Admin Control Center</h1>
-        <p style="color:var(--text-muted); margin-top:8px;">Welcome back, {role.replace('admin_', '').replace('_', ' ').toUpperCase()}</p>
+        <p id="welcome-text" style="color:var(--text-muted); margin-top:8px;">Loading dashboard...</p>
       </div>
       <a href="/" class="btn btn-outline" style="padding:10px 24px;">&larr; View Site</a>
     </div>
   </div>
 
   <div class="container" style="padding: 60px 24px;">
-    <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:24px;">
-
-      {allowedTabs.includes('analytics') && (
-        <a href="/admin/analytics" style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; text-decoration: none; transition: 0.2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--line-light)'">
-          <div style="font-size: 32px; margin-bottom: 16px;">📊</div>
-          <h2 style="font-size: 1.3rem; color: var(--white); margin-bottom: 8px;">Analytics</h2>
-          <p style="color: var(--text-muted); font-size: 0.9rem;">Global report of services rendered: revenue, service mix, and status breakdown.</p>
-        </a>
-      )}
-
-      {allowedTabs.includes('bookings') && (
-        <a href="/admin/bookings" style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; text-decoration: none; transition: 0.2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--line-light)'">
-          <div style="font-size: 32px; margin-bottom: 16px;">📦</div>
-          <h2 style="font-size: 1.3rem; color: var(--white); margin-bottom: 8px;">Manage Bookings</h2>
-          <p style="color: var(--text-muted); font-size: 0.9rem;">View all travel & logistics bookings. Update statuses from pending to completed.</p>
-        </a>
-      )}
-
-      {allowedTabs.includes('services') && (
-        <a href="/admin/services" style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; text-decoration: none; transition: 0.2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--line-light)'">
-          <div style="font-size: 32px; margin-bottom: 16px;">✈️</div>
-          <h2 style="font-size: 1.3rem; color: var(--white); margin-bottom: 8px;">Manage Services</h2>
-          <p style="color: var(--text-muted); font-size: 0.9rem;">Add new packages (travel, logistics, construction) or remove existing ones from the catalog.</p>
-        </a>
-      )}
-
-      {allowedTabs.includes('portfolio') && (
-        <a href="/admin/portfolio" style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; text-decoration: none; transition: 0.2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--line-light)'">
-          <div style="font-size: 32px; margin-bottom: 16px;">🏗️</div>
-          <h2 style="font-size: 1.3rem; color: var(--white); margin-bottom: 8px;">Portfolio CMS</h2>
-          <p style="color: var(--text-muted); font-size: 0.9rem;">Upload images and manage construction project cards shown on the public portfolio.</p>
-        </a>
-      )}
-
-      {allowedTabs.includes('support') && (
-        <a href="/admin/support" style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; text-decoration: none; transition: 0.2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--line-light)'">
-          <div style="font-size: 32px; margin-bottom: 16px;">📬</div>
-          <h2 style="font-size: 1.3rem; color: var(--white); margin-bottom: 8px;">Support Messages</h2>
-          <p style="color: var(--text-muted); font-size: 0.9rem;">View inquiries, reply via Resend email, or click the WhatsApp link to respond directly.</p>
-        </a>
-      )}
-
-      {allowedTabs.includes('users') && (
-        <a href="/admin/users" style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; text-decoration: none; transition: 0.2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--line-light)'">
-          <div style="font-size: 32px; margin-bottom: 16px;">👥</div>
-          <h2 style="font-size: 1.3rem; color: var(--white); margin-bottom: 8px;">Users & Admins</h2>
-          <p style="color: var(--text-muted); font-size: 0.9rem;">Assign department roles and tick which dashboard cards staff are allowed to see.</p>
-        </a>
-      )}
-
-      {allowedTabs.includes('estimator') && (
-        <a href="/admin/estimator" style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; text-decoration: none; transition: 0.2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--line-light)'">
-          <div style="font-size: 32px; margin-bottom: 16px;">📐</div>
-          <h2 style="font-size: 1.3rem; color: var(--white); margin-bottom: 8px;">Estimator Rates</h2>
-          <p style="color: var(--text-muted); font-size: 0.9rem;">Manage live material prices and construction build rates used by the public calculator.</p>
-        </a>
-      )}
-
-      {allowedTabs.includes('settings') && (
-        <a href="/admin/settings" style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; text-decoration: none; transition: 0.2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--line-light)'">
-          <div style="font-size: 32px; margin-bottom: 16px;">⚙️</div>
-          <h2 style="font-size: 1.3rem; color: var(--white); margin-bottom: 8px;">Platform Settings</h2>
-          <p style="color: var(--text-muted); font-size: 0.9rem;">Manage logistics base rates, domestic/international multipliers, and distance pricing.</p>
-        </a>
-      )}
-
-      {allowedTabs.includes('loyalty') && (
-        <a href="/admin/loyalty" style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; text-decoration: none; transition: 0.2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--line-light)'">
-          <div style="font-size: 32px; margin-bottom: 16px;">🏆</div>
-          <h2 style="font-size: 1.3rem; color: var(--white); margin-bottom: 8px;">Loyalty Manager</h2>
-          <p style="color: var(--text-muted); font-size: 0.9rem;">Manually add airline miles and tier levels for clients by email address.</p>
-        </a>
-      )}
-
-      {allowedTabs.includes('shipments') && (
-        <a href="/admin/shipments" style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; text-decoration: none; transition: 0.2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--line-light)'">
-          <div style="font-size: 32px; margin-bottom: 16px;">🚢</div>
-          <h2 style="font-size: 1.3rem; color: var(--white); margin-bottom: 8px;">Shipment Tracking</h2>
-          <p style="color: var(--text-muted); font-size: 0.9rem;">Create tracking numbers and update the live status timeline for customers.</p>
-        </a>
-      )}
+    <!-- The grid starts hidden to prevent flashing -->
+    <div id="admin-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:24px; opacity: 0; transition: opacity 0.3s;">
       
-      {allowedTabs.includes('warehouse') && (
-        <a href="/admin/warehouse" style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; text-decoration: none; transition: 0.2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--line-light)'">
-          <div style="font-size: 32px; margin-bottom: 16px;">🏭</div>
-          <h2 style="font-size: 1.3rem; color: var(--white); margin-bottom: 8px;">Warehouse</h2>
-          <p style="color: var(--text-muted); font-size: 0.9rem;">Add inbound stock, manage SKUs, and fulfill customer inventory orders.</p>
-        </a>
-      )}
-
-      {allowedTabs.includes('travel') && (
-        <a href="/admin/travel" style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; text-decoration: none; transition: 0.2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--line-light)'">
-          <div style="font-size: 32px; margin-bottom: 16px;">✈️</div>
-          <h2 style="font-size: 1.3rem; color: var(--white); margin-bottom: 8px;">Travel & Tours</h2>
-          <p style="color: var(--text-muted); font-size: 0.9rem;">Manage incoming flight bookings, hotel reservations, and visa applications.</p>
-        </a>
-      )}
+      <!-- We assign a data-tab to every card -->
       
-      {allowedTabs.includes('rewards') && (
-        <a href="/admin/rewards" style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; text-decoration: none; transition: 0.2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--line-light)'">
-          <div style="font-size: 32px; margin-bottom: 16px;">🏆</div>
-          <h2 style="font-size: 1.3rem; color: var(--white); margin-bottom: 8px;">Rewards Manager</h2>
-          <p style="color: var(--text-muted); font-size: 0.9rem;">Update MileageMall multipliers, add new airline partners, and manage deals.</p>
-        </a>
-      )}
+      <a href="/admin/analytics" data-tab="analytics" class="admin-card" style="display:none; background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; text-decoration: none; transition: 0.2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--line-light)'">
+        <div style="font-size: 32px; margin-bottom: 16px;">📊</div>
+        <h2 style="font-size: 1.3rem; color: var(--white); margin-bottom: 8px;">Analytics</h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Global report of services rendered: revenue, service mix, and status breakdown.</p>
+      </a>
+
+      <a href="/admin/bookings" data-tab="bookings" class="admin-card" style="display:none; background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; text-decoration: none; transition: 0.2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--line-light)'">
+        <div style="font-size: 32px; margin-bottom: 16px;">📦</div>
+        <h2 style="font-size: 1.3rem; color: var(--white); margin-bottom: 8px;">Manage Bookings</h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">View all travel & logistics bookings. Update statuses.</p>
+      </a>
+
+      <a href="/admin/services" data-tab="services" class="admin-card" style="display:none; background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; text-decoration: none; transition: 0.2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--line-light)'">
+        <div style="font-size: 32px; margin-bottom: 16px;">✈️</div>
+        <h2 style="font-size: 1.3rem; color: var(--white); margin-bottom: 8px;">Manage Services</h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Add new packages (travel, logistics, construction) to the catalog.</p>
+      </a>
+
+      <a href="/admin/portfolio" data-tab="portfolio" class="admin-card" style="display:none; background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; text-decoration: none; transition: 0.2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--line-light)'">
+        <div style="font-size: 32px; margin-bottom: 16px;">🏗️</div>
+        <h2 style="font-size: 1.3rem; color: var(--white); margin-bottom: 8px;">Portfolio CMS</h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Add, edit, or delete construction project cards shown on /construction.</p>
+      </a>
+
+      <a href="/admin/support" data-tab="support" class="admin-card" style="display:none; background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; text-decoration: none; transition: 0.2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--line-light)'">
+        <div style="font-size: 32px; margin-bottom: 16px;">📬</div>
+        <h2 style="font-size: 1.3rem; color: var(--white); margin-bottom: 8px;">Support Messages</h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">View inquiries and messages submitted via the Contact Us page.</p>
+      </a>
+
+      <a href="/admin/users" data-tab="users" class="admin-card" style="display:none; background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; text-decoration: none; transition: 0.2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--line-light)'">
+        <div style="font-size: 32px; margin-bottom: 16px;">👥</div>
+        <h2 style="font-size: 1.3rem; color: var(--white); margin-bottom: 8px;">Users & Admins</h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">List registered customers, view their lifetime spend, and manage roles.</p>
+      </a>
+
+      <a href="/admin/loyalty" data-tab="loyalty" class="admin-card" style="display:none; background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; text-decoration: none; transition: 0.2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--line-light)'">
+        <div style="font-size: 32px; margin-bottom: 16px;">🏆</div>
+        <h2 style="font-size: 1.3rem; color: var(--white); margin-bottom: 8px;">Loyalty Manager</h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Manually add airline miles for clients by email address.</p>
+      </a>
+
+      <a href="/admin/estimator" data-tab="estimator" class="admin-card" style="display:none; background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; text-decoration: none; transition: 0.2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--line-light)'">
+        <div style="font-size: 32px; margin-bottom: 16px;">📐</div>
+        <h2 style="font-size: 1.3rem; color: var(--white); margin-bottom: 8px;">Estimator Rates</h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Update base material prices, labor multipliers, and utility rates.</p>
+      </a>
+
+      <a href="/admin/settings" data-tab="settings" class="admin-card" style="display:none; background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; text-decoration: none; transition: 0.2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--line-light)'">
+        <div style="font-size: 32px; margin-bottom: 16px;">⚙️</div>
+        <h2 style="font-size: 1.3rem; color: var(--white); margin-bottom: 8px;">Platform Settings</h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Manage calculator rates, shipping multipliers, and global variables.</p>
+      </a>
+
+      <a href="/admin/shipments" data-tab="shipments" class="admin-card" style="display:none; background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; text-decoration: none; transition: 0.2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--line-light)'">
+        <div style="font-size: 32px; margin-bottom: 16px;">🚢</div>
+        <h2 style="font-size: 1.3rem; color: var(--white); margin-bottom: 8px;">Shipment Tracking</h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Create tracking numbers and update the live status timeline.</p>
+      </a>
+
+      <a href="/admin/warehouse" data-tab="warehouse" class="admin-card" style="display:none; background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; text-decoration: none; transition: 0.2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--line-light)'">
+        <div style="font-size: 32px; margin-bottom: 16px;">🏭</div>
+        <h2 style="font-size: 1.3rem; color: var(--white); margin-bottom: 8px;">Warehouse</h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Add inbound stock, manage SKUs, and fulfill customer orders.</p>
+      </a>
+
+      <a href="/admin/travel" data-tab="travel" class="admin-card" style="display:none; background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; text-decoration: none; transition: 0.2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--line-light)'">
+        <div style="font-size: 32px; margin-bottom: 16px;">✈️</div>
+        <h2 style="font-size: 1.3rem; color: var(--white); margin-bottom: 8px;">Travel & Tours</h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Manage incoming flight bookings, hotel reservations, and visa applications.</p>
+      </a>
+
+      <a href="/admin/rewards" data-tab="rewards" class="admin-card" style="display:none; background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; text-decoration: none; transition: 0.2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--line-light)'">
+        <div style="font-size: 32px; margin-bottom: 16px;">🏆</div>
+        <h2 style="font-size: 1.3rem; color: var(--white); margin-bottom: 8px;">Rewards Manager</h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Update MileageMall multipliers, add new airline partners.</p>
+      </a>
 
     </div>
   </div>
+
+  <script>
+    import { supabase } from '../../lib/supabase';
+
+    async function loadDashboard() {
+      // 1. Get user from client-side session
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return; // AdminGuard will handle redirect
+
+      // 2. Fetch profile
+      const { data: profile } = await supabase.from('absl_profiles').select('role, is_admin').eq('id', user.id).single();
+      
+      // 3. Determine role (Fallback to manager if is_admin is true)
+      const role = profile?.role || (profile?.is_admin ? 'manager' : 'customer');
+      
+      // 4. Update welcome text
+      const welcomeEl = document.getElementById('welcome-text');
+      if (welcomeEl) {
+        welcomeEl.textContent = `Welcome back, ${role.replace('admin_', '').replace('_', ' ').toUpperCase()}`;
+      }
+
+      // 5. Determine allowed tabs
+      let allowedTabs = [];
+      if (role === 'manager') {
+        allowedTabs = ['analytics', 'bookings', 'services', 'loyalty', 'users', 'portfolio', 'support', 'shipments', 'warehouse', 'travel', 'rewards', 'estimator', 'settings'];
+      } else if (role !== 'customer') {
+        const { data: perms } = await supabase.from('absl_role_permissions').select('allowed_tabs').eq('role_name', role).single();
+        allowedTabs = perms?.allowed_tabs || [];
+      }
+
+      // 6. Reveal allowed cards
+      document.querySelectorAll('.admin-card').forEach(card => {
+        const tabName = card.getAttribute('data-tab');
+        if (allowedTabs.includes(tabName)) {
+          card.style.display = 'block';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+
+      // 7. Fade in the grid
+      const grid = document.getElementById('admin-grid');
+      if (grid) grid.style.opacity = '1';
+    }
+
+    // Run the function when the script loads
+    loadDashboard();
+  </script>
 </Layout>
