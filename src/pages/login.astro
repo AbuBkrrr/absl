@@ -84,9 +84,12 @@ import Layout from '../layouts/Layout.astro';
         googleBtn.addEventListener('click', async () => {
           try {
             console.log("Initiating Google OAuth...");
+            // Hard reset: clear any stale local session to prevent redirect loops
+            await supabase.auth.signOut({ scope: 'local' });
+            
             const { data, error } = await supabase.auth.signInWithOAuth({
               provider: 'google',
-              options: { redirectTo: window.location.origin + '/account' }
+              options: { redirectTo: window.location.origin + '/api/auth/callback?next=/account' }
             });
             if (error) throw error;
             console.log("Redirecting to Google...", data);
