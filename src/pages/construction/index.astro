@@ -1,37 +1,27 @@
----
+﻿---
 import Layout from '../../layouts/Layout.astro';
 import { supabase } from '../../lib/supabase';
 
-// Fetch live rates safely
+let materials = [];
 let rateMap = {};
 try {
+  const { data: mats } = await supabase.from('absl_estimator_materials').select('*');
   const { data: rates } = await supabase.from('absl_estimator_rates').select('*');
-  if (rates) {
-    rates.forEach(r => rateMap[r.key] = Number(r.value));
-  }
-} catch (e) {
-  console.error("Failed to load estimator rates", e);
-}
+  materials = mats || [];
+  rates?.forEach(r => rateMap[r.key] = Number(r.value));
+} catch (e) {}
 ---
 
 <Layout title="Construction & Remodeling - ABSL">
-  <!-- CONSTRUCTION HERO SECTION -->
   <div style="position:relative; padding: 100px 0 80px; background: linear-gradient(rgba(10, 17, 40, 0.75), rgba(10, 17, 40, 0.95)), url('https://images.unsplash.com/photo-1541888946425-d81bb19240f5?q=80&w=2070&auto=format&fit=crop'); background-size: cover; background-position: center; border-bottom: 1px solid var(--line);">
     <div class="container" style="position:relative; z-index:2; text-align:center;">
-      <h1 style="font-size: clamp(2.5rem, 6vw, 4rem); line-height: 1.1; margin-bottom: 24px; color: var(--white);">
-        Masterpieces Built to Last.
-      </h1>
-      <p style="font-size: 1.15rem; color: var(--text-light); max-width: 700px; margin: 0 auto 40px; line-height: 1.6;">
-        From luxury residential remodels to large-scale commercial infrastructure, ABSL delivers certified craftsmanship, premium materials, and a 10-year structural guarantee.
-      </p>
-      <a href="#estimator" class="btn btn-primary" style="padding: 16px 48px; font-size: 1.1rem; display: inline-block;">
-        Start Your Project Estimator &darr;
-      </a>
+      <h1 style="font-size: clamp(2.5rem, 6vw, 4rem); line-height: 1.1; margin-bottom: 24px; color: var(--white);">Masterpieces Built to Last.</h1>
+      <p style="font-size: 1.15rem; color: var(--text-light); max-width: 700px; margin: 0 auto 40px; line-height: 1.6;">From luxury residential remodels to large-scale commercial infrastructure, ABSL delivers certified craftsmanship, premium materials, and a 10-year structural guarantee.</p>
+      <a href="#estimator" class="btn btn-primary" style="padding: 16px 48px; font-size: 1.1rem; display: inline-block;">Start Your Project Estimator &darr;</a>
     </div>
   </div>
 
   <div class="container" style="padding: 80px 24px;">
-    <!-- MASTER CONSTRUCTION ESTIMATOR -->
     <div id="estimator" style="background:var(--bg-card); border:1px solid var(--line); border-radius:var(--r-lg); padding:40px; margin-bottom:80px; box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
       <div style="text-align:center; margin-bottom:40px;">
         <h2 style="font-size:2.2rem; color:var(--gold); margin-bottom:8px;">ABSL Detailed Estimator</h2>
@@ -39,7 +29,6 @@ try {
       </div>
 
       <div style="display:grid; grid-template-columns: 1.2fr 1fr; gap:40px;">
-        <!-- INPUTS COLUMN -->
         <div>
           <h3 style="font-family:var(--display); font-size:1.2rem; color:var(--white); margin-bottom:16px; border-bottom:1px solid var(--line-light); padding-bottom:8px;">1. Core Structure</h3>
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:24px;">
@@ -70,59 +59,14 @@ try {
             </div>
           </div>
 
-          <h3 style="font-family:var(--display); font-size:1.2rem; color:var(--white); margin-bottom:16px; border-bottom:1px solid var(--line-light); padding-bottom:8px;">2. Finishes & Materials</h3>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:24px;">
-            <div>
-              <label style="display:block; font-family:var(--mono); font-size:11px; color:var(--gold); margin-bottom:6px;">ROOF TYPE</label>
-              <select id="opt-roof" style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;">
-                <option value="15000">Long Span Aluminum</option>
-                <option value="25000">Stone Coated</option>
-                <option value="35000">Flat Concrete Roof</option>
-              </select>
-            </div>
-            <div>
-              <label style="display:block; font-family:var(--mono); font-size:11px; color:var(--gold); margin-bottom:6px;">WINDOWS</label>
-              <select id="opt-windows" style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;">
-                <option value="8000">Aluminum Sliding</option>
-                <option value="15000">UPVC Casement</option>
-                <option value="28000">Double Glazed</option>
-              </select>
-            </div>
-            <div>
-              <label style="display:block; font-family:var(--mono); font-size:11px; color:var(--gold); margin-bottom:6px;">DOORS</label>
-              <select id="opt-doors" style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;">
-                <option value="5000">Flush Doors</option>
-                <option value="12000">Solid Wood</option>
-                <option value="25000">Security / Steel</option>
-              </select>
-            </div>
-            <div>
-              <label style="display:block; font-family:var(--mono); font-size:11px; color:var(--gold); margin-bottom:6px;">FLOORING</label>
-              <select id="opt-floor" style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;">
-                <option value="6000">Standard Tiles</option>
-                <option value="15000">Porcelain / Marble</option>
-                <option value="22000">Italian Marble</option>
-              </select>
-            </div>
-          </div>
-
-          <h3 style="font-family:var(--display); font-size:1.2rem; color:var(--white); margin-bottom:16px; border-bottom:1px solid var(--line-light); padding-bottom:8px;">3. Extras</h3>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:24px;">
-            <label style="display:flex; align-items:center; gap:8px; font-size:0.9rem; color:var(--text-light); cursor:pointer;">
-              <input type="checkbox" id="opt-solar" style="width:16px; height:16px;" /> Solar Power
-            </label>
-            <label style="display:flex; align-items:center; gap:8px; font-size:0.9rem; color:var(--text-light); cursor:pointer;">
-              <input type="checkbox" id="opt-pool" style="width:16px; height:16px;" /> Swimming Pool
-            </label>
-            <label style="display:flex; align-items:center; gap:8px; font-size:0.9rem; color:var(--text-light); cursor:pointer;">
-              <input type="checkbox" id="opt-landscape" style="width:16px; height:16px;" /> Landscaping
-            </label>
+          <h3 style="font-family:var(--display); font-size:1.2rem; color:var(--white); margin-bottom:16px; border-bottom:1px solid var(--line-light); padding-bottom:8px;">2. Materials & Extras</h3>
+          <div id="dynamic-materials-container" style="background:var(--bg-surface); border:1px solid var(--line-light); border-radius:6px; margin-bottom:24px; padding:8px;">
+            <div style="color:var(--text-muted); padding:16px; text-align:center;">Loading materials...</div>
           </div>
 
           <button id="calc-btn" class="btn btn-primary" style="width:100%; padding:16px; font-size:1.1rem; background:var(--gold);">Update Estimate</button>
         </div>
 
-        <!-- RESULTS COLUMN -->
         <div style="background:var(--bg-surface); border:1px solid var(--line-light); border-radius:var(--r-md); padding:32px; display:flex; flex-direction:column; overflow-y:auto; max-height: 800px;">
           <h3 style="font-family:var(--display); font-size:1.2rem; color:var(--white); border-bottom:1px solid var(--line-light); padding-bottom:12px; margin-bottom:16px;">Bill of Quantities</h3>
           <div id="results-list" style="display:flex; flex-direction:column; gap:10px; font-size:0.9rem;">
@@ -133,69 +77,54 @@ try {
     </div>
   </div>
 
-  <!-- Inject Database Rates Safely -->
-  <script type="application/json" id="estimator-rates" set:html={JSON.stringify(rateMap)}></script>
+  <script type="application/json" id="db-materials" set:html={JSON.stringify(materials)}></script>
+  <script type="application/json" id="db-rates" set:html={JSON.stringify(rateMap)}></script>
 
   <script>
-    const templateSelect = document.getElementById('calc-template');
-    const sqmInput = document.getElementById('calc-sqm');
-    const floorsInput = document.getElementById('calc-floors');
-    
-    // Parse Live Rates from DB
-    const dbRates = JSON.parse(document.getElementById('estimator-rates').textContent);
+    const dbMats = JSON.parse(document.getElementById('db-materials').textContent);
+    const dbRates = JSON.parse(document.getElementById('db-rates').textContent);
     const getRate = (key, fallback) => dbRates[key] ? Number(dbRates[key]) : fallback;
 
-    // Use DB rates for materials if available
-    const qualityRates = {
-      basic: getRate('rate_basic', 65000), 
-      mid: getRate('rate_mid', 95000), 
-      luxury: getRate('rate_luxury', 140000)
-    };
+    const matContainer = document.getElementById('dynamic-materials-container');
+    if (dbMats.length === 0) {
+      matContainer.innerHTML = '<div style="color:var(--text-muted); padding:16px; text-align:center;">No materials added yet. Admin can add them.</div>';
+    } else {
+      matContainer.innerHTML = dbMats.map((m, idx) => `
+        <label style="display:flex; justify-content:space-between; align-items:center; padding:12px; border-bottom:1px solid var(--line-light); font-size:0.9rem; cursor:pointer; ${idx === dbMats.length - 1 ? 'border-bottom:none;' : ''}">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <input type="checkbox" class="dyn-mat-check" data-price="${m.price}" data-type="${m.type}" checked style="width:16px; height:16px;" />
+            <span style="color:var(--text-light);">${m.name}</span>
+          </div>
+          <span style="color:var(--text-muted); font-family:var(--mono);">₦${Number(m.price).toLocaleString()} <span style="font-size:0.75rem;">(${m.unit})</span></span>
+        </label>
+      `).join('');
+    }
 
-    const templates = {
-      custom: { sqm: 150, floors: 1 },
-      home: { sqm: 200, floors: 1 },
-      villa: { sqm: 500, floors: 2 },
-      office: { sqm: 1200, floors: 4 }
-    };
+    const qualityRates = { basic: getRate('rate_basic', 65000), mid: getRate('rate_mid', 95000), luxury: getRate('rate_luxury', 140000) };
+    const templates = { custom: { sqm: 150, floors: 1 }, home: { sqm: 200, floors: 1 }, villa: { sqm: 500, floors: 2 }, office: { sqm: 1200, floors: 4 } };
 
-    templateSelect.addEventListener('change', (e) => {
+    document.getElementById('calc-template').addEventListener('change', (e) => {
       const t = templates[e.target.value];
-      sqmInput.value = t.sqm;
-      floorsInput.value = t.floors;
+      document.getElementById('calc-sqm').value = t.sqm;
+      document.getElementById('calc-floors').value = t.floors;
     });
 
     document.getElementById('calc-btn').addEventListener('click', () => {
-      const sqm = Number(sqmInput.value);
-      const floors = Number(floorsInput.value);
-      const totalSqm = sqm * floors;
+      const sqm = Number(document.getElementById('calc-sqm').value);
+      const floors = Number(document.getElementById('calc-floors').value);
       if (!sqm || !floors) return alert('Please enter valid square meters and floors.');
 
-      const coreCost = totalSqm * qualityRates[document.getElementById('calc-quality').value];
+      const coreCost = (sqm * floors) * qualityRates[document.getElementById('calc-quality').value];
+      let dynamicTotal = 0;
       
-      // Override with DB rates if they exist
-      const roofRate = getRate('roofing_price', 15000);
-      const windowRate = getRate('windows_price', 8000);
-      const doorRate = getRate('doors_price', 5000);
-      const floorRate = getRate('tiles_price', 6000);
-      
-      const roofCost = totalSqm * roofRate;
-      const windowCost = totalSqm * windowRate;
-      const doorCost = totalSqm * doorRate;
-      const floorCost = totalSqm * floorRate;
-      const finishesTotal = roofCost + windowCost + doorCost + floorCost;
+      document.querySelectorAll('.dyn-mat-check:checked').forEach(chk => {
+        dynamicTotal += Number(chk.dataset.price);
+      });
 
-      let extrasTotal = 0;
-      const extras = [];
-      if (document.getElementById('opt-solar').checked) { extrasTotal += 4500000; extras.push('Solar'); }
-      if (document.getElementById('opt-pool').checked) { extrasTotal += 8000000; extras.push('Pool'); }
-      if (document.getElementById('opt-landscape').checked) { extrasTotal += 1200000; extras.push('Landscaping'); }
-
-      const subtotal = coreCost + finishesTotal + extrasTotal;
+      const subtotal = coreCost + dynamicTotal;
       const professionalFees = subtotal * 0.05;
       const contingency = subtotal * 0.10;
       const grandTotal = subtotal + professionalFees + contingency;
-
       const fmt = (num) => '₦' + Math.round(num).toLocaleString();
 
       let html = `
@@ -204,36 +133,9 @@ try {
           <span style="color:var(--gold); font-family:var(--mono);">${fmt(coreCost)}</span>
         </div>
         <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px dashed var(--line-light);">
-          <span style="color:var(--text-muted);">- Roofing</span>
-          <span style="color:var(--white); font-family:var(--mono);">${fmt(roofCost)}</span>
+          <span style="color:var(--white); font-weight:600;">Selected Materials & Extras</span>
+          <span style="color:var(--gold); font-family:var(--mono);">${fmt(dynamicTotal)}</span>
         </div>
-        <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px dashed var(--line-light);">
-          <span style="color:var(--text-muted);">- Windows</span>
-          <span style="color:var(--white); font-family:var(--mono);">${fmt(windowCost)}</span>
-        </div>
-        <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px dashed var(--line-light);">
-          <span style="color:var(--text-muted);">- Doors</span>
-          <span style="color:var(--white); font-family:var(--mono);">${fmt(doorCost)}</span>
-        </div>
-        <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px dashed var(--line-light);">
-          <span style="color:var(--text-muted);">- Flooring</span>
-          <span style="color:var(--white); font-family:var(--mono);">${fmt(floorCost)}</span>
-        </div>
-      `;
-
-      if (extras.length > 0) {
-        html += `
-        <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px dashed var(--line-light); margin-top:8px;">
-          <span style="color:var(--white); font-weight:600;">Extras</span>
-          <span style="color:var(--gold); font-family:var(--mono);">${fmt(extrasTotal)}</span>
-        </div>
-        <div style="padding:4px 0 8px 12px; font-size:0.8rem; color:var(--text-muted);">
-          (${extras.join(', ')})
-        </div>
-        `;
-      }
-
-      html += `
         <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px dashed var(--line-light); margin-top:8px;">
           <span style="color:var(--text-muted);">Professional Fees (5%)</span>
           <span style="color:var(--white); font-family:var(--mono);">${fmt(professionalFees)}</span>
@@ -247,7 +149,6 @@ try {
           <span style="color:var(--gold); font-weight:700; font-size:1.4rem; font-family:var(--mono);">${fmt(grandTotal)}</span>
         </div>
       `;
-
       document.getElementById('results-list').innerHTML = html;
     });
   </script>

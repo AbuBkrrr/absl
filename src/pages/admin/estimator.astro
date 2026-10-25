@@ -1,90 +1,106 @@
----
+﻿---
 import Layout from '../../layouts/Layout.astro';
 import AdminGuard from '../../components/AdminGuard.astro';
 import { supabase } from '../../lib/supabase';
 
+const { data: materials } = await supabase.from('absl_estimator_materials').select('*').order('created_at', { ascending: false });
 const { data: rates } = await supabase.from('absl_estimator_rates').select('*');
 const getVal = (key) => rates?.find(r => r.key === key)?.value || 0;
+const rows = materials || [];
 ---
 
 <Layout title="Estimator Rates - ABSL Admin">
   <AdminGuard />
-  <div class="container" style="padding: 80px 24px; max-width: 900px;">
+  <div class="container" style="padding: 80px 24px; max-width: 1000px;">
     <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:32px;">
       <div>
-        <h1 style="font-size:2.5rem; color:var(--white); margin:0;">Estimator Rates</h1>
-        <p style="color:var(--text-muted); margin-top:8px;">Manage the live material prices and construction rates.</p>
+        <h1 style="font-size:2.5rem; color:var(--white); margin:0;">Estimator Manager</h1>
+        <p style="color:var(--text-muted); margin-top:8px;">Add materials, set labor rates, and categorize them.</p>
       </div>
       <a href="/admin" class="btn btn-outline" style="padding:10px 24px;">&larr; Back to Admin</a>
     </div>
 
-    <div style="background:var(--bg-card); border:1px solid var(--line-light); border-radius:var(--r-md); padding:32px;">
-      
-      <h2 style="font-size:1.2rem; color:var(--gold); margin-bottom:16px;">Material Prices (₦)</h2>
-      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:16px; margin-bottom:32px;">
-        <div><label style="font-size:11px; color:var(--text-muted);">Cement (per bag)</label><input id="cement_price" type="number" value={getVal('cement_price')} style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" /></div>
-        <div><label style="font-size:11px; color:var(--text-muted);">Rebar (per ton)</label><input id="rebar_price" type="number" value={getVal('rebar_price')} style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" /></div>
-        <div><label style="font-size:11px; color:var(--text-muted);">Sand (per ton)</label><input id="sand_price" type="number" value={getVal('sand_price')} style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" /></div>
-        <div><label style="font-size:11px; color:var(--text-muted);">Gravel (per ton)</label><input id="gravel_price" type="number" value={getVal('gravel_price')} style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" /></div>
-        <div><label style="font-size:11px; color:var(--text-muted);">Blocks (per piece)</label><input id="blocks_price" type="number" value={getVal('blocks_price')} style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" /></div>
-        <div><label style="font-size:11px; color:var(--text-muted);">Roofing (per sheet)</label><input id="roofing_price" type="number" value={getVal('roofing_price')} style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" /></div>
-        <div><label style="font-size:11px; color:var(--text-muted);">Timber (per plank)</label><input id="timber_price" type="number" value={getVal('timber_price')} style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" /></div>
-        <div><label style="font-size:11px; color:var(--text-muted);">Tiles (per sqm)</label><input id="tiles_price" type="number" value={getVal('tiles_price')} style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" /></div>
-        <div><label style="font-size:11px; color:var(--text-muted);">Paint (per bucket)</label><input id="paint_price" type="number" value={getVal('paint_price')} style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" /></div>
-        <div><label style="font-size:11px; color:var(--text-muted);">Doors (per unit)</label><input id="doors_price" type="number" value={getVal('doors_price')} style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" /></div>
-        <div><label style="font-size:11px; color:var(--text-muted);">Windows (per unit)</label><input id="windows_price" type="number" value={getVal('windows_price')} style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" /></div>
-        <div><label style="font-size:11px; color:var(--text-muted);">Electrical (per meter)</label><input id="electrical_price" type="number" value={getVal('electrical_price')} style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" /></div>
-        <div><label style="font-size:11px; color:var(--text-muted);">Plumbing (per unit)</label><input id="plumbing_price" type="number" value={getVal('plumbing_price')} style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" /></div>
+    <div style="background:var(--bg-surface); border:1px solid var(--line-light); border-radius:var(--r-md); padding:32px; margin-bottom:32px;">
+      <h2 style="font-size:1.2rem; color:var(--gold); margin-bottom:16px;">Add New Item</h2>
+      <div style="display:grid; grid-template-columns: 2fr 1fr 1fr; gap:16px; margin-bottom:16px;">
+        <div><label style="font-size:11px; color:var(--text-muted);">ITEM NAME</label><input id="new-name" type="text" placeholder="e.g. Glass Panes" style="width:100%; padding:10px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" /></div>
+        <div><label style="font-size:11px; color:var(--text-muted);">PRICE (₦)</label><input id="new-price" type="number" placeholder="e.g. 15000" style="width:100%; padding:10px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" /></div>
+        <div><label style="font-size:11px; color:var(--text-muted);">UNIT</label><input id="new-unit" type="text" placeholder="e.g. per sqm" style="width:100%; padding:10px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" /></div>
       </div>
 
-      <h2 style="font-size:1.2rem; color:var(--gold); margin-bottom:16px;">Labor Rates (₦ per sqm)</h2>
-      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:16px; margin-bottom:32px;">
-        <div><label style="font-size:11px; color:var(--text-muted);">Basic Build</label><input id="rate_basic" type="number" value={getVal('rate_basic')} style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" /></div>
-        <div><label style="font-size:11px; color:var(--text-muted);">Mid-Range Build</label><input id="rate_mid" type="number" value={getVal('rate_mid')} style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" /></div>
-        <div><label style="font-size:11px; color:var(--text-muted);">Luxury Build</label><input id="rate_luxury" type="number" value={getVal('rate_luxury')} style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" /></div>
+      <div style="display:flex; gap:24px; margin-bottom:24px; background:var(--bg-card); padding:16px; border-radius:4px; border:1px solid var(--line-light);">
+        <span style="font-size:12px; color:var(--gold); font-weight:700; text-transform:uppercase;">Category:</span>
+        <label style="display:flex; align-items:center; gap:8px; color:var(--white); cursor:pointer;"><input type="radio" name="item_type" value="material" checked /> Material</label>
+        <label style="display:flex; align-items:center; gap:8px; color:var(--white); cursor:pointer;"><input type="radio" name="item_type" value="labor" /> Labor</label>
+        <label style="display:flex; align-items:center; gap:8px; color:var(--white); cursor:pointer;"><input type="radio" name="item_type" value="extra" /> Extra / Equipment</label>
       </div>
+      <button id="add-item-btn" class="btn btn-primary">Add Item</button>
+    </div>
 
-      <button id="save-rates-btn" class="btn btn-primary">Save All Rates</button>
+    <div style="background:var(--bg-card); border:1px solid var(--line-light); border-radius:var(--r-md); overflow:hidden; margin-bottom:48px;">
+      <table style="width:100%; border-collapse:collapse; font-family:var(--mono); font-size:12.5px;">
+        <thead>
+          <tr style="background:var(--bg-surface); text-align:left;">
+            <th style="padding:16px; color:var(--gold);">Item Name</th>
+            <th style="padding:16px; color:var(--gold);">Type</th>
+            <th style="padding:16px; color:var(--gold); text-align:right;">Price (₦)</th>
+            <th style="padding:16px; color:var(--gold);">Unit</th>
+            <th style="padding:16px; color:var(--gold); text-align:right;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map(item => (
+            <tr style="border-top:1px solid var(--line-light);">
+              <td style="padding:16px; color:var(--white); font-weight:600;">{item.name}</td>
+              <td style="padding:16px;"><span style={`font-size:10px; padding:4px 8px; border-radius:4px; text-transform:uppercase; font-weight:700; background:${item.type === 'material' ? 'rgba(59, 130, 246, 0.15)' : item.type === 'labor' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)'}; color:${item.type === 'material' ? '#3B82F6' : item.type === 'labor' ? '#10B981' : '#F59E0B'};`}>{item.type}</span></td>
+              <td style="padding:16px; text-align:right; color:var(--white);">{Number(item.price).toLocaleString()}</td>
+              <td style="padding:16px; color:var(--text-muted);">{item.unit}</td>
+              <td style="padding:16px; text-align:right;"><button class="del-btn" data-id={item.id} style="background:transparent; border:1px solid #ef4444; color:#ef4444; padding:4px 10px; border-radius:4px; cursor:pointer;">Delete</button></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    <div style="background:var(--bg-surface); border:1px solid var(--line-light); border-radius:var(--r-md); padding:32px;">
+      <h2 style="font-size:1.2rem; color:var(--gold); margin-bottom:16px;">Base Labor Rates (₦ per sqm)</h2>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:16px; margin-bottom:32px;">
+        <div><label style="font-size:11px; color:var(--text-muted);">Basic Build</label><input id="rate_basic" type="number" value={getVal('rate_basic')} style="width:100%; padding:10px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" /></div>
+        <div><label style="font-size:11px; color:var(--text-muted);">Mid-Range Build</label><input id="rate_mid" type="number" value={getVal('rate_mid')} style="width:100%; padding:10px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" /></div>
+        <div><label style="font-size:11px; color:var(--text-muted);">Luxury Build</label><input id="rate_luxury" type="number" value={getVal('rate_luxury')} style="width:100%; padding:10px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" /></div>
+      </div>
+      <button id="save-rates-btn" class="btn btn-primary">Save Labor Rates</button>
       <div id="rates-msg" style="display:none; margin-top:16px; padding:12px; text-align:center; border-radius:4px; font-size:0.9rem;"></div>
     </div>
   </div>
 
   <script>
+    import { supabase } from '../../lib/supabase';
+    document.getElementById('add-item-btn').addEventListener('click', async () => {
+      const btn = document.getElementById('add-item-btn');
+      const name = document.getElementById('new-name').value;
+      const price = Number(document.getElementById('new-price').value);
+      const unit = document.getElementById('new-unit').value;
+      const type = document.querySelector('input[name="item_type"]:checked').value;
+      if (!name || !price || !unit) return alert('Please fill all fields');
+      btn.textContent = 'Adding...'; btn.disabled = true;
+      const { error } = await supabase.from('absl_estimator_materials').insert({ name, price, unit, type });
+      if (error) { alert(error.message); btn.textContent = 'Add Item'; btn.disabled = false; } else { window.location.reload(); }
+    });
+    document.querySelectorAll('.del-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        if (!confirm('Delete this item?')) return;
+        await supabase.from('absl_estimator_materials').delete().eq('id', e.target.dataset.id);
+        window.location.reload();
+      });
+    });
     document.getElementById('save-rates-btn').addEventListener('click', async () => {
-      const btn = document.getElementById('save-rates-btn');
-      const msg = document.getElementById('rates-msg');
-      btn.textContent = 'Saving...';
-      btn.disabled = true;
-
-      const keys = ['cement_price', 'rebar_price', 'sand_price', 'gravel_price', 'blocks_price', 'roofing_price', 'timber_price', 'tiles_price', 'paint_price', 'doors_price', 'windows_price', 'electrical_price', 'plumbing_price', 'rate_basic', 'rate_mid', 'rate_luxury'];
-      
-      const updates = keys.map(key => ({
-        key: key,
-        value: Number(document.getElementById(key).value)
-      }));
-
-      const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
-      const supabase = createClient(import.meta.env.PUBLIC_SUPABASE_URL, import.meta.env.PUBLIC_SUPABASE_ANON_KEY);
-
+      const btn = document.getElementById('save-rates-btn'); const msg = document.getElementById('rates-msg');
+      btn.textContent = 'Saving...'; btn.disabled = true;
+      const updates = [{ key: 'rate_basic', value: document.getElementById('rate_basic').value }, { key: 'rate_mid', value: document.getElementById('rate_mid').value }, { key: 'rate_luxury', value: document.getElementById('rate_luxury').value }];
       const { error } = await supabase.from('absl_estimator_rates').upsert(updates);
-
-      if (error) {
-        msg.style.display = 'block';
-        msg.style.background = 'rgba(239, 68, 68, 0.1)';
-        msg.style.color = '#EF4444';
-        msg.style.border = '1px solid #EF4444';
-        msg.textContent = 'Error: ' + error.message;
-        btn.textContent = 'Save All Rates';
-        btn.disabled = false;
-      } else {
-        msg.style.display = 'block';
-        msg.style.background = 'rgba(16, 185, 129, 0.1)';
-        msg.style.color = '#10B981';
-        msg.style.border = '1px solid #10B981';
-        msg.textContent = 'Rates updated successfully!';
-        btn.textContent = 'Save All Rates';
-        btn.disabled = false;
-      }
+      if (error) { msg.style.display = 'block'; msg.style.background = 'rgba(239, 68, 68, 0.1)'; msg.style.color = '#EF4444'; msg.textContent = 'Error: ' + error.message; btn.textContent = 'Save Labor Rates'; btn.disabled = false; }
+      else { msg.style.display = 'block'; msg.style.background = 'rgba(16, 185, 129, 0.1)'; msg.style.color = '#10B981'; msg.textContent = 'Rates updated successfully!'; btn.textContent = 'Save Labor Rates'; btn.disabled = false; }
     });
   </script>
 </Layout>
