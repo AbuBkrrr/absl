@@ -2,182 +2,133 @@
 import Layout from '../layouts/Layout.astro';
 import { supabase } from '../lib/supabase';
 
-const { data: packages } = await supabase
-  .from('absl_packages')
-  .select('*')
-  .eq('category', 'logistics')
-  .eq('status', 'active');
+const { data: settings } = await supabase.from('absl_settings').select('*');
+const getVal = (key, defaultVal) => settings?.find(s => s.key === key)?.value || defaultVal;
+
+const baseRate = Number(getVal('logistics_base_rate', 15000));
+const domMulti = Number(getVal('logistics_domestic_multiplier', 1.2));
+const intMulti = Number(getVal('logistics_international_multiplier', 2.5));
+const domCitiesString = getVal('logistics_domestic_cities', 'lagos, abuja, kano, kaduna, sokoto, katsina, borno, port harcourt');
+const domCities = domCitiesString.split(',').map(c => c.trim().toLowerCase());
+const distRate = Number(getVal('logistics_distance_rate', 5));
+
+const settingsJson = JSON.stringify({ baseRate, domMulti, intMulti, domCities, distRate });
 ---
 
-<Layout title="Global Logistics & Supply Chain - ABSL">
-  <!-- HERO SECTION -->
-  <section style="position:relative; padding: 100px 0 80px; background: linear-gradient(rgba(10, 17, 40, 0.85), rgba(10, 17, 40, 0.95)), url('https://images.unsplash.com/photo-1578575437130-527eed3abbec?q=80&w=2070&auto=format&fit=crop'); background-size: cover; background-position: center; border-bottom: 1px solid var(--line);">
-    <div class="container" style="position:relative; z-index:2;">
-      <div style="max-width: 800px; margin-bottom: 48px;">
-        <div style="display:flex; align-items:center; gap:16px; margin-bottom: 24px;">
-          <div style="width: 60px; height: 1px; background: var(--gold);"></div>
-          <span style="font-size: 0.85rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--gold);">Global Freight & Supply Chain</span>
-        </div>
-        <h1 style="font-size: 4rem; line-height: 1.1; margin-bottom: 24px;">
-          Moving Your World, <br> Without Limits.
-        </h1>
-        <p style="font-size: 1.15rem; color: var(--text-muted); max-width: 600px;">
-          From a single parcel to complex supply chain management, ABSL connects Nigeria to the global economy. We combine international reach with deep local expertise to deliver your cargo securely and on time.
-        </p>
-      </div>
-
-      <!-- Tracking Bar -->
-      <div style="background: rgba(255,255,255,0.05); backdrop-filter: blur(12px); border: 1px solid var(--line); border-radius: var(--r-md); padding: 8px; display: flex; flex-wrap: wrap; gap: 8px; max-width: 900px;">
-        <div style="flex:1; min-width:200px; padding: 12px 16px;">
-          <div style="font-size:0.7rem; text-transform:uppercase; letter-spacing:1px; color:var(--gold); margin-bottom:4px;">Track Your Shipment</div>
-          <input id="hero-track-input" type="text" placeholder="Enter tracking number (e.g. ABSL123456789)" style="width:100%; background:transparent; border:none; color:var(--white); font-family:var(--font-body); font-size:0.95rem; outline:none;">
-        </div>
-        <button id="hero-track-btn" class="btn btn-primary" style="display:flex; align-items:center; justify-content:center; padding: 0 32px; border-radius: var(--r-sm);">Track</button>
-      </div>
-    </div>
-  </section>
-
-  <!-- TRUST STATS -->
-  <section style="background: var(--bg-surface); border-bottom: 1px solid var(--line-light); padding: 32px 0;">
-    <div class="container" style="display:flex; justify-content:space-around; flex-wrap:wrap; gap:24px; text-align:center;">
-      <div>
-        <div style="font-family:var(--font-display); font-size:2.2rem; color:var(--gold);">170+</div>
-        <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted);">Countries Served</div>
-      </div>
-      <div>
-        <div style="font-family:var(--font-display); font-size:2.2rem; color:var(--gold);">140k</div>
-        <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted);">SQM Warehouse Space</div>
-      </div>
-      <div>
-        <div style="font-family:var(--font-display); font-size:2.2rem; color:var(--gold);">24/7</div>
-        <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted);">Cargo Security & Tracking</div>
-      </div>
-      <div>
-        <div style="font-family:var(--font-display); font-size:2.2rem; color:var(--gold);">100+</div>
-        <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted);">Local Logistics Experts</div>
-      </div>
-    </div>
-  </section>
-
-  <!-- CORE SERVICES -->
-  <section style="padding: 100px 0; background: var(--bg-main);">
+<Layout title="Global Logistics - ABSL">
+  <div style="background: var(--bg-surface); padding: 80px 0; border-bottom: 1px solid var(--line-light);">
     <div class="container">
-      <div style="text-align:center; margin-bottom:64px;">
-        <h2 style="font-size: 2.5rem; margin-bottom: 16px;">End-to-End Logistics Solutions</h2>
-        <p style="color:var(--text-muted); max-width:600px; margin:0 auto;">Whether you need air freight, ocean shipping, or full warehousing and distribution, our integrated network keeps your business moving.</p>
-        <div style="width: 60px; height: 2px; background: var(--gold); margin: 24px auto 0;"></div>
-      </div>
+      <h1 style="font-size:3rem; margin-bottom:16px;">Global Logistics</h1>
+      <p style="color:var(--text-muted); font-size:1.1rem; max-width:600px;">End-to-end freight forwarding, customs clearance, and secure delivery with real-time tracking and global coverage.</p>
+    </div>
+  </div>
 
-      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:32px;">
+  <div class="container" style="padding: 80px 0;">
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap:40px;">
+      
+      <!-- LEFT COLUMN: FORM -->
+      <div style="background:var(--bg-card); border:1px solid var(--line-light); border-radius:var(--r-md); padding:32px;">
+        <h3 style="font-size:1.5rem; color:var(--gold); margin-bottom:24px; font-family:var(--font-display);">Shipment Details</h3>
         
-        <!-- Air Freight (Clickable) -->
-        <a href="/logistics/quote?type=air" style="display:block; text-decoration:none; background:var(--bg-surface); padding:48px 32px; border:1px solid var(--line-light); border-radius:var(--r-md); transition:0.2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--line-light)'">
-          <div style="font-size: 32px; margin-bottom: 24px;">✈️</div>
-          <h3 style="font-size: 1.5rem; margin-bottom: 16px; color:var(--white);">Air Freight</h3>
-          <p style="color:var(--text-muted); font-size: 0.95rem; line-height:1.8; margin-bottom:24px;">Time-critical shipments moved via our global air network. We offer express, standard, and chartered air freight solutions.</p>
-        </a>
-
-        <!-- Ocean Freight (Clickable) -->
-        <a href="/logistics/quote?type=ocean" style="display:block; text-decoration:none; background:var(--bg-surface); padding:48px 32px; border:1px solid var(--line-light); border-radius:var(--r-md); transition:0.2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--line-light)'">
-          <div style="font-size: 32px; margin-bottom: 24px;">🚢</div>
-          <h3 style="font-size: 1.5rem; margin-bottom: 16px; color:var(--white);">Ocean Freight</h3>
-          <p style="color:var(--text-muted); font-size: 0.95rem; line-height:1.8; margin-bottom:24px;">Cost-effective FCL and LCL ocean shipping. We handle port-to-port and door-to-door delivery with full visibility.</p>
-        </a>
-
-        <!-- Ground & Road (Clickable) -->
-        <a href="/logistics/quote?type=ground" style="display:block; text-decoration:none; background:var(--bg-surface); padding:48px 32px; border:1px solid var(--line-light); border-radius:var(--r-md); transition:0.2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--line-light)'">
-          <div style="font-size: 32px; margin-bottom: 24px;">🚛</div>
-          <h3 style="font-size: 1.5rem; margin-bottom: 16px; color:var(--white);">Ground & Road Freight</h3>
-          <p style="color:var(--text-muted); font-size: 0.95rem; line-height:1.8; margin-bottom:24px;">Reliable FTL and LTL trucking across Nigeria and West Africa. Our dedicated fleet ensures last-mile delivery.</p>
-        </a>
-
-        <!-- Warehousing (Not Clickable) -->
-        <a href="/logistics/warehousing" style="display:block; text-decoration:none; background:var(--bg-surface); padding:48px 32px; border:1px solid var(--line-light); border-radius:var(--r-md); transition:0.2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--line-light)'">
-          <div style="font-size: 32px; margin-bottom: 24px;">🏢</div>
-          <h3 style="font-size: 1.5rem; margin-bottom: 16px; color:var(--white);">Warehousing & Distribution</h3>
-          <p style="color:var(--text-muted); font-size: 0.95rem; line-height:1.8; margin-bottom:24px;">140,000 SQM of secure warehouse space. We offer fulfillment, inventory management, and cross-docking.</p>
-        </a>
-
-        <!-- Customs Brokerage (Not Clickable) -->
-        <div style="background:var(--bg-surface); padding:48px 32px; border:1px solid var(--line-light); border-radius:var(--r-md);">
-          <div style="font-size: 32px; margin-bottom: 24px;">📋</div>
-          <h3 style="font-size: 1.5rem; margin-bottom: 16px; color:var(--white);">Customs Brokerage</h3>
-          <p style="color:var(--text-muted); font-size: 0.95rem; line-height:1.8; margin-bottom:24px;">Licensed in-house customs team ensuring fast clearance and compliance with local and international trade regulations.</p>
+        <div style="margin-bottom:20px;">
+          <label style="display:block; font-family:var(--mono); font-size:11px; color:var(--text-muted); margin-bottom:6px;">FREIGHT TYPE</label>
+          <select id="freight-type" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;">
+            <option value="Ground / Road Freight">Ground / Road Freight</option>
+            <option value="Air Freight (Express)">Air Freight (Express)</option>
+            <option value="Sea Freight">Sea Freight</option>
+          </select>
         </div>
 
-        <!-- Supply Chain (Not Clickable) -->
-        <div style="background:var(--bg-surface); padding:48px 32px; border:1px solid var(--line-light); border-radius:var(--r-md);">
-          <div style="font-size: 32px; margin-bottom: 24px;">📊</div>
-          <h3 style="font-size: 1.5rem; margin-bottom: 16px; color:var(--white);">Supply Chain Visibility</h3>
-          <p style="color:var(--text-muted); font-size: 0.95rem; line-height:1.8; margin-bottom:24px;">Real-time tracking, API integrations, and a customer portal to monitor your shipments from origin to destination.</p>
-        </div>
-
-      </div>
-    </div>
-  </section>
-
-  <!-- LOCAL EXPERTISE -->
-  <section style="padding: 100px 0; background: var(--bg-surface); border-top: 1px solid var(--line-light); border-bottom: 1px solid var(--line-light);">
-    <div class="container">
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:64px; align-items:center;">
-        <div>
-          <div style="font-size:0.8rem; text-transform:uppercase; letter-spacing:2px; color:var(--gold); margin-bottom:16px;">Deep Local Expertise</div>
-          <h2 style="font-size: 2.8rem; margin-bottom:24px;">Nigeria is Complex.<br>We Make It Simple.</h2>
-          <p style="color:var(--text-muted); font-size:1rem; line-height:1.9; margin-bottom:32px;">
-            Port congestion, customs delays, and fragmented infrastructure are constant challenges. We overcome them with dedicated inland container depots (ICDs), barge operations, and a team of 100+ local experts.
-          </p>
-          <ul style="list-style:none; color:var(--text-light); font-size:0.95rem; line-height:2.2;">
-            <li>✓ Dedicated Barge Operations (Port to ICD)</li>
-            <li>✓ 140,000 SQM Inland Container Depots (Ikorodu & Apapa)</li>
-            <li>✓ 24/7 Security & Full Container Handling (VGM)</li>
-            <li>✓ Seamless Door-to-Door Delivery Fleet</li>
-          </ul>
-        </div>
-        <div style="background: var(--bg-card); border: 1px solid var(--line); padding: 40px; border-radius: var(--r-md);">
-          <div style="font-family: var(--font-display); font-size: 1.3rem; margin-bottom: 24px; color: var(--gold);">ABSL Network Advantages</div>
-          <div style="display:flex; flex-direction:column; gap:16px;">
-            <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--line-light); padding-bottom:12px;"><span style="color:var(--text-muted);">Global Reach</span><span style="color:var(--white); font-weight:600;">170+ Countries</span></div>
-            <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--line-light); padding-bottom:12px;"><span style="color:var(--text-muted);">Warehouse Space</span><span style="color:var(--white); font-weight:600;">140,000 SQM</span></div>
-            <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--line-light); padding-bottom:12px;"><span style="color:var(--text-muted);">Local Team</span><span style="color:var(--white); font-weight:600;">100+ Experts</span></div>
-            <div style="margin-top:16px;"><a href="/contact" class="btn btn-primary" style="width:100%; text-align:center;">Speak to a Logistics Expert</a></div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom:20px;">
+          <div>
+            <label style="display:block; font-family:var(--mono); font-size:11px; color:var(--text-muted); margin-bottom:6px;">ORIGIN</label>
+            <input id="origin" type="text" value="kano" placeholder="e.g. Kano" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
+          </div>
+          <div>
+            <label style="display:block; font-family:var(--mono); font-size:11px; color:var(--text-muted); margin-bottom:6px;">DESTINATION</label>
+            <input id="dest" type="text" value="lagos" placeholder="e.g. Lagos" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
           </div>
         </div>
-      </div>
-    </div>
-  </section>
 
-  <!-- CTA -->
-  <section style="padding: 100px 0; background: var(--bg-main); text-align:center;">
-    <div class="container">
-      <h2 style="font-size: 2.8rem; margin-bottom: 20px;">Ready to Optimize Your Supply Chain?</h2>
-      <p style="color:var(--text-muted); font-size:1.1rem; max-width:600px; margin:0 auto 40px;">Get a tailored logistics quote or speak with our team about your freight, warehousing, or customs needs.</p>
-      <div style="display:flex; gap:16px; justify-content:center; flex-wrap:wrap;">
-        <a href="/contact" class="btn btn-primary" style="padding:16px 48px;">Request a Quote</a>
-        <a href="/" class="btn btn-outline" style="padding:16px 48px;">View All Services</a>
-      </div>
-    </div>
-  </section>
+        <h4 style="font-size:1.2rem; color:var(--white); margin-bottom:16px; margin-top:32px;">Package Dimensions</h4>
+        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:12px; margin-bottom:16px;">
+          <div>
+            <label style="display:block; font-family:var(--mono); font-size:10px; color:var(--text-muted); margin-bottom:4px;">LENGTH (cm)</label>
+            <input id="length" type="number" value="5" style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
+          </div>
+          <div>
+            <label style="display:block; font-family:var(--mono); font-size:10px; color:var(--text-muted); margin-bottom:4px;">WIDTH (cm)</label>
+            <input id="width" type="number" value="5" style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
+          </div>
+          <div>
+            <label style="display:block; font-family:var(--mono); font-size:10px; color:var(--text-muted); margin-bottom:4px;">HEIGHT (cm)</label>
+            <input id="height" type="number" value="5" style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
+          </div>
+        </div>
+        <div style="margin-bottom:32px;">
+          <label style="display:block; font-family:var(--mono); font-size:10px; color:var(--gold); margin-bottom:4px;">ACTUAL KG</label>
+          <input id="weight" type="number" value="5" style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
+        </div>
 
-  <!-- Tracking Script -->
-  <script is:inline>
-    document.addEventListener('DOMContentLoaded', () => {
-      const trackBtn = document.getElementById('hero-track-btn');
-      if (trackBtn) {
-        trackBtn.addEventListener('click', () => {
-          const val = document.getElementById('hero-track-input').value.trim();
-          if (val) {
-            window.location.href = '/track?num=' + encodeURIComponent(val);
-          }
-        });
-      }
-    });
-  </script>
+        <button id="calc-btn" class="btn btn-primary" style="width:100%;">Calculate Estimate</button>
+      </div>
+
+      <!-- RIGHT COLUMN: RESULTS -->
+      <div style="background:var(--bg-surface); border:1px solid var(--line-light); border-radius:var(--r-md); padding:32px; display:flex; flex-direction:column;">
+        <div style="text-align:center; margin-bottom:24px;">
+          <div id="res-route" style="color:var(--text-muted); font-size:0.9rem; margin-bottom:8px;">kano &rarr; lagos</div>
+          <div style="font-family:var(--mono); font-size:11px; color:var(--gold); text-transform:uppercase; letter-spacing:1px;">Estimated Cost</div>
+          <div id="res-total" style="font-family:var(--font-display); font-size:2.5rem; font-weight:700; color:var(--white); margin:12px 0;">₦0</div>
+          <div style="font-size:0.85rem; color:var(--text-muted);">2 - 4 Business Days (Domestic)</div>
+        </div>
+
+        <div style="border-top:1px solid var(--line-light); padding-top:24px; display:flex; flex-direction:column; gap:12px; font-size:0.95rem;">
+          <div style="display:flex; justify-content:space-between;">
+            <span style="color:var(--text-muted);">Actual Weight:</span>
+            <span id="res-actual" style="color:var(--white);">0 kg</span>
+          </div>
+          <div style="display:flex; justify-content:space-between;">
+            <span style="color:var(--text-muted);">Volumetric Weight:</span>
+            <span id="res-volume" style="color:var(--white);">0.00 kg</span>
+          </div>
+          <div style="display:flex; justify-content:space-between;">
+            <span style="color:var(--gold);">Chargeable Weight:</span>
+            <span id="res-chargeable" style="color:var(--gold); font-weight:600;">0 kg</span>
+          </div>
+          
+          <div style="display:flex; justify-content:space-between; border-top:1px dashed var(--line-light); padding-top:12px; margin-top:8px;">
+            <span style="color:var(--text-muted);">Calculated Distance:</span>
+            <span id="res-distance" style="color:var(--white); font-weight:600;">0 km</span>
+          </div>
+          <div style="display:flex; justify-content:space-between;">
+            <span style="color:var(--text-muted);">Base Rate:</span>
+            <span id="res-base-rate" style="color:var(--white); font-weight:600;">₦0</span>
+          </div>
+          <div style="display:flex; justify-content:space-between;">
+            <span style="color:var(--text-muted);">Distance Charge:</span>
+            <span id="res-dist-charge" style="color:var(--white); font-weight:600;">₦0</span>
+          </div>
+        </div>
+
+        <div style="margin-top:auto; padding-top:32px;">
+          <a href="/contact" class="btn btn-outline" style="width:100%; text-align:center;">Book This Shipment</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Hidden JSON for Settings -->
+  <script type="application/json" id="calc-settings" set:html={settingsJson}></script>
+
   <script>
-    import { globalLocations } from '../scripts/globalLocations.js';
-
-    // 1. Load settings from the JSON tag
-    const settingsData = document.getElementById('calc-settings');
-    const settings = JSON.parse(settingsData.textContent);
+    // 1. Comprehensive Location Database
+    const locations = {
+      // Nigeria
+      "kano": [12.0022, 8.5920], "lagos": [6.5244, 3.3792], "abuja": [9.0765, 7.3986], "kaduna": [10.5105, 7.4165], "katsina": [12.9908, 7.6018], "borno": [11.8333, 13.1500], "maiduguri": [11.8333, 13.1500], "port harcourt": [4.8156, 7.0498], "ibadan": [7.3775, 3.9470], "enugu": [6.4584, 7.5464], "jos": [9.8965, 8.8583], "benin city": [6.3350, 5.6037], "sokoto": [13.0059, 5.2476], "yola": [9.2035, 12.4954], "owerri": [5.4836, 7.0333], "uyo": [5.0378, 7.9128], "calabar": [4.9757, 8.3417], "makurdi": [7.7337, 8.5133], "lokoja": [7.8023, 6.7333], "asaba": [6.1980, 6.7240], "akure": [7.2571, 5.2058], "abeokuta": [7.1475, 3.3619], "osogbo": [7.7827, 4.5418], "ilorin": [8.4966, 4.5421], "minna": [9.6139, 6.5569], "bauchi": [10.3103, 9.8438], "gombe": [10.2897, 11.1673], "damaturu": [11.7479, 11.9608], "dutse": [11.7566, 9.3386], "gusau": [12.1628, 6.6614], "birnin kebbi": [12.4539, 4.1975], "awka": [6.2109, 7.0740], "umuahia": [5.5333, 7.4833], "yenagoa": [4.9247, 6.2642], "jalingo": [8.8921, 11.3771], "lafia": [8.4939, 8.5155],
+      // International
+      "london": [51.5074, -0.1278], "dubai": [25.2048, 55.2708], "germany": [50.1109, 8.6821], "usa": [40.7128, -74.0060], "new york": [40.7128, -74.0060], "uk": [51.5074, -0.1278], "canada": [43.6510, -79.3470], "china": [31.2304, 121.4737], "india": [28.7041, 77.1025], "south africa": [-26.2041, 28.0473], "france": [48.8566, 2.3522], "italy": [41.9028, 12.4964], "spain": [40.4168, -3.7038], "brazil": [-23.5505, -46.6333], "australia": [-33.8688, 151.2093], "japan": [35.6762, 139.6503], "russia": [55.7558, 37.6173], "turkey": [41.0082, 28.9784], "egypt": [30.0444, 31.2357], "kenya": [-1.2921, 36.8219], "ghana": [5.6037, -0.1870]
+    };
 
     // 2. Haversine Formula
     function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
@@ -191,72 +142,58 @@ const { data: packages } = await supabase
       return R * c;
     }
 
-    // 3. Calculation Logic
-    const calculateBtn = document.getElementById('calc-btn');
-    if (calculateBtn) {
-      calculateBtn.addEventListener('click', () => {
-        // Get Values
-        const weight = Number(document.getElementById('weight')?.value || 0);
-        const length = Number(document.getElementById('length')?.value || 0);
-        const width = Number(document.getElementById('width')?.value || 0);
-        const height = Number(document.getElementById('height')?.value || 0);
-        let origin = (document.getElementById('origin')?.value || 'kano').toLowerCase().trim();
-        let dest = (document.getElementById('dest')?.value || '').toLowerCase().trim();
+    // 3. Load Settings
+    const settings = JSON.parse(document.getElementById('calc-settings').textContent);
 
-        if (!weight || !length || !width || !height || !dest) {
-          alert('Please fill in destination, weight, and dimensions.');
-          return;
-        }
+    // 4. Logic
+    document.getElementById('calc-btn').addEventListener('click', () => {
+      const weight = Number(document.getElementById('weight').value);
+      const length = Number(document.getElementById('length').value);
+      const width = Number(document.getElementById('width').value);
+      const height = Number(document.getElementById('height').value);
+      let origin = document.getElementById('origin').value.toLowerCase().trim();
+      let dest = document.getElementById('dest').value.toLowerCase().trim();
 
-        // Calculate Weights
-        const volumetricWeight = (length * width * height) / 5000;
-        const chargeableWeight = Math.max(weight, volumetricWeight);
+      if (!weight || !length || !width || !height || !dest) {
+        alert('Please fill in all fields.');
+        return;
+      }
 
-        // Lookup Coordinates
-        let originCoords = globalLocations[origin] || globalLocations['kano']; // default to Kano if unknown
-        let destCoords = globalLocations[dest];
+      // Calculate weights
+      const volumetricWeight = (length * width * height) / 5000;
+      const chargeableWeight = Math.max(weight, volumetricWeight);
 
-        // Fallback if destination not found
-        if (!destCoords) {
-            alert(`We could not find coordinates for "${dest}". Please check the spelling or contact support.`);
-            return;
-        }
+      // Get Coordinates
+      let originCoords = locations[origin] || locations['kano'];
+      let destCoords = locations[dest];
 
-        // Calculate Distance
-        let distance = getDistanceFromLatLonInKm(originCoords[0], originCoords[1], destCoords[0], destCoords[1]);
-        
-        // Determine Multiplier (Domestic vs International)
-        let isDomestic = settings.domCities.some(city => dest.includes(city)) || (destCoords[0] > 4 && destCoords[0] < 14 && destCoords[1] > 2 && destCoords[1] < 15);
-        let multiplier = isDomestic ? settings.domMulti : settings.intMulti;
+      if (!destCoords) {
+        alert(`We could not find coordinates for "${dest}". Please try a major city like Lagos, London, or Dubai.`);
+        return;
+      }
 
-        // Calculate Costs
-        const baseWeightCost = chargeableWeight * settings.baseRate;
-        const distanceCost = distance * settings.distRate;
-        const finalCost = Math.round((baseWeightCost + distanceCost) * multiplier);
+      // Calculate Distance
+      const distance = getDistanceFromLatLonInKm(originCoords[0], originCoords[1], destCoords[0], destCoords[1]);
 
-        // Update UI Elements
-        const resActual = document.getElementById('res-actual');
-        const resVolume = document.getElementById('res-volume');
-        const resChargeable = document.getElementById('res-chargeable');
-        const resTotal = document.getElementById('res-total');
-        
-        // Dynamically inject Distance breakdown
-        let resDistanceContainer = document.getElementById('res-distance-container');
-        if (!resDistanceContainer && resTotal) {
-            resDistanceContainer = document.createElement('div');
-            resDistanceContainer.id = 'res-distance-container';
-            resDistanceContainer.style = "display:flex; justify-content:space-between; margin-bottom:8px; color:var(--text-muted); font-size:0.9rem; border-top: 1px dashed var(--line-light); padding-top: 8px; margin-top: 8px;";
-            resDistanceContainer.innerHTML = `<span>Distance (<span id="res-dest-label"></span>):</span> <span id="res-distance" style="color:var(--white); font-weight:600;"></span>`;
-            resTotal.parentElement.parentElement.insertBefore(resDistanceContainer, resTotal.parentElement);
-        }
+      // Determine Multiplier
+      let isDomestic = settings.domCities.includes(dest) || (destCoords[0] > 4 && destCoords[0] < 14 && destCoords[1] > 2 && destCoords[1] < 15);
+      let multiplier = isDomestic ? settings.domMulti : settings.intMulti;
 
-        if (resActual) resActual.textContent = weight + ' kg';
-        if (resVolume) resVolume.textContent = volumetricWeight.toFixed(2) + ' kg';
-        if (resChargeable) resChargeable.textContent = chargeableWeight.toFixed(2) + ' kg';
-        if (document.getElementById('res-distance')) document.getElementById('res-distance').textContent = Math.round(distance).toLocaleString() + ' km';
-        if (document.getElementById('res-dest-label')) document.getElementById('res-dest-label').textContent = `${origin} to ${dest}`;
-        if (resTotal) resTotal.textContent = '₦' + finalCost.toLocaleString();
-      });
-    }
+      // Calculate Costs
+      const baseWeightCost = chargeableWeight * settings.baseRate;
+      const distanceCost = distance * settings.distRate;
+      const finalCost = Math.round((baseWeightCost + distanceCost) * multiplier);
+
+      // Update UI
+      document.getElementById('res-route').innerHTML = `${origin} &rarr; ${dest}`;
+      document.getElementById('res-actual').textContent = weight + ' kg';
+      document.getElementById('res-volume').textContent = volumetricWeight.toFixed(2) + ' kg';
+      document.getElementById('res-chargeable').textContent = chargeableWeight.toFixed(2) + ' kg';
+      
+      document.getElementById('res-distance').textContent = Math.round(distance).toLocaleString() + ' km';
+      document.getElementById('res-base-rate').textContent = '₦' + baseWeightCost.toLocaleString();
+      document.getElementById('res-dist-charge').textContent = '₦' + distanceCost.toLocaleString();
+      document.getElementById('res-total').textContent = '₦' + finalCost.toLocaleString();
+    });
   </script>
 </Layout>
