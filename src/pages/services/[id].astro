@@ -49,11 +49,14 @@ if (error || !pkg) return Astro.redirect('/services');
         qty: 1
       };
 
-      // 2. Read existing cart using the correct 'absl_cart' key
-      const rawCart = localStorage.getItem('absl_cart');
+      // 2. Read existing cart safely
       let cart = [];
-      if (rawCart) {
-        try { cart = JSON.parse(rawCart); } catch(err) {}
+      try {
+        const rawCart = localStorage.getItem('absl_cart');
+        const parsed = JSON.parse(rawCart || '[]');
+        cart = Array.isArray(parsed) ? parsed : [];
+      } catch (e) {
+        cart = [];
       }
 
       // 3. Add or update item
@@ -66,6 +69,7 @@ if (error || !pkg) return Astro.redirect('/services');
 
       // 4. Save and trigger the cart badge update
       localStorage.setItem('absl_cart', JSON.stringify(cart));
+      console.log('ABSL Cart Saved:', cart);
       window.dispatchEvent(new Event('absl-cart-updated'));
 
       // 5. Visual feedback

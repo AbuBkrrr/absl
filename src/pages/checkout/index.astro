@@ -65,7 +65,14 @@ import Layout from '../../layouts/Layout.astro';
       window.location.reload();
     };
     document.addEventListener('DOMContentLoaded', () => {
-      const cart = JSON.parse(localStorage.getItem('absl_cart') || '[]');
+      let cart = [];
+      try {
+        const rawCart = localStorage.getItem('absl_cart');
+        const parsed = JSON.parse(rawCart || '[]');
+        cart = Array.isArray(parsed) ? parsed : [];
+      } catch (e) {
+        cart = [];
+      }
       const itemsContainer = document.getElementById('cart-items');
       const emptyCart = document.getElementById('empty-cart');
       const checkoutForm = document.getElementById('checkout-form');

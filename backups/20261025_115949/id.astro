@@ -1,0 +1,82 @@
+﻿---
+import Layout from '../../layouts/Layout.astro';
+import { supabase } from '../../lib/supabase';
+
+const { id } = Astro.params;
+const { data: pkg, error } = await supabase.from('absl_packages').select('*').eq('id', id).single();
+
+if (error || !pkg) return Astro.redirect('/services');
+---
+
+<Layout title={`${pkg.title} - ABSL`}>
+  <div class="container" style="padding: 80px 24px; max-width: 800px;">
+    <a href="/services" style="font-family:var(--mono); font-size:12px; color:var(--text-muted); text-decoration:none;">&larr; Back to Services</a>
+
+    <div style="margin-top:32px; background:var(--bg-card); border:1px solid var(--line-light); border-radius:var(--r-md); padding:48px;">
+      <div style="font-family:var(--mono); font-size:11px; text-transform:uppercase; color:var(--gold); margin-bottom:16px;">{pkg.category}</div>
+      <h1 style="font-family:var(--display); font-size:3rem; color:var(--white); margin-bottom:24px; line-height:1.1;">{pkg.title}</h1>
+      <p style="color:var(--text-muted); font-size:1.1rem; line-height:1.8; margin-bottom:48px;">{pkg.description}</p>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--line-light); padding-top:32px; flex-wrap:wrap; gap:24px;">
+        <div>
+          <div style="font-family:var(--mono); font-size:11px; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">Total Price</div>
+          <div style="font-family:var(--mono); font-size:2rem; font-weight:700; color:var(--gold);">₦{Number(pkg.price).toLocaleString()}</div>
+        </div>
+
+        <button id="add-btn" class="btn btn-primary" style="padding:16px 48px; font-size:1.1rem; background: var(--green); color: white;"
+          data-id={String(pkg.id)}
+          data-title={pkg.title}
+          data-price={Number(pkg.price)}
+          data-points={Number(pkg.loyalty_points || 0)}
+          data-category={pkg.category}>
+          Add to Cart
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('add-btn')?.addEventListener('click', (e) => {
+      const btn = e.currentTarget;
+      
+      // 1. Get data from button attributes
+      const item = {
+        id: btn.dataset.id,
+        title: btn.dataset.title,
+        price: Number(btn.dataset.price),
+        points: Number(btn.dataset.points) || 0,
+        category: btn.dataset.category,
+        qty: 1
+      };
+
+      // 2. Read existing cart using the correct 'absl_cart' key
+      const rawCart = localStorage.getItem('absl_cart');
+      let cart = [];
+      if (rawCart) {
+        try { cart = JSON.parse(rawCart); } catch(err) {}
+      }
+
+      // 3. Add or update item
+      const existing = cart.find(i => i.id === item.id);
+      if (existing) {
+        existing.qty += 1;
+      } else {
+        cart.push(item);
+      }
+
+      // 4. Save and trigger the cart badge update
+      localStorage.setItem('absl_cart', JSON.stringify(cart));
+      window.dispatchEvent(new Event('absl-cart-updated'));
+
+      // 5. Visual feedback
+      const originalText = btn.textContent;
+      btn.textContent = '✓ Added to Cart';
+      btn.style.background = '#0F7B4A'; // emerald green
+      
+      setTimeout(() => {
+        btn.textContent = originalText;
+        btn.style.background = 'var(--green)';
+      }, 1500);
+    });
+  </script>
+</Layout>
