@@ -2,7 +2,6 @@
 import Layout from '../../layouts/Layout.astro';
 import { createClient } from '../../lib/supabase';
 
-// 1. Authenticate User
 // Initialize SSR client with cookies
 const supabase = createClient({ request: Astro.request, cookies: Astro.cookies });
 const { data: { user } } = await supabase.auth.getUser();
@@ -11,18 +10,13 @@ if (!user) {
   return Astro.redirect('/login');
 }
 
-// 2. Fetch Profile Data
-const { data: profile } = await supabase
-  .from('absl_profiles')
-  .select('*')
-  .eq('id', user.id)
-  .single();
-
-if ((profile?.role && profile.role !== "customer") || profile?.is_admin) {
+// Check if admin
+const { data: profile } = await supabase.from('absl_profiles').select('*').eq('id', user.id).single();
+if (profile && (profile.role !== 'customer' || profile.is_admin)) {
   return Astro.redirect('/admin');
 }
 
-// 3. Fetch Bookings
+// Fetch Customer Bookings
 const { data: bookings } = await supabase
   .from('absl_bookings')
   .select('*')
@@ -32,185 +26,36 @@ const { data: bookings } = await supabase
 const rows = bookings || [];
 ---
 
-<Layout title="Client Area - ABSL">
+<Layout title="My Account - ABSL">
   <div style="background: var(--bg-surface); padding: 60px 0; border-bottom: 1px solid var(--line-light);">
-    <div class="container" style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 16px;">
+    <div class="container" style="display: flex; justify-content: space-between; align-items: flex-end;">
       <div>
-        <h1 style="font-size:2.5rem; color:var(--white); margin:0;">Welcome, {profile?.full_name || user.email}</h1>
-        <p style="color:var(--text-muted); margin-top:8px;">Manage your bookings, profile, and preferences.</p>
+        <h1 style="font-size:2.5rem; color:var(--white); margin:0;">Client Dashboard</h1>
+        <p style="color:var(--text-muted); margin-top:8px;">Welcome back, {profile?.full_name || user.email}</p>
       </div>
-      <button onclick="document.cookie='sb-access-token=; Max-Age=0; path=/'; supabase.auth.signOut().then(() => window.location.href='/login');" class="btn btn-outline" style="padding:10px 24px;">Log Out</button>
+      <a href="/" class="btn btn-outline" style="padding:10px 24px;">&larr; View Site</a>
     </div>
   </div>
 
   <div class="container" style="padding: 60px 24px;">
-    <div style="display:grid; grid-template-columns: 250px 1fr; gap:40px; align-items: start;">
-      
-      <!-- Sidebar Navigation -->
-      <div style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 24px;">
-        <nav style="display:flex; flex-direction:column; gap:8px;">
-          <button class="tab-btn active" data-target="bookings" style="text-align:left; background:transparent; border:none; padding:12px; border-radius:4px; cursor:pointer; color:var(--white); font-weight:600; font-size:0.95rem; transition:0.2s;">📦 My Bookings</button>
-          <button class="tab-btn" data-target="profile" style="text-align:left; background:transparent; border:none; padding:12px; border-radius:4px; cursor:pointer; color:var(--text-muted); font-weight:600; font-size:0.95rem; transition:0.2s;">👤 Profile Settings</button>
-        </nav>
+    <h2 style="font-size:1.8rem; color:var(--white); margin-bottom:24px;">My Bookings</h2>
+    {rows.length === 0 ? (
+      <div style="background:var(--bg-card); border:1px dashed var(--line); padding:40px; text-align:center; border-radius:var(--r-md);">
+        <p style="color:var(--text-muted); margin-bottom:16px;">You have no active bookings yet.</p>
+        <a href="/travel" class="btn btn-primary">Start Booking</a>
       </div>
-
-      <!-- Main Content Area -->
-      <div>
-        <!-- TAB: BOOKINGS -->
-        <div id="tab-bookings" class="tab-panel">
-          <h2 style="font-size:1.8rem; color:var(--white); margin-bottom:24px;">My Bookings</h2>
-
-          {rows.length === 0 ? (
-            <div style="background:var(--bg-card); border:1px dashed var(--line); padding:40px; text-align:center; border-radius:var(--r-md);">
-              <p style="color:var(--text-muted); margin-bottom:16px;">You have no active bookings yet.</p>
-              <a href="/travel" class="btn btn-primary">Start Booking</a>
+    ) : (
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        {rows.map(b => (
+          <div style="background:var(--bg-card); border:1px solid var(--line-light); border-radius:var(--r-md); padding:24px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
+              <div style="color:var(--gold); font-family:var(--mono);">ORDER #{b.id.slice(0, 8).toUpperCase()}</div>
+              <div style="color:var(--white); font-weight:700;">₦{Number(b.total_amount).toLocaleString()}</div>
             </div>
-          ) : (
-            <div style="display:flex; flex-direction:column; gap:24px;">
-              {rows.map(b => (
-                <div style="background:var(--bg-card); border:1px solid var(--line-light); border-radius:var(--r-md); overflow:hidden;">
-                  <div style="background:var(--bg-surface); padding:16px 24px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--line-light);">
-                    <div>
-                      <div style="font-family:var(--mono); font-size:11px; color:var(--gold); margin-bottom:4px;">ORDER #{b.id.slice(0, 8).toUpperCase()}</div>
-                      <div style="font-size:0.9rem; color:var(--text-light); font-weight:600;">{new Date(b.created_at).toLocaleDateString()}</div>
-                    </div>
-                    <span style={`font-size:11px; padding:4px 12px; border-radius:4px; font-weight:700; text-transform:uppercase; background:${b.booking_status === 'completed' ? 'rgba(16, 185, 129, 0.15)' : b.booking_status === 'cancelled' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(245, 158, 11, 0.15)'}; color:${b.booking_status === 'completed' ? '#10B981' : b.booking_status === 'cancelled' ? '#EF4444' : '#F59E0B'};`}>
-                      {b.booking_status}
-                    </span>
-                  </div>
-                  
-                  <div style="padding:24px;">
-                    <h4 style="font-size:1rem; color:var(--white); margin-bottom:16px;">Items Ordered</h4>
-                    <div style="display:flex; flex-direction:column; gap:12px; margin-bottom:24px;">
-                      {Array.isArray(b.items) && b.items.map(item => (
-                        <div style="display:flex; justify-content:space-between; font-size:0.9rem; border-bottom:1px solid var(--line-light); padding-bottom:12px;">
-                          <div>
-                            <div style="color:var(--text-light);">{item.title}</div>
-                            <div style="color:var(--text-muted); font-size:0.8rem;">Qty: {item.qty} × ₦{Number(item.price).toLocaleString()}</div>
-                          </div>
-                          <div style="color:var(--white); font-weight:600;">₦{(Number(item.qty) * Number(item.price)).toLocaleString()}</div>
-                        </div>
-                      ))}
-                    </div>
-                    
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:16px; border-top:1px solid var(--line); padding-top:16px;">
-                      <div style="font-size:0.85rem; color:var(--text-muted);">
-                        {b.delivery_location ? `Delivery: ${b.delivery_location}` : 'Standard Delivery'}
-                      </div>
-                      <div style="text-align:right;">
-                        <div style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase;">Total</div>
-                        <div style="font-size:1.4rem; font-weight:700; color:var(--gold);">₦{Number(b.total_amount).toLocaleString()}</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <!-- TAB: PROFILE -->
-        <div id="tab-profile" class="tab-panel" style="display:none;">
-          <h2 style="font-size:1.8rem; color:var(--white); margin-bottom:24px;">Profile Settings</h2>
-          
-          <div style="background:var(--bg-card); border:1px solid var(--line-light); border-radius:var(--r-md); padding:32px;">
-            <div style="margin-bottom:20px;">
-              <label style="display:block; font-family:var(--mono); font-size:11px; color:var(--text-muted); margin-bottom:6px;">EMAIL ADDRESS (READ ONLY)</label>
-              <input type="email" value={user.email} readonly style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--text-muted); border-radius:4px;" />
-            </div>
-            
-            <div style="margin-bottom:20px;">
-              <label style="display:block; font-family:var(--mono); font-size:11px; color:var(--gold); margin-bottom:6px;">FULL NAME</label>
-              <input id="p-name" type="text" value={profile?.full_name || ''} style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
-            </div>
-
-            <div style="margin-bottom:24px;">
-              <label style="display:block; font-family:var(--mono); font-size:11px; color:var(--gold); margin-bottom:6px;">PHONE NUMBER</label>
-              <input id="p-phone" type="tel" value={profile?.phone || ''} placeholder="+234..." style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
-            </div>
-
-            <button id="save-profile-btn" class="btn btn-primary">Save Changes</button>
-            <div id="profile-msg" style="display:none; margin-top:16px; padding:12px; text-align:center; border-radius:4px; font-size:0.9rem;"></div>
+            <div style="color:var(--text-muted); font-size:0.9rem;">Status: {b.booking_status}</div>
           </div>
-        </div>
-
+        ))}
       </div>
-    </div>
+    )}
   </div>
-
-  <script>
-    import { createClient } from '../../lib/supabase';
-
-    // 1. Tab Switching Logic
-    const tabs = document.querySelectorAll('.tab-btn');
-    const panels = document.querySelectorAll('.tab-panel');
-
-    tabs.forEach(tab => {
-      tab.addEventListener('click', () => {
-        // Reset styles
-        tabs.forEach(t => {
-          t.classList.remove('active');
-          t.style.background = 'transparent';
-          t.style.color = 'var(--text-muted)';
-        });
-        panels.forEach(p => p.style.display = 'none');
-
-        // Set active styles
-        tab.classList.add('active');
-        tab.style.background = 'var(--gold-soft)';
-        tab.style.color = 'var(--gold)';
-        
-        // Show target panel
-        document.getElementById(`tab-${tab.dataset.target}`).style.display = 'block';
-      });
-    });
-
-    // Set initial active state for styling
-    tabs[0].style.background = 'var(--gold-soft)';
-    tabs[0].style.color = 'var(--gold)';
-
-    // 2. Save Profile Logic
-    document.getElementById('save-profile-btn').addEventListener('click', async () => {
-      const btn = document.getElementById('save-profile-btn');
-      const msg = document.getElementById('profile-msg');
-      const newName = document.getElementById('p-name').value.trim();
-      const newPhone = document.getElementById('p-phone').value.trim();
-
-      btn.textContent = 'Saving...';
-      btn.disabled = true;
-      msg.style.display = 'none';
-
-      // Initialize SSR client with cookies
-const supabase = createClient({ request: Astro.request, cookies: Astro.cookies });
-const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      // Upsert into profiles
-      const { error } = await supabase.from('absl_profiles').upsert({
-        id: user.id,
-        email: user.email,
-        full_name: newName,
-        phone: newPhone,
-        updated_at: new Date().toISOString()
-      });
-
-      if (error) {
-        msg.style.display = 'block';
-        msg.style.background = 'rgba(239, 68, 68, 0.1)';
-        msg.style.color = '#EF4444';
-        msg.style.border = '1px solid #EF4444';
-        msg.textContent = 'Error: ' + error.message;
-        btn.textContent = 'Save Changes';
-        btn.disabled = false;
-      } else {
-        msg.style.display = 'block';
-        msg.style.background = 'rgba(16, 185, 129, 0.1)';
-        msg.style.color = '#10B981';
-        msg.style.border = '1px solid #10B981';
-        msg.textContent = 'Profile updated successfully!';
-        btn.textContent = 'Save Changes';
-        btn.disabled = false;
-      }
-    });
-  </script>
 </Layout>

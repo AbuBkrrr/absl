@@ -5,17 +5,18 @@ export const GET: APIRoute = async ({ url, request, cookies, redirect }) => {
   const code = url.searchParams.get('code');
   const next = url.searchParams.get('next') ?? '/account';
 
-  if (code) {
-    const supabase = createClient({ request, cookies });
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) {
-      return redirect(next);
-    } else {
-      console.error('Auth callback error:', error.message);
-      return redirect(`/login?error=${encodeURIComponent(error.message)}`);
-    }
+  if (!code) {
+    console.error("Callback Error: No code parameter found in URL.");
+    return redirect('/login?error=missing_code_from_supabase');
   }
 
-  // If no code is present, redirect to login with an error
-  return redirect('/login?error=no-code');
+  const supabase = createClient({ request, cookies });
+  const { error } = await supabase.auth.exchangeCodeForSession(code);
+
+  if (error) {
+    console.error("Exchange Code Error:", error.message);
+    return redirect(`/login?error=${encodeURIComponent(error.message)}`);
+  }
+
+  return redirect(next);
 };
