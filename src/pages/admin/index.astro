@@ -34,9 +34,13 @@ if (role === 'manager') {
   <div class="container" style="padding: 60px 24px;">
     <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:24px;">
 
-      <!-- ========================================== -->
-      <!-- ACTIVE FEATURES (BUILT)                    -->
-      <!-- ========================================== -->
+      {allowedTabs.includes('analytics') && (
+        <a href="/admin/analytics" style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; text-decoration: none; transition: 0.2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--line-light)'">
+          <div style="font-size: 32px; margin-bottom: 16px;">📊</div>
+          <h2 style="font-size: 1.3rem; color: var(--white); margin-bottom: 8px;">Analytics</h2>
+          <p style="color: var(--text-muted); font-size: 0.9rem;">Global report of services rendered: revenue, service mix, and status breakdown.</p>
+        </a>
+      )}
 
       {allowedTabs.includes('bookings') && (
         <a href="/admin/bookings" style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; text-decoration: none; transition: 0.2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--line-light)'">
@@ -102,63 +106,36 @@ if (role === 'manager') {
         </a>
       )}
 
-      <!-- ========================================== -->
-      <!-- PLACEHOLDERS (COMING SOON)                 -->
-      <!-- ========================================== -->
-
-      {allowedTabs.includes('analytics') && (
-        <div style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; opacity: 0.6; cursor: not-allowed;">
-          <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-            <div style="font-size: 32px; margin-bottom: 16px;">📊</div>
-            <span style="font-size:10px; background:rgba(255,255,255,0.1); padding:4px 8px; border-radius:4px; color:var(--text-muted);">COMING SOON</span>
-          </div>
-          <h2 style="font-size: 1.3rem; color: var(--white); margin-bottom: 8px;">Analytics</h2>
-          <p style="color: var(--text-muted); font-size: 0.9rem;">Global report of services rendered: revenue, service mix, and status breakdown.</p>
-        </div>
-      )}
-
       {allowedTabs.includes('shipments') && (
-        <div style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; opacity: 0.6; cursor: not-allowed;">
-          <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-            <div style="font-size: 32px; margin-bottom: 16px;">🚢</div>
-            <span style="font-size:10px; background:rgba(255,255,255,0.1); padding:4px 8px; border-radius:4px; color:var(--text-muted);">COMING SOON</span>
-          </div>
+        <a href="/admin/shipments" style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; text-decoration: none; transition: 0.2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--line-light)'">
+          <div style="font-size: 32px; margin-bottom: 16px;">🚢</div>
           <h2 style="font-size: 1.3rem; color: var(--white); margin-bottom: 8px;">Shipment Tracking</h2>
           <p style="color: var(--text-muted); font-size: 0.9rem;">Create tracking numbers and update the live status timeline for customers.</p>
-        </div>
+        </a>
       )}
       
       {allowedTabs.includes('warehouse') && (
-        <div style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; opacity: 0.6; cursor: not-allowed;">
-          <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-            <div style="font-size: 32px; margin-bottom: 16px;">🏭</div>
-            <span style="font-size:10px; background:rgba(255,255,255,0.1); padding:4px 8px; border-radius:4px; color:var(--text-muted);">COMING SOON</span>
-          </div>
-          <h2 style="font-size: 1.3rem; color: var(--white); margin-bottom: 8px;">Warehouse Admin</h2>
+        <a href="/admin/warehouse" style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; text-decoration: none; transition: 0.2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--line-light)'">
+          <div style="font-size: 32px; margin-bottom: 16px;">🏭</div>
+          <h2 style="font-size: 1.3rem; color: var(--white); margin-bottom: 8px;">Warehouse</h2>
           <p style="color: var(--text-muted); font-size: 0.9rem;">Add inbound stock, manage SKUs, and fulfill customer inventory orders.</p>
-        </div>
+        </a>
       )}
 
       {allowedTabs.includes('travel') && (
-        <div style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; opacity: 0.6; cursor: not-allowed;">
-          <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-            <div style="font-size: 32px; margin-bottom: 16px;">✈️</div>
-            <span style="font-size:10px; background:rgba(255,255,255,0.1); padding:4px 8px; border-radius:4px; color:var(--text-muted);">COMING SOON</span>
-          </div>
+        <a href="/admin/travel" style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; text-decoration: none; transition: 0.2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--line-light)'">
+          <div style="font-size: 32px; margin-bottom: 16px;">✈️</div>
           <h2 style="font-size: 1.3rem; color: var(--white); margin-bottom: 8px;">Travel & Tours</h2>
           <p style="color: var(--text-muted); font-size: 0.9rem;">Manage incoming flight bookings, hotel reservations, and visa applications.</p>
-        </div>
+        </a>
       )}
       
       {allowedTabs.includes('rewards') && (
-        <div style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; opacity: 0.6; cursor: not-allowed;">
-          <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-            <div style="font-size: 32px; margin-bottom: 16px;">🏆</div>
-            <span style="font-size:10px; background:rgba(255,255,255,0.1); padding:4px 8px; border-radius:4px; color:var(--text-muted);">COMING SOON</span>
-          </div>
+        <a href="/admin/rewards" style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; text-decoration: none; transition: 0.2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--line-light)'">
+          <div style="font-size: 32px; margin-bottom: 16px;">🏆</div>
           <h2 style="font-size: 1.3rem; color: var(--white); margin-bottom: 8px;">Rewards Manager</h2>
           <p style="color: var(--text-muted); font-size: 0.9rem;">Update MileageMall multipliers, add new airline partners, and manage deals.</p>
-        </div>
+        </a>
       )}
 
     </div>
