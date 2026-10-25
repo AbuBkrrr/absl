@@ -194,4 +194,24 @@ const settingsJson = JSON.stringify({ baseRate, domMulti, intMulti, domCities, d
       document.getElementById('res-total').textContent = '₦' + finalCost.toLocaleString();
     });
   </script>
+<section style="padding: 80px 0; background: var(--bg-main);">
+    <div class="container">
+        <div style="text-align: center; margin-bottom: 48px;">
+            <h2 style="font-size: 2rem; margin-bottom: 12px;">Related Logistics Services</h2>
+            <p style="color: var(--text-muted); max-width: 600px; margin: 0 auto;">Get a formal quote or explore our warehousing solutions.</p>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+            <a href="/logistics/quote" style="background: var(--bg-card); border: 1px solid var(--line); padding: 32px; border-radius: var(--r-md); text-decoration: none;">
+                <div style="font-size: 32px; margin-bottom: 16px;">&#128203;</div>
+                <h3 style="color: var(--white); font-size: 1.3rem; margin-bottom: 8px; font-family: var(--font-display);">Request a Freight Quote</h3>
+                <p style="color: var(--text-muted); font-size: 0.9rem;">Get detailed pricing for any shipment size or destination.</p>
+            </a>
+            <a href="/logistics/warehousing" style="background: var(--bg-card); border: 1px solid var(--line); padding: 32px; border-radius: var(--r-md); text-decoration: none;">
+                <div style="font-size: 32px; margin-bottom: 16px;">&#127981;</div>
+                <h3 style="color: var(--white); font-size: 1.3rem; margin-bottom: 8px; font-family: var(--font-display);">Warehousing &amp; Storage</h3>
+                <p style="color: var(--text-muted); font-size: 0.9rem;">Secure, climate-controlled storage for goods in transit.</p>
+            </a>
+        </div>
+    </div>
+</section>
 </Layout>
