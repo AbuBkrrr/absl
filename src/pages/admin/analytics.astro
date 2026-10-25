@@ -1,7 +1,8 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import AdminGuard from '../../components/AdminGuard.astro';
-import { supabase } from '../../lib/supabase';
+import { createClient } from '../../lib/supabase';
+const supabase = createClient({ request: Astro.request, cookies: Astro.cookies });
 
 // Fetch all data needed for analytics
 const { data: bookings } = await supabase.from('absl_bookings').select('*').order('created_at', { ascending: false });

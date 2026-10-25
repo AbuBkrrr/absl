@@ -1,7 +1,8 @@
-﻿---
+---
 import Layout from '../../layouts/Layout.astro';
 import AdminGuard from '../../components/AdminGuard.astro';
-import { supabase } from '../../lib/supabase';
+import { createClient } from '../../lib/supabase';
+const supabase = createClient({ request: Astro.request, cookies: Astro.cookies });
 
 const { data: materials } = await supabase.from('absl_estimator_materials').select('*').order('created_at', { ascending: false });
 const { data: rates } = await supabase.from('absl_estimator_rates').select('*');

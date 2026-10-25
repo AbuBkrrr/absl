@@ -1,7 +1,8 @@
-﻿---
+---
 import Layout from '../../layouts/Layout.astro';
 import AdminGuard from '../../components/AdminGuard.astro';
-import { supabase } from '../../lib/supabase';
+import { createClient } from '../../lib/supabase';
+const supabase = createClient({ request: Astro.request, cookies: Astro.cookies });
 
 const { data: requests } = await supabase.from('absl_warehouse_requests').select('*').order('created_at', { ascending: false });
 const { data: inventory } = await supabase.from('absl_inventory').select('*').order('created_at', { ascending: false });
