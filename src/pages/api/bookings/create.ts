@@ -67,6 +67,13 @@ export const POST: APIRoute = async ({ request }) => {
       }
     }
 
+        const itemsHtml = body.cart.map((item: any) => `
+      <tr>
+        <td style="padding: 8px; border-bottom: 1px solid #eee;">${item.title} (x${item.qty})</td>
+        <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">₦${(Number(item.price) * Number(item.qty)).toLocaleString()}</td>
+      </tr>
+    `).join('');
+
     // 3. Send confirmation email (with miles info if earned)
     if (body.email && import.meta.env.RESEND_API_KEY) {
       try {
@@ -75,11 +82,26 @@ export const POST: APIRoute = async ({ request }) => {
           to: [body.email],
           subject: 'Booking Received - ABSL',
           html: `
-            <div style="font-family: sans-serif; color: #333;">
+            <div style="font-family: sans-serif; color: #333; max-width: 600px;">
               <h2>Hi ${body.name},</h2>
               <p>Thank you for booking with ABSL. We have received your order.</p>
-              <p><strong>Total Amount:</strong> ₦${total.toLocaleString()}</p>
-              ${milesEarned > 0 ? `<p>🎉 You have earned <strong>${milesEarned.toLocaleString()} loyalty miles</strong> on this booking.</p>` : ''}
+              
+              <div style="background: #f8f9fa; padding: 16px; border-radius: 8px; margin: 20px 0;">
+                <h3 style="margin-top: 0; font-size: 16px;">Order Summary</h3>
+                <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                  ${itemsHtml}
+                  <tr>
+                    <td style="padding: 12px 8px; font-weight: bold;">Total</td>
+                    <td style="padding: 12px 8px; font-weight: bold; text-align: right; color: #1E5F9E;">₦${total.toLocaleString()}</td>
+                  </tr>
+                </table>
+              </div>
+
+              ${milesEarned > 0 
+                ? `<div style="background: #eef2f6; border-left: 4px solid #C5A059; padding: 12px; margin: 20px 0;"><strong>🎉 Reward:</strong> You have earned ${milesEarned.toLocaleString()} loyalty miles for this booking!</div>` 
+                : (!userId ? `<div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px; margin: 20px 0; font-size: 14px;"><strong>Tip:</strong> You checked out as a guest. Log in to your account next time to earn loyalty miles on your bookings!</div>` : '')
+              }
+
               <p>Our team will contact you shortly on ${body.phone} to finalize payment and delivery.</p>
               <br>
               <p><em>Allstates Business Solutions & Logistics Ltd</em></p>
