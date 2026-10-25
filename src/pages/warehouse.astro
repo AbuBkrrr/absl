@@ -15,11 +15,11 @@ if (user) {
 }
 ---
 
-<Layout title="Your Inventory - ABSL">
+<Layout title="Warehouse - ABSL">
   <div style="background: var(--bg-surface); padding: 60px 0; border-bottom: 1px solid var(--line-light);">
     <div class="container">
-      <h1 style="font-size:2.5rem; color:var(--white); margin:0;">Your Inventory Dashboard</h1>
-      <p style="color:var(--text-muted); margin-top:8px; font-size:1.1rem;">Monitor your real-time stock levels stored at our 140,000 SQM facilities.</p>
+      <h1 style="font-size:2.5rem; color:var(--white); margin:0;">Warehouse &amp; Inventory</h1>
+      <p style="color:var(--text-muted); margin-top:8px; font-size:1.1rem;">Monitor real-time stock levels stored at our 140,000 SQM facilities.</p>
     </div>
   </div>
 
@@ -31,6 +31,30 @@ if (user) {
         <a href="/login" class="btn btn-primary">Log In</a>
       </div>
     ) : (
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:24px; margin-bottom:48px;">
+        <div style="background:var(--bg-card); border:1px solid var(--line-light); border-radius:var(--r-md); padding:32px;">
+          <div style="font-size:32px; margin-bottom:16px;">&#128202;</div>
+          <h3 style="font-size:1.2rem; color:var(--white); margin-bottom:8px;">Real-Time Inventory</h3>
+          <p style="color:var(--text-muted); font-size:0.9rem;">Live SKU tracking synced directly from the warehouse floor.</p>
+        </div>
+        <div style="background:var(--bg-card); border:1px solid var(--line-light); border-radius:var(--r-md); padding:32px;">
+          <div style="font-size:32px; margin-bottom:16px;">&#128276;</div>
+          <h3 style="font-size:1.2rem; color:var(--white); margin-bottom:8px;">Automated Alerts</h3>
+          <p style="color:var(--text-muted); font-size:0.9rem;">Get notified when stock hits the reorder level before you run out.</p>
+        </div>
+        <div style="background:var(--bg-card); border:1px solid var(--line-light); border-radius:var(--r-md); padding:32px;">
+          <div style="font-size:32px; margin-bottom:16px;">&#128230;</div>
+          <h3 style="font-size:1.2rem; color:var(--white); margin-bottom:8px;">Smart Fulfillment</h3>
+          <p style="color:var(--text-muted); font-size:0.9rem;">Contact your account manager to trigger pick-and-pack operations.</p>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:48px;">
+        <a href="/account" class="btn btn-primary" style="padding:16px; text-align:center; text-decoration:none;">Request Warehouse Space &rarr;</a>
+        <a href="/account" class="btn btn-outline" style="padding:16px; text-align:center; text-decoration:none;">Contact Support &rarr;</a>
+      </div>
+
+      <h2 style="font-size:1.8rem; color:var(--white); margin-bottom:24px;">Current Stock Levels</h2>
       <div style="background:var(--bg-card); border:1px solid var(--line-light); border-radius:var(--r-md); overflow-x:auto;">
         <table style="width:100%; border-collapse:collapse; font-family:var(--mono); font-size:12.5px;">
           <thead>
@@ -43,7 +67,7 @@ if (user) {
           </thead>
           <tbody>
             {inventory.length === 0 ? (
-              <tr><td colspan="4" style="padding:32px; text-align:center; color:var(--text-muted);">You have no inventory stored with us yet.</td></tr>
+              <tr><td colspan="4" style="padding:32px; text-align:center; color:var(--text-muted);">You have no inventory stored with us yet. <a href="/account" style="color:var(--gold);">Request space</a> to get started.</td></tr>
             ) : (
               inventory.map(item => (
                 <tr style="border-top:1px solid var(--line-light);">
@@ -52,11 +76,9 @@ if (user) {
                     <div style="font-size:11px; color:var(--text-muted);">{item.description}</div>
                   </td>
                   <td style="padding:16px; text-align:center; color:var(--white); font-weight:700;">{item.quantity}</td>
-                  <td style="padding:16px; color:var(--text-muted);">{item.location || 'Warehouse A'}</td>
+                  <td style="padding:16px; color:var(--text-muted);">{item.location || "Warehouse A"}</td>
                   <td style="padding:16px;">
-                    <span style="font-size:10px; padding:4px 10px; border-radius:4px; background:rgba(16, 185, 129, 0.15); color:#10B981; text-transform:uppercase; font-weight:700;">
-                      {item.status}
-                    </span>
+                    <span style="font-size:10px; padding:4px 10px; border-radius:4px; background:rgba(16, 185, 129, 0.15); color:#10B981; text-transform:uppercase; font-weight:700;">{item.status}</span>
                   </td>
                 </tr>
               ))
