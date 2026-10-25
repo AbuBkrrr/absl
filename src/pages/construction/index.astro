@@ -150,6 +150,10 @@ try {
         </div>
       `;
       document.getElementById('results-list').innerHTML = html;
+      const ctaBtn = document.createElement('div');
+      ctaBtn.style.cssText = 'margin-top:24px; text-align:center;';
+      ctaBtn.innerHTML = '<a href="/contact" class="btn btn-outline" style="width:100%;padding:14px;font-size:0.9rem;">Contact Us for a More Professional BOQ</a>';
+      document.getElementById('results-list').appendChild(ctaBtn);
     });
   </script>
 </Layout>
