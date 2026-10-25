@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabase';
 
 const { data: { user } } = await supabase.auth.getUser();
 const { data: profile } = await supabase.from('absl_profiles').select('role, is_admin').eq('id', user?.id).single();
+
 // Fallback: if they have the legacy is_admin flag but no role, treat them as manager
 const role = profile?.role || (profile?.is_admin ? 'manager' : 'customer');
 
@@ -19,6 +20,7 @@ if (role === 'manager') {
 
 <Layout title="Admin Dashboard - ABSL">
   <AdminGuard />
+  
   <div style="background: var(--bg-surface); padding: 60px 0; border-bottom: 1px solid var(--line-light);">
     <div class="container" style="display:flex; justify-content:space-between; align-items:flex-end;">
       <div>
@@ -32,108 +34,130 @@ if (role === 'manager') {
   <div class="container" style="padding: 60px 24px;">
     <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:24px;">
 
-      {allowedTabs.includes('analytics') && (
-        <a href="/admin/analytics" style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; text-decoration: none; transition: 0.2s;">
-          <div style="font-size: 32px; margin-bottom: 16px;">📊</div>
-          <h2 style="font-size: 1.3rem; color: var(--white); margin-bottom: 8px;">Analytics</h2>
-          <p style="color: var(--text-muted); font-size: 0.9rem;">Global report of services rendered: revenue, service mix, status breakdown.</p>
-        </a>
-      )}
+      <!-- ========================================== -->
+      <!-- ACTIVE FEATURES (BUILT)                    -->
+      <!-- ========================================== -->
 
       {allowedTabs.includes('bookings') && (
-        <a href="/admin/bookings" style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; text-decoration: none; transition: 0.2s;">
+        <a href="/admin/bookings" style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; text-decoration: none; transition: 0.2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--line-light)'">
           <div style="font-size: 32px; margin-bottom: 16px;">📦</div>
           <h2 style="font-size: 1.3rem; color: var(--white); margin-bottom: 8px;">Manage Bookings</h2>
-          <p style="color: var(--text-muted); font-size: 0.9rem;">View all travel & logistics bookings. Update statuses.</p>
+          <p style="color: var(--text-muted); font-size: 0.9rem;">View all travel & logistics bookings. Update statuses from pending to completed.</p>
         </a>
       )}
 
       {allowedTabs.includes('services') && (
-        <a href="/admin/services" style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; text-decoration: none; transition: 0.2s;">
+        <a href="/admin/services" style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; text-decoration: none; transition: 0.2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--line-light)'">
           <div style="font-size: 32px; margin-bottom: 16px;">✈️</div>
           <h2 style="font-size: 1.3rem; color: var(--white); margin-bottom: 8px;">Manage Services</h2>
-          <p style="color: var(--text-muted); font-size: 0.9rem;">Add new packages (travel, logistics, construction) to the catalog.</p>
+          <p style="color: var(--text-muted); font-size: 0.9rem;">Add new packages (travel, logistics, construction) or remove existing ones from the catalog.</p>
         </a>
       )}
 
       {allowedTabs.includes('portfolio') && (
-        <a href="/admin/portfolio" style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; text-decoration: none; transition: 0.2s;">
+        <a href="/admin/portfolio" style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; text-decoration: none; transition: 0.2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--line-light)'">
           <div style="font-size: 32px; margin-bottom: 16px;">🏗️</div>
           <h2 style="font-size: 1.3rem; color: var(--white); margin-bottom: 8px;">Portfolio CMS</h2>
-          <p style="color: var(--text-muted); font-size: 0.9rem;">Add, edit, or delete construction project cards shown on /construction.</p>
+          <p style="color: var(--text-muted); font-size: 0.9rem;">Upload images and manage construction project cards shown on the public portfolio.</p>
         </a>
       )}
 
       {allowedTabs.includes('support') && (
-        <a href="/admin/support" style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; text-decoration: none; transition: 0.2s;">
+        <a href="/admin/support" style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; text-decoration: none; transition: 0.2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--line-light)'">
           <div style="font-size: 32px; margin-bottom: 16px;">📬</div>
           <h2 style="font-size: 1.3rem; color: var(--white); margin-bottom: 8px;">Support Messages</h2>
-          <p style="color: var(--text-muted); font-size: 0.9rem;">View inquiries and messages submitted via the Contact Us page.</p>
+          <p style="color: var(--text-muted); font-size: 0.9rem;">View inquiries, reply via Resend email, or click the WhatsApp link to respond directly.</p>
         </a>
       )}
 
       {allowedTabs.includes('users') && (
-        <a href="/admin/users" style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; text-decoration: none; transition: 0.2s;">
+        <a href="/admin/users" style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; text-decoration: none; transition: 0.2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--line-light)'">
           <div style="font-size: 32px; margin-bottom: 16px;">👥</div>
           <h2 style="font-size: 1.3rem; color: var(--white); margin-bottom: 8px;">Users & Admins</h2>
-          <p style="color: var(--text-muted); font-size: 0.9rem;">List registered customers, view their lifetime spend, and manage roles.</p>
-        </a>
-      )}
-
-      {allowedTabs.includes('loyalty') && (
-        <a href="/admin/loyalty" style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; text-decoration: none; transition: 0.2s;">
-          <div style="font-size: 32px; margin-bottom: 16px;">🏆</div>
-          <h2 style="font-size: 1.3rem; color: var(--white); margin-bottom: 8px;">Loyalty Manager</h2>
-          <p style="color: var(--text-muted); font-size: 0.9rem;">Manually add airline miles for clients by email address.</p>
+          <p style="color: var(--text-muted); font-size: 0.9rem;">Assign department roles and tick which dashboard cards staff are allowed to see.</p>
         </a>
       )}
 
       {allowedTabs.includes('estimator') && (
-        <a href="/admin/estimator" style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; text-decoration: none; transition: 0.2s;">
+        <a href="/admin/estimator" style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; text-decoration: none; transition: 0.2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--line-light)'">
           <div style="font-size: 32px; margin-bottom: 16px;">📐</div>
           <h2 style="font-size: 1.3rem; color: var(--white); margin-bottom: 8px;">Estimator Rates</h2>
-          <p style="color: var(--text-muted); font-size: 0.9rem;">Update base material prices, labor multipliers, and utility rates.</p>
+          <p style="color: var(--text-muted); font-size: 0.9rem;">Manage live material prices and construction build rates used by the public calculator.</p>
         </a>
       )}
 
       {allowedTabs.includes('settings') && (
-        <a href="/admin/settings" style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; text-decoration: none; transition: 0.2s;">
+        <a href="/admin/settings" style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; text-decoration: none; transition: 0.2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--line-light)'">
           <div style="font-size: 32px; margin-bottom: 16px;">⚙️</div>
           <h2 style="font-size: 1.3rem; color: var(--white); margin-bottom: 8px;">Platform Settings</h2>
-          <p style="color: var(--text-muted); font-size: 0.9rem;">Manage calculator rates, shipping multipliers, and global variables.</p>
+          <p style="color: var(--text-muted); font-size: 0.9rem;">Manage logistics base rates, domestic/international multipliers, and distance pricing.</p>
         </a>
       )}
 
-      <!-- Placeholders for other cards -->
+      {allowedTabs.includes('loyalty') && (
+        <a href="/admin/loyalty" style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; text-decoration: none; transition: 0.2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--line-light)'">
+          <div style="font-size: 32px; margin-bottom: 16px;">🏆</div>
+          <h2 style="font-size: 1.3rem; color: var(--white); margin-bottom: 8px;">Loyalty Manager</h2>
+          <p style="color: var(--text-muted); font-size: 0.9rem;">Manually add airline miles and tier levels for clients by email address.</p>
+        </a>
+      )}
+
+      <!-- ========================================== -->
+      <!-- PLACEHOLDERS (COMING SOON)                 -->
+      <!-- ========================================== -->
+
+      {allowedTabs.includes('analytics') && (
+        <div style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; opacity: 0.6; cursor: not-allowed;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <div style="font-size: 32px; margin-bottom: 16px;">📊</div>
+            <span style="font-size:10px; background:rgba(255,255,255,0.1); padding:4px 8px; border-radius:4px; color:var(--text-muted);">COMING SOON</span>
+          </div>
+          <h2 style="font-size: 1.3rem; color: var(--white); margin-bottom: 8px;">Analytics</h2>
+          <p style="color: var(--text-muted); font-size: 0.9rem;">Global report of services rendered: revenue, service mix, and status breakdown.</p>
+        </div>
+      )}
+
       {allowedTabs.includes('shipments') && (
-        <div style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; opacity: 0.6;">
-          <div style="font-size: 32px; margin-bottom: 16px;">🚢</div>
+        <div style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; opacity: 0.6; cursor: not-allowed;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <div style="font-size: 32px; margin-bottom: 16px;">🚢</div>
+            <span style="font-size:10px; background:rgba(255,255,255,0.1); padding:4px 8px; border-radius:4px; color:var(--text-muted);">COMING SOON</span>
+          </div>
           <h2 style="font-size: 1.3rem; color: var(--white); margin-bottom: 8px;">Shipment Tracking</h2>
-          <p style="color: var(--text-muted); font-size: 0.9rem;">Create tracking numbers and update the live status timeline.</p>
+          <p style="color: var(--text-muted); font-size: 0.9rem;">Create tracking numbers and update the live status timeline for customers.</p>
         </div>
       )}
       
       {allowedTabs.includes('warehouse') && (
-        <div style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; opacity: 0.6;">
-          <div style="font-size: 32px; margin-bottom: 16px;">🏭</div>
-          <h2 style="font-size: 1.3rem; color: var(--white); margin-bottom: 8px;">Warehouse</h2>
-          <p style="color: var(--text-muted); font-size: 0.9rem;">Add inbound stock, manage SKUs, and fulfill customer orders.</p>
+        <div style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; opacity: 0.6; cursor: not-allowed;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <div style="font-size: 32px; margin-bottom: 16px;">🏭</div>
+            <span style="font-size:10px; background:rgba(255,255,255,0.1); padding:4px 8px; border-radius:4px; color:var(--text-muted);">COMING SOON</span>
+          </div>
+          <h2 style="font-size: 1.3rem; color: var(--white); margin-bottom: 8px;">Warehouse Admin</h2>
+          <p style="color: var(--text-muted); font-size: 0.9rem;">Add inbound stock, manage SKUs, and fulfill customer inventory orders.</p>
         </div>
       )}
 
       {allowedTabs.includes('travel') && (
-        <div style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; opacity: 0.6;">
-          <div style="font-size: 32px; margin-bottom: 16px;">✈️</div>
+        <div style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; opacity: 0.6; cursor: not-allowed;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <div style="font-size: 32px; margin-bottom: 16px;">✈️</div>
+            <span style="font-size:10px; background:rgba(255,255,255,0.1); padding:4px 8px; border-radius:4px; color:var(--text-muted);">COMING SOON</span>
+          </div>
           <h2 style="font-size: 1.3rem; color: var(--white); margin-bottom: 8px;">Travel & Tours</h2>
           <p style="color: var(--text-muted); font-size: 0.9rem;">Manage incoming flight bookings, hotel reservations, and visa applications.</p>
         </div>
       )}
       
       {allowedTabs.includes('rewards') && (
-        <div style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; opacity: 0.6;">
-          <div style="font-size: 32px; margin-bottom: 16px;">🏆</div>
+        <div style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; opacity: 0.6; cursor: not-allowed;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <div style="font-size: 32px; margin-bottom: 16px;">🏆</div>
+            <span style="font-size:10px; background:rgba(255,255,255,0.1); padding:4px 8px; border-radius:4px; color:var(--text-muted);">COMING SOON</span>
+          </div>
           <h2 style="font-size: 1.3rem; color: var(--white); margin-bottom: 8px;">Rewards Manager</h2>
-          <p style="color: var(--text-muted); font-size: 0.9rem;">Update MileageMall multipliers, add new airline partners.</p>
+          <p style="color: var(--text-muted); font-size: 0.9rem;">Update MileageMall multipliers, add new airline partners, and manage deals.</p>
         </div>
       )}
 
