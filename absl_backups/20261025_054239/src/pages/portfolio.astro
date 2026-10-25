@@ -1,0 +1,47 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { supabase } from '../lib/supabase';
+
+const { data: projects } = await supabase
+  .from('absl_projects')
+  .select('*')
+  .order('created_at', { ascending: false });
+
+const rows = projects || [];
+---
+
+<Layout title="Our Portfolio - ABSL">
+  <div style="background: var(--bg-surface); padding: 80px 0; border-bottom: 1px solid var(--line-light);">
+    <div class="container">
+      <h1 style="font-size:3rem; margin-bottom:16px;">Our Portfolio</h1>
+      <p style="color:var(--text-muted); font-size:1.1rem; max-width:600px;">Explore our completed projects, from luxury residential remodels to large-scale commercial infrastructure.</p>
+    </div>
+  </div>
+
+  <div class="container" style="padding: 80px 24px;">
+    {(!rows || rows.length === 0) ? (
+      <div style="text-align:center; padding:60px; background:var(--bg-card); border:1px dashed var(--line); border-radius:var(--r-md);">
+        <h3 style="font-size:1.5rem; color:var(--white); margin-bottom:8px;">No Projects Yet</h3>
+        <p style="color:var(--text-muted);">Check back soon as we update our recent work!</p>
+      </div>
+    ) : (
+      <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(350px, 1fr)); gap:40px;">
+        {rows.map(p => (
+          <div style="border:1px solid var(--line-light); border-radius:var(--r-md); overflow:hidden; background:var(--bg-card); display:flex; flex-direction:column; transition: transform 0.3s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+            <div style="height:280px; background: url('${p.image_url || 'https://images.unsplash.com/photo-1541888946425-d81bb19240f5'}') center/cover;"></div>
+            <div style="padding:32px; flex:1; display:flex; flex-direction:column;">
+              <div style="font-size:0.75rem; color:var(--gold); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">{p.category}</div>
+              <h3 style="font-size:1.4rem; margin-bottom:12px; color:var(--white);">{p.title}</h3>
+              <p style="color:var(--text-muted); font-size:0.9rem; flex:1; margin-bottom:20px;">{p.description}</p>
+              
+              <div style="border-top:1px solid var(--line-light); padding-top:16px; margin-top:auto;">
+                {p.team_members && <div style="font-size:0.8rem; color:var(--text-light); margin-bottom:4px;"><strong>Team:</strong> {p.team_members}</div>}
+                {p.project_date && <div style="font-size:0.8rem; color:var(--text-muted);"><strong>Completed:</strong> {p.project_date}</div>}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+</Layout>

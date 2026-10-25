@@ -1,0 +1,92 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { supabase } from '../../lib/supabase';
+
+const { data: bookings } = await supabase.from('absl_travel_bookings').select('*').order('created_at', { ascending: false });
+const rows = bookings || [];
+---
+
+<Layout title="Travel Bookings - ABSL Admin">
+  <div style="background: var(--bg-surface); padding: 60px 0; border-bottom: 1px solid var(--line-light);">
+    <div class="container" style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:16px;">
+      <div>
+        <h1 style="font-size:2.5rem; margin:0;">Travel & Tour Requests</h1>
+        <p style="color:var(--text-muted); margin-top:8px;">Manage incoming flight, hotel, visa, and car hire requests.</p>
+      </div>
+      <a href="/admin" class="btn btn-outline" style="padding:10px 24px;">&larr; Back to Admin</a>
+    </div>
+  </div>
+
+  <div class="container" style="padding: 40px 24px 80px;">
+    <div style="background:var(--bg-card); border:1px solid var(--line-light); border-radius:var(--r-md); overflow:hidden;">
+      <table style="width:100%; border-collapse:collapse; font-family:var(--mono); font-size:12.5px;">
+        <thead>
+          <tr style="background:var(--bg-surface); text-align:left;">
+            <th style="padding:16px; color:var(--gold);">Date</th>
+            <th style="padding:16px; color:var(--gold);">Service</th>
+            <th style="padding:16px; color:var(--gold);">Customer</th>
+            <th style="padding:16px; color:var(--gold);">Contact</th>
+            <th style="padding:16px; color:var(--gold);">Details</th>
+            <th style="padding:16px; color:var(--gold);">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.length === 0 ? (
+            <tr><td colspan="6" style="padding:32px; text-align:center; color:var(--text-muted);">No travel requests yet.</td></tr>
+          ) : (
+            rows.map(b => (
+              <tr style="border-top:1px solid var(--line-light);">
+                <td style="padding:16px; color:var(--text-muted);">{new Date(b.created_at).toLocaleDateString()}</td>
+                <td style="padding:16px; color:var(--gold); font-weight:600;">{b.service_type}</td>
+                <td style="padding:16px; color:var(--white);">{b.customer_name}</td>
+                <td style="padding:16px; color:var(--text-muted);">
+                  <a href={`mailto:${b.customer_email}`} style="color:var(--gold); text-decoration:underline;">{b.customer_email}</a><br/>
+                  <span style="font-size:11px;">{b.customer_phone}</span>
+                </td>
+                <td style="padding:16px; color:var(--text-light); font-size:11px; max-width: 250px; white-space: pre-wrap;">
+                  {Object.entries(b.details).map(([key, val]) => `${key}: ${val}`).join('\n')}
+                </td>
+                <td style="padding:16px;">
+                  <select data-id={b.id} class="status-select" style="padding:8px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px; font-family:var(--mono); font-size:12px;">
+                    <option value="pending" selected={b.status === 'pending'}>Pending</option>
+                    <option value="contacted" selected={b.status === 'contacted'}>Contacted</option>
+                    <option value="confirmed" selected={b.status === 'confirmed'}>Confirmed</option>
+                    <option value="cancelled" selected={b.status === 'cancelled'}>Cancelled</option>
+                  </select>
+                </td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script is:inline>
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.status-select').forEach(select => {
+        select.addEventListener('change', async (e) => {
+          const el = e.target;
+          const id = el.dataset.id;
+          const status = el.value;
+          
+          el.style.borderColor = 'var(--gold)';
+          
+          const res = await fetch('/api/travel-update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, status })
+          });
+
+          if (res.ok) {
+            el.style.borderColor = 'var(--green)';
+            setTimeout(() => el.style.borderColor = 'var(--line-light)', 1000);
+          } else {
+            alert('Failed to update status.');
+            el.style.borderColor = 'var(--line-light)';
+          }
+        });
+      });
+    });
+  </script>
+</Layout>

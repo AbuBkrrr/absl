@@ -1,5 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import AdminGuard from '../../components/AdminGuard.astro';
 import { supabase } from '../../lib/supabase';
 
 const { data: bookings } = await supabase.from('absl_travel_bookings').select('*').order('created_at', { ascending: false });
@@ -7,6 +8,7 @@ const rows = bookings || [];
 ---
 
 <Layout title="Travel Bookings - ABSL Admin">
+  <AdminGuard />
   <div style="background: var(--bg-surface); padding: 60px 0; border-bottom: 1px solid var(--line-light);">
     <div class="container" style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:16px;">
       <div>

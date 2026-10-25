@@ -10,7 +10,7 @@ export interface CartItem {
   maxQty: number;
 }
 
-const KEY = 'qm-cart';
+const KEY = 'absl_cart';
 
 export function getCart(): CartItem[] {
   try {

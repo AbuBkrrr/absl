@@ -1,5 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import AdminGuard from '../../components/AdminGuard.astro';
 import { supabase } from '../../lib/supabase';
 
 const { data: shipments } = await supabase.from('absl_shipments').select('*').order('created_at', { ascending: false });
@@ -9,6 +10,7 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 ---
 
 <Layout title="Shipments - ABSL Admin">
+  <AdminGuard />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" is:inline></script>
 

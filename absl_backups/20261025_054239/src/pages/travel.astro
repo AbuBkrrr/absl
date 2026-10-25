@@ -1,0 +1,320 @@
+---
+import Layout from '../layouts/Layout.astro';
+const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+---
+
+<Layout title="Travel & Tours - ABSL">
+  <!-- HERO SECTION -->
+  <section style="position:relative; padding: 100px 0 80px; background: linear-gradient(rgba(10, 17, 40, 0.85), rgba(10, 17, 40, 0.95)), url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=2074&auto=format&fit=crop'); background-size: cover; background-position: center; border-bottom: 1px solid var(--line);">
+    <div class="container" style="position:relative; z-index:2;">
+      <div style="text-align:center; max-width: 800px; margin: 0 auto 48px;">
+        <h1 style="font-size: 4rem; line-height: 1.1; margin-bottom: 24px;">Your Gateway to the World.</h1>
+        <p style="font-size: 1.15rem; color: var(--text-muted);">Book flights, reserve hotels, apply for visas, and arrange premium car hires — all in one place.</p>
+      </div>
+
+      <!-- SEARCH WIDGET -->
+      <div style="background: rgba(255,255,255,0.05); backdrop-filter: blur(12px); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 24px; max-width: 900px; margin: 0 auto;">
+        
+        <!-- Tabs -->
+        <div style="display:flex; gap:8px; margin-bottom:24px; flex-wrap:wrap; border-bottom:1px solid var(--line-light); padding-bottom:16px;">
+          <button class="travel-tab active" data-target="flights" style="background:none; border:none; color:var(--gold); font-family:var(--mono); font-size:13px; font-weight:600; cursor:pointer; padding:8px 16px; border-radius:4px; transition:0.2s;">✈️ Flights</button>
+          <button class="travel-tab" data-target="hotels" style="background:none; border:none; color:var(--text-muted); font-family:var(--mono); font-size:13px; font-weight:600; cursor:pointer; padding:8px 16px; border-radius:4px; transition:0.2s;">🏨 Hotels</button>
+          <button class="travel-tab" data-target="visas" style="background:none; border:none; color:var(--text-muted); font-family:var(--mono); font-size:13px; font-weight:600; cursor:pointer; padding:8px 16px; border-radius:4px; transition:0.2s;">📋 Visas</button>
+          <button class="travel-tab" data-target="tours" style="background:none; border:none; color:var(--text-muted); font-family:var(--mono); font-size:13px; font-weight:600; cursor:pointer; padding:8px 16px; border-radius:4px; transition:0.2s;">🌍 Tours</button>
+          <button class="travel-tab" data-target="cars" style="background:none; border:none; color:var(--text-muted); font-family:var(--mono); font-size:13px; font-weight:600; cursor:pointer; padding:8px 16px; border-radius:4px; transition:0.2s;">🚗 Car Hire</button>
+        </div>
+
+        <!-- FLIGHTS PANEL -->
+        <div id="panel-flights" class="travel-panel" style="display:block;">
+          <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:16px;">
+            <div>
+              <label style="display:block; font-family:var(--mono); font-size:10px; color:var(--gold); margin-bottom:6px;">FROM</label>
+              <input type="text" placeholder="Lagos (LOS)" class="t-input" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px; outline:none;" />
+            </div>
+            <div>
+              <label style="display:block; font-family:var(--mono); font-size:10px; color:var(--gold); margin-bottom:6px;">TO</label>
+              <input type="text" placeholder="London (LHR)" class="t-input" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px; outline:none;" />
+            </div>
+            <div>
+              <label style="display:block; font-family:var(--mono); font-size:10px; color:var(--gold); margin-bottom:6px;">DEPARTURE</label>
+              <input type="date" class="t-input" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px; outline:none;" />
+            </div>
+            <div>
+              <label style="display:block; font-family:var(--mono); font-size:10px; color:var(--gold); margin-bottom:6px;">PASSENGERS</label>
+              <select class="t-input" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px; outline:none;">
+                <option value="" disabled selected>Select Passengers</option>
+                <option>1 Adult</option><option>2 Adults</option><option>3 Adults</option><option>Family</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn btn-primary search-btn" data-service="Flight" style="width:100%; margin-top:16px; padding:14px;">Search Flights</button>
+        </div>
+
+        <!-- HOTELS PANEL -->
+        <div id="panel-hotels" class="travel-panel" style="display:none;">
+          <div style="display:grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap:16px;">
+            <div>
+              <label style="display:block; font-family:var(--mono); font-size:10px; color:var(--gold); margin-bottom:6px;">DESTINATION / CITY</label>
+              <input type="text" placeholder="Dubai, UAE" class="t-input" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px; outline:none;" />
+            </div>
+            <div>
+              <label style="display:block; font-family:var(--mono); font-size:10px; color:var(--gold); margin-bottom:6px;">CHECK-IN</label>
+              <input type="date" class="t-input" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px; outline:none;" />
+            </div>
+            <div>
+              <label style="display:block; font-family:var(--mono); font-size:10px; color:var(--gold); margin-bottom:6px;">CHECK-OUT</label>
+              <input type="date" class="t-input" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px; outline:none;" />
+            </div>
+            <div>
+              <label style="display:block; font-family:var(--mono); font-size:10px; color:var(--gold); margin-bottom:6px;">GUESTS</label>
+              <select class="t-input" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px; outline:none;">
+                <option value="" disabled selected>Select Guests</option>
+                <option>1 Room, 1 Guest</option><option>1 Room, 2 Guests</option><option>2 Rooms, 4 Guests</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn btn-primary search-btn" data-service="Hotel" style="width:100%; margin-top:16px; padding:14px;">Search Hotels</button>
+        </div>
+
+        <!-- VISAS PANEL -->
+        <div id="panel-visas" class="travel-panel" style="display:none;">
+          <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:16px;">
+            <div>
+              <label style="display:block; font-family:var(--mono); font-size:10px; color:var(--gold); margin-bottom:6px;">DESTINATION COUNTRY</label>
+              <input type="text" list="country-list" placeholder="Type country (e.g. Canada)" class="t-input" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px; outline:none;" />
+              <datalist id="country-list"></datalist>
+            </div>
+            <div>
+              <label style="display:block; font-family:var(--mono); font-size:10px; color:var(--gold); margin-bottom:6px;">PURPOSE OF TRAVEL</label>
+              <select class="t-input" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px; outline:none;">
+                <option value="" disabled selected>Select Purpose</option>
+                <option>Tourism</option><option>Business</option><option>Study</option><option>Work</option>
+              </select>
+            </div>
+            <div>
+              <label style="display:block; font-family:var(--mono); font-size:10px; color:var(--gold); margin-bottom:6px;">NATIONALITY</label>
+              <input type="text" placeholder="Nigerian" class="t-input" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px; outline:none;" />
+            </div>
+          </div>
+          <button class="btn btn-primary search-btn" data-service="Visa Application" style="width:100%; margin-top:16px; padding:14px;">Apply for Visa</button>
+        </div>
+
+        <!-- TOURS PANEL -->
+        <div id="panel-tours" class="travel-panel" style="display:none;">
+          <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:16px;">
+            <div>
+              <label style="display:block; font-family:var(--mono); font-size:10px; color:var(--gold); margin-bottom:6px;">DESTINATION</label>
+              <input type="text" placeholder="Cape Town, South Africa" class="t-input" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px; outline:none;" />
+            </div>
+            <div>
+              <label style="display:block; font-family:var(--mono); font-size:10px; color:var(--gold); margin-bottom:6px;">START DATE</label>
+              <input type="date" class="t-input" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px; outline:none;" />
+            </div>
+            <div>
+              <label style="display:block; font-family:var(--mono); font-size:10px; color:var(--gold); margin-bottom:6px;">GROUP SIZE</label>
+              <input type="number" placeholder="2" class="t-input" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px; outline:none;" />
+            </div>
+          </div>
+          <button class="btn btn-primary search-btn" data-service="Tour Package" style="width:100%; margin-top:16px; padding:14px;">Request Tour Guide</button>
+        </div>
+
+        <!-- CARS PANEL -->
+        <div id="panel-cars" class="travel-panel" style="display:none;">
+          <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:16px;">
+            <div>
+              <label style="display:block; font-family:var(--mono); font-size:10px; color:var(--gold); margin-bottom:6px;">PICK-UP LOCATION</label>
+              <input type="text" placeholder="Abuja Airport" class="t-input" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px; outline:none;" />
+            </div>
+            <div>
+              <label style="display:block; font-family:var(--mono); font-size:10px; color:var(--gold); margin-bottom:6px;">PICK-UP DATE</label>
+              <input type="date" class="t-input" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px; outline:none;" />
+            </div>
+            <div>
+              <label style="display:block; font-family:var(--mono); font-size:10px; color:var(--gold); margin-bottom:6px;">DROP-OFF DATE</label>
+              <input type="date" class="t-input" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px; outline:none;" />
+            </div>
+            <div>
+              <label style="display:block; font-family:var(--mono); font-size:10px; color:var(--gold); margin-bottom:6px;">VEHICLE TYPE</label>
+              <select class="t-input" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px; outline:none;">
+                <option value="" disabled selected>Select Vehicle</option>
+                <option>SUV (With Driver)</option><option>Sedan (With Driver)</option><option>Luxury Bus</option><option>Self-Drive</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn btn-primary search-btn" data-service="Car Hire" style="width:100%; margin-top:16px; padding:14px;">Reserve Vehicle</button>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- MILEAGE MALL PROMO -->
+  <section style="background: var(--bg-surface); border-bottom: 1px solid var(--line-light); padding: 40px 0;">
+    <div class="container">
+      <div style="display:flex; justify-content:space-between; align-items:center; background: var(--bg-main); border:1px solid var(--gold); border-radius: var(--r-md); padding: 32px; flex-wrap:wrap; gap:24px;">
+        <div>
+          <h3 style="color: var(--white); font-size:1.8rem; margin-bottom:8px;">✈️ MileageMall Rewards</h3>
+          <p style="color: var(--text-muted); max-width: 600px;">Earn miles while you travel, book flights, and shop. Track your airline loyalty programs, find shopping multipliers, and offset your carbon footprint — all in one hub.</p>
+        </div>
+        <a href="/rewards" class="btn btn-primary" style="padding:16px 32px; font-size:1.1rem; flex-shrink:0;">Launch Rewards Dashboard</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Booking Modal -->
+  <div id="booking-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:9999; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+    <div style="background:var(--bg-card); border:1px solid var(--gold); border-radius:var(--r-md); width:100%; max-width:500px; padding:32px;">
+      <h3 style="font-size:1.5rem; color:var(--gold); margin-bottom:8px;">Complete Your Request</h3>
+      <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:24px;">Please provide your contact details so our travel desk can confirm your <span id="modal-service-name" style="color:var(--white); font-weight:bold;"></span> booking.</p>
+      
+      <div style="display:flex; flex-direction:column; gap:16px; margin-bottom:24px;">
+        <div>
+          <label style="display:block; font-family:var(--mono); font-size:10px; color:var(--gold); margin-bottom:4px;">FULL NAME</label>
+          <input id="m-name" type="text" placeholder="John Doe" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
+        </div>
+        <div>
+          <label style="display:block; font-family:var(--mono); font-size:10px; color:var(--gold); margin-bottom:4px;">EMAIL ADDRESS</label>
+          <input id="m-email" type="email" placeholder="john@company.com" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
+        </div>
+        <div>
+          <label style="display:block; font-family:var(--mono); font-size:10px; color:var(--gold); margin-bottom:4px;">PHONE NUMBER</label>
+          <input id="m-phone" type="tel" placeholder="+234 800 000 0000" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
+        </div>
+      </div>
+
+      <div style="display:flex; gap:12px;">
+        <button id="cancel-modal" class="btn btn-outline" style="flex:1;">Cancel</button>
+        <button id="submit-booking" class="btn btn-primary" style="flex:1;">Submit Request</button>
+      </div>
+    </div>
+  </div>
+
+  <script is:inline define:vars={{ supabaseUrl, supabaseAnonKey }}>
+    let supabaseClient = null;
+    let currentService = "";
+    let currentDetails = {};
+
+    async function getSupabase() {
+      if (supabaseClient) return supabaseClient;
+      const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+      supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+      return supabaseClient;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Populate Country List safely via JS
+      const countries = ["Afghanistan","Albania","Algeria","Andorra","Angola","Antigua and Barbuda","Argentina","Armenia","Australia","Austria","Azerbaijan","Bahamas","Bahrain","Bangladesh","Barbados","Belarus","Belgium","Belize","Benin","Bhutan","Bolivia","Bosnia and Herzegovina","Botswana","Brazil","Brunei","Bulgaria","Burkina Faso","Burundi","Cabo Verde","Cambodia","Cameroon","Canada","Central African Republic","Chad","Chile","China","Colombia","Comoros","Congo","Costa Rica","Croatia","Cuba","Cyprus","Czech Republic","Denmark","Djibouti","Dominica","Dominican Republic","Ecuador","Egypt","El Salvador","Equatorial Guinea","Eritrea","Estonia","Eswatini","Ethiopia","Fiji","Finland","France","Gabon","Gambia","Georgia","Germany","Ghana","Greece","Grenada","Guatemala","Guinea","Guinea-Bissau","Guyana","Haiti","Honduras","Hungary","Iceland","India","Indonesia","Iran","Iraq","Ireland","Israel","Italy","Jamaica","Japan","Jordan","Kazakhstan","Kenya","Kiribati","Kuwait","Kyrgyzstan","Laos","Latvia","Lebanon","Lesotho","Liberia","Libya","Liechtenstein","Lithuania","Luxembourg","Madagascar","Malawi","Malaysia","Maldives","Mali","Malta","Marshall Islands","Mauritania","Mauritius","Mexico","Micronesia","Moldova","Monaco","Mongolia","Montenegro","Morocco","Mozambique","Myanmar","Namibia","Nauru","Nepal","Netherlands","New Zealand","Nicaragua","Niger","Nigeria","North Korea","North Macedonia","Norway","Oman","Pakistan","Palau","Palestine","Panama","Papua New Guinea","Paraguay","Peru","Philippines","Poland","Portugal","Qatar","Romania","Russia","Rwanda","Saint Kitts and Nevis","Saint Lucia","Saint Vincent and the Grenadines","Samoa","San Marino","Sao Tome and Principe","Saudi Arabia","Senegal","Serbia","Seychelles","Sierra Leone","Singapore","Slovakia","Slovenia","Solomon Islands","Somalia","South Africa","South Korea","South Sudan","Spain","Sri Lanka","Sudan","Suriname","Sweden","Switzerland","Syria","Taiwan","Tajikistan","Tanzania","Thailand","Timor-Leste","Togo","Tonga","Trinidad and Tobago","Tunisia","Turkey","Turkmenistan","Tuvalu","Uganda","Ukraine","United Arab Emirates","United Kingdom","United States","Uruguay","Uzbekistan","Vanuatu","Vatican City","Venezuela","Vietnam","Yemen","Zambia","Zimbabwe"];
+      const datalist = document.getElementById('country-list');
+      if (datalist) {
+        countries.forEach(c => {
+          const opt = document.createElement('option');
+          opt.value = c;
+          datalist.appendChild(opt);
+        });
+      }
+
+      // Tab Switching Logic
+      const tabs = document.querySelectorAll('.travel-tab');
+      const panels = document.querySelectorAll('.travel-panel');
+
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          tabs.forEach(t => { t.classList.remove('active'); t.style.background = 'none'; t.style.color = 'var(--text-muted)'; });
+          panels.forEach(p => p.style.display = 'none');
+
+          tab.classList.add('active');
+          tab.style.background = 'rgba(197, 160, 89, 0.1)';
+          tab.style.color = 'var(--gold)';
+          
+          document.getElementById(`panel-${tab.dataset.target}`).style.display = 'block';
+        });
+      });
+
+      if(tabs.length > 0) {
+        tabs[0].style.background = 'rgba(197, 160, 89, 0.1)';
+        tabs[0].style.color = 'var(--gold)';
+      }
+
+      // Modal Logic
+      const modal = document.getElementById('booking-modal');
+      const cancelBtn = document.getElementById('cancel-modal');
+      const submitBtn = document.getElementById('submit-booking');
+
+      document.querySelectorAll('.search-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          currentService = e.currentTarget.dataset.service;
+          const activePanel = e.currentTarget.closest('.travel-panel');
+          const inputs = activePanel.querySelectorAll('.t-input');
+          currentDetails = {};
+          let isValid = true;
+
+          // Validate all fields
+          inputs.forEach((input) => {
+            const label = input.previousElementSibling.textContent.trim();
+            const val = input.value.trim();
+            
+            if (!val) {
+              isValid = false;
+              input.style.borderColor = '#ef4444'; // Highlight empty fields red
+            } else {
+              input.style.borderColor = 'var(--line-light)'; // Reset
+            }
+            currentDetails[label] = val;
+          });
+
+          if (!isValid) {
+            alert('Please fill in all fields before proceeding.');
+            return;
+          }
+
+          document.getElementById('modal-service-name').textContent = currentService;
+          modal.style.display = 'flex';
+        });
+      });
+
+      cancelBtn.addEventListener('click', () => modal.style.display = 'none');
+
+      submitBtn.addEventListener('click', async () => {
+        const name = document.getElementById('m-name').value.trim();
+        const email = document.getElementById('m-email').value.trim();
+        const phone = document.getElementById('m-phone').value.trim();
+
+        if (!name || !email || !phone) return alert('Please fill all contact fields.');
+
+        submitBtn.textContent = 'Submitting...'; submitBtn.disabled = true;
+
+        try {
+          const response = await fetch('/api/travel-book', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              service_type: currentService,
+              customer_name: name,
+              customer_email: email,
+              customer_phone: phone,
+              details: currentDetails
+            })
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(errorText || 'Failed to submit request');
+          }
+
+          alert(`Request submitted successfully!\n\nA confirmation email has been sent to ${email}. Our travel desk will contact you shortly regarding your ${currentService} request.`);
+          modal.style.display = 'none';
+          
+          document.getElementById('m-name').value = '';
+          document.getElementById('m-email').value = '';
+          document.getElementById('m-phone').value = '';
+          submitBtn.textContent = 'Submit Request'; submitBtn.disabled = false;
+
+        } catch (err) {
+          alert('Error: ' + err.message);
+          submitBtn.textContent = 'Submit Request'; submitBtn.disabled = false;
+        }
+      });
+    });
+  </script>
+</Layout>

@@ -1,0 +1,187 @@
+---
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout title="Get a Freight Quote - ABSL">
+  <div style="background: var(--bg-surface); padding: 60px 0; border-bottom: 1px solid var(--line-light);">
+    <div class="container">
+      <a href="/logistics" style="color: var(--gold); font-family: var(--mono); font-size: 12px; text-decoration: none; margin-bottom: 16px; display: inline-block;">&larr; Back to Logistics</a>
+      <h1 style="font-size:2.5rem; margin-bottom:8px;">Instant Freight Quote</h1>
+      <p style="color:var(--text-muted);">Get an estimated cost based on standard volumetric weight calculations.</p>
+    </div>
+  </div>
+
+  <div class="container" style="padding: 60px 24px; max-width: 900px;">
+    
+    <div style="display:grid; grid-template-columns: 1.2fr 1fr; gap:40px; align-items:start;">
+      
+      <!-- INPUT FORM -->
+      <div style="background:var(--bg-card); border:1px solid var(--line-light); border-radius:var(--r-md); padding:32px;">
+        <h2 style="font-size:1.4rem; color:var(--gold); margin-bottom:24px; border-bottom:1px solid var(--line-light); padding-bottom:12px;">Shipment Details</h2>
+        
+        <div style="margin-bottom:20px;">
+          <label style="display:block; font-family:var(--mono); font-size:11px; color:var(--gold); margin-bottom:8px;">FREIGHT TYPE</label>
+          <select id="f-type" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px; outline:none;">
+            <option value="air">Air Freight (Express)</option>
+            <option value="ocean">Ocean Freight (FCL/LCL)</option>
+            <option value="ground">Ground / Road Freight</option>
+          </select>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px;">
+          <div>
+            <label style="display:block; font-family:var(--mono); font-size:11px; color:var(--gold); margin-bottom:8px;">ORIGIN</label>
+            <input id="f-origin" type="text" placeholder="e.g. Lagos, Nigeria" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
+          </div>
+          <div>
+            <label style="display:block; font-family:var(--mono); font-size:11px; color:var(--gold); margin-bottom:8px;">DESTINATION</label>
+            <input id="f-dest" type="text" placeholder="e.g. London, UK" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
+          </div>
+        </div>
+
+        <h3 style="font-size:1.1rem; color:var(--white); margin-top:32px; margin-bottom:16px; border-bottom:1px solid var(--line-light); padding-bottom:8px;">Package Dimensions</h3>
+        
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:12px; margin-bottom:20px;">
+          <div>
+            <label style="display:block; font-family:var(--mono); font-size:11px; color:var(--text-muted); margin-bottom:6px;">LENGTH (cm)</label>
+            <input id="f-l" type="number" placeholder="e.g. 30" min="1" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
+          </div>
+          <div>
+            <label style="display:block; font-family:var(--mono); font-size:11px; color:var(--text-muted); margin-bottom:6px;">WIDTH (cm)</label>
+            <input id="f-w" type="number" placeholder="e.g. 30" min="1" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
+          </div>
+          <div>
+            <label style="display:block; font-family:var(--mono); font-size:11px; color:var(--text-muted); margin-bottom:6px;">HEIGHT (cm)</label>
+            <input id="f-h" type="number" placeholder="e.g. 30" min="1" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
+          </div>
+          <div>
+            <label style="display:block; font-family:var(--mono); font-size:11px; color:var(--gold); margin-bottom:6px;">ACTUAL KG</label>
+            <input id="f-kg" type="number" placeholder="e.g. 5" min="0.1" step="0.1" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
+          </div>
+        </div>
+
+        <!-- Error Message -->
+        <div id="error-msg" style="display:none; color:#ef4444; font-size:0.85rem; margin-bottom:16px; font-weight:600; text-align:center;"></div>
+
+        <button id="calc-btn" type="button" class="btn btn-primary" style="width:100%; padding:16px; font-size:1.1rem; margin-top:12px;">Calculate Estimate</button>
+      </div>
+
+      <!-- RESULTS PANEL -->
+      <div>
+        <div id="empty-state" style="background:var(--bg-surface); border:1px dashed var(--line); border-radius:var(--r-md); padding:40px; text-align:center; color:var(--text-muted);">
+          <div style="font-size:32px; margin-bottom:16px;">📦</div>
+          <p>Enter your origin, destination, and package details to see your estimated shipping cost.</p>
+        </div>
+
+        <div id="result-panel" style="display:none; background:linear-gradient(160deg,var(--bg-card),var(--bg-surface)); border:1px solid var(--gold); border-radius:var(--r-md); padding:32px;">
+          <div style="text-align:center; border-bottom:1px solid var(--line-light); padding-bottom:20px; margin-bottom:20px;">
+            <div id="res-route" style="font-size:0.9rem; color:var(--text-muted); font-weight:600; margin-bottom:8px;">- → -</div>
+            <div style="font-family:var(--mono); font-size:11px; color:var(--gold); text-transform:uppercase; letter-spacing:1px;">Estimated Cost</div>
+            <div id="res-total" style="font-family:var(--display); font-size:2.5rem; color:var(--white); font-weight:700; margin-top:8px;">₦0</div>
+            <div id="res-time" style="font-size:0.85rem; color:var(--text-muted); margin-top:4px;">Transit: 3-5 Business Days</div>
+          </div>
+          
+          <div style="display:flex; flex-direction:column; gap:12px; font-size:0.9rem; font-family:var(--mono);">
+            <div style="display:flex; justify-content:space-between; color:var(--text-light);">
+              <span>Actual Weight:</span> <span id="res-actual">0 kg</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; color:var(--text-light);">
+              <span>Volumetric Weight:</span> <span id="res-vol">0 kg</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; color:var(--gold); font-weight:600;">
+              <span>Chargeable Weight:</span> <span id="res-chargeable">0 kg</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; color:var(--text-light); border-top:1px dashed var(--line-light); padding-top:12px; margin-top:4px;">
+              <span>Base Rate:</span> <span id="res-base">₦0</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; color:var(--text-light);">
+              <span>Freight Charge:</span> <span id="res-freight">₦0</span>
+            </div>
+          </div>
+
+          <a href="/contact" class="btn btn-outline" style="width:100%; text-align:center; margin-top:24px;">Book This Shipment</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script is:inline>
+    document.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const typeParam = urlParams.get('type');
+      if (typeParam && ['air', 'ocean', 'ground'].includes(typeParam)) {
+        document.getElementById('f-type').value = typeParam;
+      }
+
+      const calcBtn = document.getElementById('calc-btn');
+      const errorEl = document.getElementById('error-msg');
+      
+      calcBtn.addEventListener('click', () => {
+        const type = document.getElementById('f-type').value;
+        const origin = document.getElementById('f-origin').value.trim();
+        const dest = document.getElementById('f-dest').value.trim();
+        const l = Number(document.getElementById('f-l').value);
+        const w = Number(document.getElementById('f-w').value);
+        const h = Number(document.getElementById('f-h').value);
+        const actualKg = Number(document.getElementById('f-kg').value);
+
+        // Validation
+        if (!origin || !dest) {
+          errorEl.textContent = 'Please enter both Origin and Destination.';
+          errorEl.style.display = 'block';
+          return;
+        }
+        
+        if (!l || !w || !h || !actualKg) {
+          errorEl.textContent = 'Please enter valid package dimensions and weight.';
+          errorEl.style.display = 'block';
+          return;
+        }
+
+        // Hide error if validation passes
+        errorEl.style.display = 'none';
+
+        // Rates & Divisors based on freight type
+        let divisor = 5000; // Air standard
+        let baseRate = 25000; // NGN
+        let perKgRate = 12000; // NGN
+        let transit = '3 - 5 Business Days';
+
+        if (type === 'ocean') {
+          divisor = 1000;
+          baseRate = 85000;
+          perKgRate = 2500;
+          transit = '20 - 30 Business Days';
+        } else if (type === 'ground') {
+          divisor = 3000;
+          baseRate = 15000;
+          perKgRate = 4500;
+          transit = '2 - 4 Business Days (Domestic)';
+        }
+
+        // Calculations
+        const volumetricKg = (l * w * h) / divisor;
+        const chargeableKg = Math.max(actualKg, volumetricKg);
+        
+        const freightCharge = chargeableKg * perKgRate;
+        const total = baseRate + freightCharge;
+
+        const fmt = (num) => '₦' + Math.round(num).toLocaleString();
+
+        // Update UI
+        document.getElementById('empty-state').style.display = 'none';
+        document.getElementById('result-panel').style.display = 'block';
+        
+        document.getElementById('res-route').textContent = `${origin} → ${dest}`;
+        document.getElementById('res-total').textContent = fmt(total);
+        document.getElementById('res-time').textContent = transit;
+        document.getElementById('res-actual').textContent = actualKg + ' kg';
+        document.getElementById('res-vol').textContent = volumetricKg.toFixed(2) + ' kg';
+        document.getElementById('res-chargeable').textContent = chargeableKg.toFixed(2) + ' kg';
+        document.getElementById('res-base').textContent = fmt(baseRate);
+        document.getElementById('res-freight').textContent = fmt(freightCharge);
+      });
+    });
+  </script>
+</Layout>
