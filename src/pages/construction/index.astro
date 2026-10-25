@@ -1,4 +1,4 @@
-﻿---
+---
 import Layout from '../../layouts/Layout.astro';
 import { supabase } from '../../lib/supabase';
 
@@ -150,6 +150,23 @@ try {
         </div>
       `;
       document.getElementById('results-list').innerHTML = html;
+const checkBtn = document.getElementById('checkout-estimate-btn');
+if (checkBtn) {
+  checkBtn.addEventListener('click', () => {
+    const existingCart = JSON.parse(localStorage.getItem('absl_cart') || '[]');
+    existingCart.push({
+      id: 'estimate-' + Date.now(),
+      title: 'Construction Estimate: ' + sqm + 'm2, ' + floors + ' Floor(s)',
+      price: Math.round(grandTotal),
+      category: 'Construction',
+      maxQty: 1,
+      qty: 1
+    });
+    localStorage.setItem('absl_cart', JSON.stringify(existingCart));
+    window.dispatchEvent(new Event('absl-cart-updated'));
+    window.location.href = '/checkout';
+  });
+}
       const ctaBtn = document.createElement('div');
       ctaBtn.style.cssText = 'margin-top:24px; text-align:center;';
       ctaBtn.innerHTML = '<a href="/contact" class="btn btn-outline" style="width:100%;padding:14px;font-size:0.9rem;">Contact Us for a More Professional BOQ</a>';

@@ -39,7 +39,11 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       <div style="padding:20px; background:var(--bg-surface); border-bottom:1px solid var(--line-light);">
         <h2 style="font-size:1.1rem; color:var(--gold); margin:0;">Current Stock Levels</h2>
       </div>
-      <table style="width:100%; border-collapse:collapse; font-family:var(--mono); font-size:12.5px;">
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:48px;">
+  <a href="/account" class="btn btn-primary" style="padding:16px; text-align:center; text-decoration:none;">Request Warehouse Space &rarr;</a>
+  <a href="/account" class="btn btn-outline" style="padding:16px; text-align:center; text-decoration:none;">Contact Support &rarr;</a>
+</div>
+<table style="width:100%; border-collapse:collapse; font-family:var(--mono); font-size:12.5px;">
         <thead>
           <tr style="text-align:left;">
             <th style="padding:16px; color:var(--text-muted); font-weight:normal;">SKU</th>
