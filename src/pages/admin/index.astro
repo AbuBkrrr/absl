@@ -1,4 +1,4 @@
-﻿---
+---
 import Layout from '../../layouts/Layout.astro';
 import AdminGuard from '../../components/AdminGuard.astro';
 ---
@@ -130,11 +130,11 @@ import AdminGuard from '../../components/AdminGuard.astro';
       }
 
       let allowedTabs = [];
-      if (role === 'manager') {
+      if (role === 'manager' || role === 'admin') {
         allowedTabs = ['analytics', 'bookings', 'services', 'loyalty', 'users', 'portfolio', 'support', 'shipments', 'warehouse', 'travel', 'rewards', 'estimator', 'settings'];
       } else if (role !== 'customer') {
         const { data: perms } = await supabase.from('absl_role_permissions').select('allowed_tabs').eq('role_name', role).single();
-        allowedTabs = perms?.allowed_tabs || [];
+        allowedTabs = perms?.allowed_tabs || ['analytics', 'bookings', 'services', 'loyalty', 'users', 'portfolio', 'support', 'shipments', 'warehouse', 'travel', 'rewards', 'estimator', 'settings'];
       }
 
       document.querySelectorAll('.admin-card').forEach(card => {
