@@ -1,8 +1,10 @@
----
+﻿---
 import Layout from '../../layouts/Layout.astro';
-import { supabase } from '../../lib/supabase';
+import { createClient } from '../../lib/supabase';
 
 // 1. Authenticate User
+// Initialize SSR client with cookies
+const supabase = createClient({ request: Astro.request, cookies: Astro.cookies });
 const { data: { user } } = await supabase.auth.getUser();
 
 if (!user) {
@@ -137,7 +139,7 @@ const rows = bookings || [];
   </div>
 
   <script>
-    import { supabase } from '../../lib/supabase';
+    import { createClient } from '../../lib/supabase';
 
     // 1. Tab Switching Logic
     const tabs = document.querySelectorAll('.tab-btn');
@@ -178,7 +180,9 @@ const rows = bookings || [];
       btn.disabled = true;
       msg.style.display = 'none';
 
-      const { data: { user } } = await supabase.auth.getUser();
+      // Initialize SSR client with cookies
+const supabase = createClient({ request: Astro.request, cookies: Astro.cookies });
+const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       // Upsert into profiles
