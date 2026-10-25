@@ -39,7 +39,21 @@ const settings = (configData && configData.settings) ? configData.settings : {
 const flwKey = import.meta.env.PUBLIC_FLUTTERWAVE_PUBLIC_KEY;
 ---
 
-<Layout title="Construction Lifecycle Estimator - ABSL">
+
+  <!-- CONSTRUCTION HERO SECTION -->
+  <div style="position:relative; padding: 100px 0 80px; background: linear-gradient(rgba(10, 17, 40, 0.75), rgba(10, 17, 40, 0.95)), url('https://images.unsplash.com/photo-1541888946425-d81bb19240f5?q=80&w=2070&auto=format&fit=crop'); background-size: cover; background-position: center; border-bottom: 1px solid var(--line); margin-bottom: 40px;">
+    <div class="container" style="position:relative; z-index:2; text-align:center;">
+      <h1 style="font-size: clamp(2.5rem, 6vw, 4rem); line-height: 1.1; margin-bottom: 24px; color: var(--white);">
+        Masterpieces Built to Last.
+      </h1>
+      <p style="font-size: 1.15rem; color: var(--text-light); max-width: 700px; margin: 0 auto 40px; line-height: 1.6;">
+        From luxury residential remodels to large-scale commercial infrastructure, ABSL delivers certified craftsmanship, premium materials, and a 10-year structural guarantee.
+      </p>
+      <a href="#estimator" class="btn btn-primary" style="padding: 16px 48px; font-size: 1.1rem; display: inline-block;">
+        Start Your Project Estimator &darr;
+      </a>
+    </div>
+  </div>
   <style is:global>
     .bp-wrap { --navy-950: #0a1628; --navy-900: #0e1d34; --navy-850: #11223c; --navy-800: #132846; --navy-700: #1c3358; --gold: #f5a623; --gold-soft: rgba(245, 166, 35, 0.12); --ink: #edf1f7; --ink-muted: #8a96ac; --ink-faint: #5c6883; --line: rgba(245, 166, 35, 0.16); --line-soft: rgba(255, 255, 255, 0.06); --display: "Space Grotesk", sans-serif; --body: "Inter", sans-serif; --mono: "IBM Plex Mono", monospace; font-family: var(--body); background: var(--navy-950); color: var(--ink); padding: 40px 20px 80px; border-radius: 16px; margin-top: 20px; position: relative; }
     .bp-wrap::before { content:""; position:absolute; inset:0; background-image: repeating-linear-gradient(0deg, rgba(245,166,35,.045) 0 1px, transparent 1px 40px), repeating-linear-gradient(90deg, rgba(245,166,35,.045) 0 1px, transparent 1px 40px), repeating-linear-gradient(0deg, rgba(245,166,35,.06) 0 1px, transparent 1px 200px), repeating-linear-gradient(90deg, rgba(245,166,35,.06) 0 1px, transparent 1px 200px); pointer-events:none; z-index:0; border-radius: 16px; }
@@ -705,4 +719,5 @@ const flwKey = import.meta.env.PUBLIC_FLUTTERWAVE_PUBLIC_KEY;
       </div>
     </div>
   </div>
+  <script type="application/json" id="estimator-rates" set:html={JSON.stringify(rateMap)}></script>
 </Layout>

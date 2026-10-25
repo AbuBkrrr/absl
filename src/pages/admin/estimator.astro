@@ -1,291 +1,89 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+import AdminGuard from '../../components/AdminGuard.astro';
+import { supabase } from '../../lib/supabase';
+
+const { data: rates } = await supabase.from('absl_estimator_rates').select('*');
+const getVal = (key) => rates?.find(r => r.key === key)?.value || 0;
 ---
 
-<Layout title="Estimator Settings - ABSL Admin">
-  <div style="background: var(--bg-surface); padding: 60px 0; border-bottom: 1px solid var(--line-light);">
-    <div class="container" style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:16px;">
+<Layout title="Estimator Rates - ABSL Admin">
+  <AdminGuard />
+  <div class="container" style="padding: 80px 24px; max-width: 900px;">
+    <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:32px;">
       <div>
-        <h1 style="font-size:2.5rem; margin:0;">Estimator Settings</h1>
-        <p style="color:var(--text-muted); margin-top:8px;">Manage materials, finishing options, and utility rates.</p>
+        <h1 style="font-size:2.5rem; color:var(--white); margin:0;">Estimator Rates</h1>
+        <p style="color:var(--text-muted); margin-top:8px;">Manage the live material prices and construction rates.</p>
       </div>
       <a href="/admin" class="btn btn-outline" style="padding:10px 24px;">&larr; Back to Admin</a>
     </div>
-  </div>
 
-  <div class="container" style="padding: 40px 24px 80px;">
-    <div style="background:var(--bg-surface); border:1px solid var(--line-light); border-radius:var(--r-md); padding:32px; margin-bottom:32px;">
+    <div style="background:var(--bg-card); border:1px solid var(--line-light); border-radius:var(--r-md); padding:32px;">
       
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; border-bottom:1px solid var(--line-light); padding-bottom:16px;">
-        <h2 style="font-size:1.4rem; color:var(--gold); margin:0;">Configuration Data</h2>
-        <button id="publish-btn" class="btn btn-primary" style="background:var(--gold); color:var(--bg-main); font-weight:700;">🚀 Publish Updates</button>
+      <h2 style="font-size:1.2rem; color:var(--gold); margin-bottom:16px;">Material Prices (₦)</h2>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:16px; margin-bottom:32px;">
+        <div><label style="font-size:11px; color:var(--text-muted);">Cement (per bag)</label><input id="cement_price" type="number" value={getVal('cement_price')} style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" /></div>
+        <div><label style="font-size:11px; color:var(--text-muted);">Rebar (per ton)</label><input id="rebar_price" type="number" value={getVal('rebar_price')} style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" /></div>
+        <div><label style="font-size:11px; color:var(--text-muted);">Sand (per ton)</label><input id="sand_price" type="number" value={getVal('sand_price')} style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" /></div>
+        <div><label style="font-size:11px; color:var(--text-muted);">Gravel (per ton)</label><input id="gravel_price" type="number" value={getVal('gravel_price')} style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" /></div>
+        <div><label style="font-size:11px; color:var(--text-muted);">Blocks (per piece)</label><input id="blocks_price" type="number" value={getVal('blocks_price')} style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" /></div>
+        <div><label style="font-size:11px; color:var(--text-muted);">Roofing (per sheet)</label><input id="roofing_price" type="number" value={getVal('roofing_price')} style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" /></div>
+        <div><label style="font-size:11px; color:var(--text-muted);">Timber (per plank)</label><input id="timber_price" type="number" value={getVal('timber_price')} style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" /></div>
+        <div><label style="font-size:11px; color:var(--text-muted);">Tiles (per sqm)</label><input id="tiles_price" type="number" value={getVal('tiles_price')} style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" /></div>
+        <div><label style="font-size:11px; color:var(--text-muted);">Paint (per bucket)</label><input id="paint_price" type="number" value={getVal('paint_price')} style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" /></div>
+        <div><label style="font-size:11px; color:var(--text-muted);">Doors (per unit)</label><input id="doors_price" type="number" value={getVal('doors_price')} style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" /></div>
+        <div><label style="font-size:11px; color:var(--text-muted);">Windows (per unit)</label><input id="windows_price" type="number" value={getVal('windows_price')} style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" /></div>
+        <div><label style="font-size:11px; color:var(--text-muted);">Electrical (per meter)</label><input id="electrical_price" type="number" value={getVal('electrical_price')} style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" /></div>
+        <div><label style="font-size:11px; color:var(--text-muted);">Plumbing (per unit)</label><input id="plumbing_price" type="number" value={getVal('plumbing_price')} style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" /></div>
       </div>
 
-      <div id="settings-form">
-        
-        <!-- Phase 1 Materials -->
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-          <h3 style="font-size:1.2rem; color:var(--white); margin:0;">Phase 1: Materials</h3>
-          <button class="add-btn" data-target="materials" style="background:none; border:1px solid var(--gold); color:var(--gold); padding:4px 12px; border-radius:4px; cursor:pointer;">+ Add Material</button>
-        </div>
-        <div style="overflow-x:auto; margin-bottom:32px;">
-          <table style="width:100%; border-collapse:collapse; font-family:var(--mono); font-size:12.5px;">
-            <thead>
-              <tr style="text-align:left; background:var(--bg-card);">
-                <th style="padding:12px; color:var(--text-muted);">Name</th>
-                <th style="padding:12px; color:var(--text-muted);">Unit</th>
-                <th style="padding:12px; color:var(--text-muted);">Qty/SQM</th>
-                <th style="padding:12px; color:var(--text-muted);">Base Price (₦)</th>
-                <th style="padding:12px; color:var(--text-muted);"></th>
-              </tr>
-            </thead>
-            <tbody id="materials-body"></tbody>
-          </table>
-        </div>
-
-        <!-- Phase 2 Finishing -->
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-          <h3 style="font-size:1.2rem; color:var(--white); margin:0;">Phase 2: Finishing & Handover</h3>
-          <button class="add-btn" data-target="finishing" style="background:none; border:1px solid var(--gold); color:var(--gold); padding:4px 12px; border-radius:4px; cursor:pointer;">+ Add Finishing</button>
-        </div>
-        <div style="overflow-x:auto; margin-bottom:32px;">
-          <table style="width:100%; border-collapse:collapse; font-family:var(--mono); font-size:12.5px;">
-            <thead>
-              <tr style="text-align:left; background:var(--bg-card);">
-                <th style="padding:12px; color:var(--text-muted);">Name</th>
-                <th style="padding:12px; color:var(--text-muted);">Unit</th>
-                <th style="padding:12px; color:var(--text-muted);">Type (SQM/Set)</th>
-                <th style="padding:12px; color:var(--text-muted);">Base Price (₦)</th>
-                <th style="padding:12px; color:var(--text-muted);"></th>
-              </tr>
-            </thead>
-            <tbody id="finishing-body"></tbody>
-          </table>
-        </div>
-
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom:32px;">
-          <div>
-            <label style="display:block; font-size:11px; color:var(--text-muted); margin-bottom:4px;">Labor Multiplier (%)</label>
-            <input type="number" step="0.01" id="p2-labor" style="width:100%; padding:10px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
-          </div>
-          <div>
-            <label style="display:block; font-size:11px; color:var(--text-muted); margin-bottom:4px;">Architect Fee (%)</label>
-            <input type="number" step="0.01" id="p2-arch" style="width:100%; padding:10px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
-          </div>
-        </div>
-
-        <!-- Phase 3 Utilities -->
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-          <h3 style="font-size:1.2rem; color:var(--white); margin:0;">Phase 3: Monthly Utilities</h3>
-          <button class="add-btn" data-target="utilities" style="background:none; border:1px solid var(--gold); color:var(--gold); padding:4px 12px; border-radius:4px; cursor:pointer;">+ Add Utility</button>
-        </div>
-        <div style="overflow-x:auto;">
-          <table style="width:100%; border-collapse:collapse; font-family:var(--mono); font-size:12.5px;">
-            <thead>
-              <tr style="text-align:left; background:var(--bg-card);">
-                <th style="padding:12px; color:var(--text-muted);">Name</th>
-                <th style="padding:12px; color:var(--text-muted);">Unit</th>
-                <th style="padding:12px; color:var(--text-muted);">Multiplier</th>
-                <th style="padding:12px; color:var(--text-muted);">Base Price (₦)</th>
-                <th style="padding:12px; color:var(--text-muted);"></th>
-              </tr>
-            </thead>
-            <tbody id="utilities-body"></tbody>
-          </table>
-        </div>
-
+      <h2 style="font-size:1.2rem; color:var(--gold); margin-bottom:16px;">Labor Rates (₦ per sqm)</h2>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:16px; margin-bottom:32px;">
+        <div><label style="font-size:11px; color:var(--text-muted);">Basic Build</label><input id="rate_basic" type="number" value={getVal('rate_basic')} style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" /></div>
+        <div><label style="font-size:11px; color:var(--text-muted);">Mid-Range Build</label><input id="rate_mid" type="number" value={getVal('rate_mid')} style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" /></div>
+        <div><label style="font-size:11px; color:var(--text-muted);">Luxury Build</label><input id="rate_luxury" type="number" value={getVal('rate_luxury')} style="width:100%; padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" /></div>
       </div>
+
+      <button id="save-rates-btn" class="btn btn-primary">Save All Rates</button>
+      <div id="rates-msg" style="display:none; margin-top:16px; padding:12px; text-align:center; border-radius:4px; font-size:0.9rem;"></div>
     </div>
   </div>
 
-  <div id="toast-container" style="position:fixed; bottom:24px; right:24px; z-index:9999; display:flex; flex-direction:column; gap:10px;"></div>
+  <script>
+    document.getElementById('save-rates-btn').addEventListener('click', async () => {
+      const btn = document.getElementById('save-rates-btn');
+      const msg = document.getElementById('rates-msg');
+      btn.textContent = 'Saving...';
+      btn.disabled = true;
 
-  <script is:inline define:vars={{ supabaseUrl, supabaseAnonKey }}>
-    let supabaseClient = null;
-    
-    // Fallback data (matches DB default)
-    let globalSettings = {
-      materials: [
-        { id: 'cement', name: 'Cement', unit: 'bags', qtyPerSqm: 0.45, basePrice: 12500 },
-        { id: 'rebar', name: 'Rebar', unit: 'tons', qtyPerSqm: 0.018, basePrice: 1250000 },
-        { id: 'sand', name: 'Sand', unit: 'tons', qtyPerSqm: 0.040, basePrice: 45000 },
-        { id: 'gravel', name: 'Gravel', unit: 'tons', qtyPerSqm: 0.035, basePrice: 55000 },
-        { id: 'blocks', name: 'Blocks', unit: 'pcs', qtyPerSqm: 9.5, basePrice: 650 },
-        { id: 'roofing', name: 'Roofing Sheets', unit: 'sheets', qtyPerSqm: 0.18, basePrice: 8500 },
-        { id: 'timber', name: 'Timber', unit: 'planks', qtyPerSqm: 0.25, basePrice: 4500 },
-        { id: 'tiles', name: 'Tiles', unit: 'sqm', qtyPerSqm: 1.08, basePrice: 6500 },
-        { id: 'paint', name: 'Paint', unit: 'buckets', qtyPerSqm: 0.045, basePrice: 45000 },
-        { id: 'doors', name: 'Doors', unit: 'units', qtyPerSqm: 0.018, basePrice: 85000 },
-        { id: 'windows', name: 'Windows', unit: 'units', qtyPerSqm: 0.035, basePrice: 65000 },
-        { id: 'electrical', name: 'Electrical Wiring', unit: 'm', qtyPerSqm: 2.8, basePrice: 850 },
-        { id: 'plumbing', name: 'Plumbing', unit: 'sqm', qtyPerSqm: 1, basePrice: 12000 }
-      ],
-      finishing: [
-        { id: 'cleaning', name: 'Post-Construction Cleaning', unit: 'sqm', basePrice: 1500, type: 'sqm' },
-        { id: 'living', name: 'Living Room Set', unit: 'set', basePrice: 850000, type: 'set' },
-        { id: 'bedroom', name: 'Bedroom Set', unit: 'set', basePrice: 650000, type: 'set' },
-        { id: 'kitchen', name: 'Kitchen Appliances', unit: 'set', basePrice: 950000, type: 'set' },
-        { id: 'curtains', name: 'Curtains', unit: 'sqm', basePrice: 8500, type: 'sqm' }
-      ],
-      laborMultiplier: 0.40,
-      archFeeMultiplier: 0.10,
-      utilities: [
-        { id: 'elec', name: 'Electricity', unit: 'kWh', basePrice: 225, multiplier: 9 },
-        { id: 'water', name: 'Water', unit: 'm3', basePrice: 350, multiplier: 16 },
-        { id: 'gas', name: 'Gas', unit: 'cylinders', basePrice: 15500, multiplier: 2 },
-        { id: 'waste', name: 'Waste Disposal', unit: 'flat', basePrice: 5000, multiplier: 1 }
-      ]
-    };
+      const keys = ['cement_price', 'rebar_price', 'sand_price', 'gravel_price', 'blocks_price', 'roofing_price', 'timber_price', 'tiles_price', 'paint_price', 'doors_price', 'windows_price', 'electrical_price', 'plumbing_price', 'rate_basic', 'rate_mid', 'rate_luxury'];
+      
+      const updates = keys.map(key => ({
+        key: key,
+        value: Number(document.getElementById(key).value)
+      }));
 
-    async function getSupabase() {
-      if (supabaseClient) return supabaseClient;
       const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
-      supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
-      return supabaseClient;
-    }
+      const supabase = createClient(import.meta.env.PUBLIC_SUPABASE_URL, import.meta.env.PUBLIC_SUPABASE_ANON_KEY);
 
-    function showToast(message, type = 'success') {
-      const container = document.getElementById('toast-container');
-      const toast = document.createElement('div');
-      const bgColor = type === 'success' ? 'var(--green)' : (type === 'error' ? '#ef4444' : 'var(--gold)');
-      toast.style.cssText = `background: var(--bg-card); border: 1px solid ${bgColor}; color: var(--white); padding: 16px 24px; border-radius: var(--r-md); font-family: var(--font-body); font-weight: 600; box-shadow: 0 10px 30px rgba(0,0,0,0.5);`;
-      toast.innerHTML = message;
-      container.appendChild(toast);
-      setTimeout(() => toast.remove(), 3000);
-    }
-
-    function renderForm() {
-      const s = globalSettings;
-      
-      // Render Materials
-      document.getElementById('materials-body').innerHTML = s.materials.map((m, idx) => `
-        <tr style="border-top:1px solid var(--line-light);">
-          <td style="padding:8px;"><input type="text" data-index="${idx}" data-field="name" class="mat-input" value="${m.name}" style="width:100%; padding:6px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" /></td>
-          <td style="padding:8px;"><input type="text" data-index="${idx}" data-field="unit" class="mat-input" value="${m.unit}" style="width:60px; padding:6px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" /></td>
-          <td style="padding:8px;"><input type="number" step="0.001" data-index="${idx}" data-field="qtyPerSqm" class="mat-input" value="${m.qtyPerSqm}" style="width:80px; padding:6px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" /></td>
-          <td style="padding:8px;"><input type="number" data-index="${idx}" data-field="basePrice" class="mat-input" value="${m.basePrice}" style="width:100px; padding:6px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" /></td>
-          <td style="padding:8px;"><button class="del-btn" data-target="materials" data-index="${idx}" style="background:none; border:none; color:#ef4444; cursor:pointer;">✕</button></td>
-        </tr>
-      `).join('');
-
-      // Render Finishing
-      document.getElementById('finishing-body').innerHTML = s.finishing.map((f, idx) => `
-        <tr style="border-top:1px solid var(--line-light);">
-          <td style="padding:8px;"><input type="text" data-index="${idx}" data-field="name" class="fin-input" value="${f.name}" style="width:100%; padding:6px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" /></td>
-          <td style="padding:8px;"><input type="text" data-index="${idx}" data-field="unit" class="fin-input" value="${f.unit}" style="width:60px; padding:6px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" /></td>
-          <td style="padding:8px;">
-            <select data-index="${idx}" data-field="type" class="fin-input" style="padding:6px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;">
-              <option value="sqm" ${f.type === 'sqm' ? 'selected' : ''}>Calculated by SQM</option>
-              <option value="set" ${f.type === 'set' ? 'selected' : ''}>User selects Qty (Set)</option>
-            </select>
-          </td>
-          <td style="padding:8px;"><input type="number" data-index="${idx}" data-field="basePrice" class="fin-input" value="${f.basePrice}" style="width:100px; padding:6px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" /></td>
-          <td style="padding:8px;"><button class="del-btn" data-target="finishing" data-index="${idx}" style="background:none; border:none; color:#ef4444; cursor:pointer;">✕</button></td>
-        </tr>
-      `).join('');
-
-      document.getElementById('p2-labor').value = s.laborMultiplier;
-      document.getElementById('p2-arch').value = s.archFeeMultiplier;
-
-      // Render Utilities
-      document.getElementById('utilities-body').innerHTML = s.utilities.map((u, idx) => `
-        <tr style="border-top:1px solid var(--line-light);">
-          <td style="padding:8px;"><input type="text" data-index="${idx}" data-field="name" class="util-input" value="${u.name}" style="width:100%; padding:6px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" /></td>
-          <td style="padding:8px;"><input type="text" data-index="${idx}" data-field="unit" class="util-input" value="${u.unit}" style="width:60px; padding:6px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" /></td>
-          <td style="padding:8px;"><input type="number" step="0.1" data-index="${idx}" data-field="multiplier" class="util-input" value="${u.multiplier}" style="width:80px; padding:6px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" /></td>
-          <td style="padding:8px;"><input type="number" data-index="${idx}" data-field="basePrice" class="util-input" value="${u.basePrice}" style="width:100px; padding:6px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" /></td>
-          <td style="padding:8px;"><button class="del-btn" data-target="utilities" data-index="${idx}" style="background:none; border:none; color:#ef4444; cursor:pointer;">✕</button></td>
-        </tr>
-      `).join('');
-    }
-
-    document.addEventListener('DOMContentLoaded', async () => {
-      const supabase = await getSupabase();
-      const { data } = await supabase.from('absl_estimator_settings').select('*').eq('id', 'default').single();
-      
-      if (data && data.settings) {
-        // Migrate old format to new array-based format on the fly
-        if (!Array.isArray(data.settings.finishing) && data.settings.phase2) {
-          const p = data.settings.phase2;
-          data.settings.finishing = [
-            { id: 'cleaning', name: 'Post-Construction Cleaning', unit: 'sqm', basePrice: p.cleaningRate, type: 'sqm' },
-            { id: 'living', name: 'Living Room Set', unit: 'set', basePrice: p.livingRoomSet, type: 'set' },
-            { id: 'bedroom', name: 'Bedroom Set', unit: 'set', basePrice: p.bedroomSet, type: 'set' },
-            { id: 'kitchen', name: 'Kitchen Appliances', unit: 'set', basePrice: p.kitchenAppliances, type: 'set' },
-            { id: 'curtains', name: 'Curtains', unit: 'sqm', basePrice: p.curtainsRate, type: 'sqm' }
-          ];
-          data.settings.laborMultiplier = p.laborMultiplier;
-          data.settings.archFeeMultiplier = p.archFeeMultiplier;
-        }
-        if (!Array.isArray(data.settings.utilities) && data.settings.utilities) {
-           const u = data.settings.utilities;
-           data.settings.utilities = [
-             { id: 'elec', name: 'Electricity', unit: 'kWh', basePrice: u.electricityPerKwh, multiplier: 9 },
-             { id: 'water', name: 'Water', unit: 'm3', basePrice: u.waterPerM3, multiplier: 16 },
-             { id: 'gas', name: 'Gas', unit: 'cylinders', basePrice: u.gasCylinder, multiplier: 2 },
-             { id: 'waste', name: 'Waste Disposal', unit: 'flat', basePrice: u.wasteDisposal, multiplier: 1 }
-           ];
-        }
-        globalSettings = data.settings;
-      }
-      renderForm();
-    });
-
-    // Add Row Logic
-    document.querySelectorAll('.add-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const target = btn.dataset.target;
-        if (target === 'materials') globalSettings.materials.push({ id: 'custom-' + Date.now(), name: 'New Material', unit: 'pcs', qtyPerSqm: 1, basePrice: 1000 });
-        if (target === 'finishing') globalSettings.finishing.push({ id: 'custom-' + Date.now(), name: 'New Item', unit: 'set', basePrice: 50000, type: 'set' });
-        if (target === 'utilities') globalSettings.utilities.push({ id: 'custom-' + Date.now(), name: 'New Utility', unit: 'unit', basePrice: 1000, multiplier: 1 });
-        renderForm();
-      });
-    });
-
-    // Delete Row Logic
-    document.addEventListener('click', (e) => {
-      if (e.target.classList.contains('del-btn')) {
-        const target = e.target.dataset.target;
-        const idx = Number(e.target.dataset.index);
-        globalSettings[target].splice(idx, 1);
-        renderForm();
-      }
-    });
-
-    // Publish Logic
-    document.getElementById('publish-btn').addEventListener('click', async () => {
-      const btn = document.getElementById('publish-btn');
-      btn.textContent = 'Publishing...'; btn.disabled = true;
-
-      // Read inputs back into globalSettings
-      document.querySelectorAll('.mat-input').forEach(input => {
-        globalSettings.materials[input.dataset.index][input.dataset.field] = input.type === 'number' ? Number(input.value) : input.value;
-      });
-      document.querySelectorAll('.fin-input').forEach(input => {
-        globalSettings.finishing[input.dataset.index][input.dataset.field] = input.type === 'number' ? Number(input.value) : input.value;
-      });
-      document.querySelectorAll('.util-input').forEach(input => {
-        globalSettings.utilities[input.dataset.index][input.dataset.field] = input.type === 'number' ? Number(input.value) : input.value;
-      });
-      
-      globalSettings.laborMultiplier = Number(document.getElementById('p2-labor').value);
-      globalSettings.archFeeMultiplier = Number(document.getElementById('p2-arch').value);
-
-      const supabase = await getSupabase();
-      const { error } = await supabase.from('absl_estimator_settings').upsert({ 
-        id: 'default', 
-        settings: globalSettings,
-        updated_at: new Date().toISOString()
-      });
+      const { error } = await supabase.from('absl_estimator_rates').upsert(updates);
 
       if (error) {
-        showToast('Failed to publish: ' + error.message, 'error');
-        btn.textContent = '🚀 Publish Updates'; btn.disabled = false;
+        msg.style.display = 'block';
+        msg.style.background = 'rgba(239, 68, 68, 0.1)';
+        msg.style.color = '#EF4444';
+        msg.style.border = '1px solid #EF4444';
+        msg.textContent = 'Error: ' + error.message;
+        btn.textContent = 'Save All Rates';
+        btn.disabled = false;
       } else {
-        showToast('✅ Successfully published!');
-        btn.textContent = '🚀 Publish Updates'; btn.disabled = false;
+        msg.style.display = 'block';
+        msg.style.background = 'rgba(16, 185, 129, 0.1)';
+        msg.style.color = '#10B981';
+        msg.style.border = '1px solid #10B981';
+        msg.textContent = 'Rates updated successfully!';
+        btn.textContent = 'Save All Rates';
+        btn.disabled = false;
       }
     });
   </script>
