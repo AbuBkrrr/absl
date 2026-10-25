@@ -121,8 +121,7 @@ const settingsJson = JSON.stringify({ baseRate, domMulti, intMulti, domCities, d
   <!-- Hidden JSON for Settings -->
   <script type="application/json" id="calc-settings" set:html={settingsJson}></script>
 
-  <script>
-    // 1. Comprehensive Location Database
+    <script>
     const locations = {
       // Nigeria
       "kano": [12.0022, 8.5920], "lagos": [6.5244, 3.3792], "abuja": [9.0765, 7.3986], "kaduna": [10.5105, 7.4165], "katsina": [12.9908, 7.6018], "borno": [11.8333, 13.1500], "maiduguri": [11.8333, 13.1500], "port harcourt": [4.8156, 7.0498], "ibadan": [7.3775, 3.9470], "enugu": [6.4584, 7.5464], "jos": [9.8965, 8.8583], "benin city": [6.3350, 5.6037], "sokoto": [13.0059, 5.2476], "yola": [9.2035, 12.4954], "owerri": [5.4836, 7.0333], "uyo": [5.0378, 7.9128], "calabar": [4.9757, 8.3417], "makurdi": [7.7337, 8.5133], "lokoja": [7.8023, 6.7333], "asaba": [6.1980, 6.7240], "akure": [7.2571, 5.2058], "abeokuta": [7.1475, 3.3619], "osogbo": [7.7827, 4.5418], "ilorin": [8.4966, 4.5421], "minna": [9.6139, 6.5569], "bauchi": [10.3103, 9.8438], "gombe": [10.2897, 11.1673], "damaturu": [11.7479, 11.9608], "dutse": [11.7566, 9.3386], "gusau": [12.1628, 6.6614], "birnin kebbi": [12.4539, 4.1975], "awka": [6.2109, 7.0740], "umuahia": [5.5333, 7.4833], "yenagoa": [4.9247, 6.2642], "jalingo": [8.8921, 11.3771], "lafia": [8.4939, 8.5155],
@@ -130,23 +129,19 @@ const settingsJson = JSON.stringify({ baseRate, domMulti, intMulti, domCities, d
       "london": [51.5074, -0.1278], "dubai": [25.2048, 55.2708], "germany": [50.1109, 8.6821], "usa": [40.7128, -74.0060], "new york": [40.7128, -74.0060], "uk": [51.5074, -0.1278], "canada": [43.6510, -79.3470], "china": [31.2304, 121.4737], "india": [28.7041, 77.1025], "south africa": [-26.2041, 28.0473], "france": [48.8566, 2.3522], "italy": [41.9028, 12.4964], "spain": [40.4168, -3.7038], "brazil": [-23.5505, -46.6333], "australia": [-33.8688, 151.2093], "japan": [35.6762, 139.6503], "russia": [55.7558, 37.6173], "turkey": [41.0082, 28.9784], "egypt": [30.0444, 31.2357], "kenya": [-1.2921, 36.8219], "ghana": [5.6037, -0.1870]
     };
 
-    // 2. Haversine Formula
     function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
-      var R = 6371; // Earth radius in km
+      var R = 6371; 
       var dLat = (lat2-lat1) * (Math.PI/180);
       var dLon = (lon2-lon1) * (Math.PI/180); 
-      var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-              Math.cos(lat1 * (Math.PI/180)) * Math.cos(lat2 * (Math.PI/180)) * 
-              Math.sin(dLon/2) * Math.sin(dLon/2); 
+      var a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * (Math.PI/180)) * Math.cos(lat2 * (Math.PI/180)) * Math.sin(dLon/2) * Math.sin(dLon/2); 
       var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
       return R * c;
     }
 
-    // 3. Load Settings
     const settings = JSON.parse(document.getElementById('calc-settings').textContent);
 
-    // 4. Logic
     document.getElementById('calc-btn').addEventListener('click', () => {
+      const freightType = document.getElementById('freight-type').value;
       const weight = Number(document.getElementById('weight').value);
       const length = Number(document.getElementById('length').value);
       const width = Number(document.getElementById('width').value);
@@ -159,30 +154,33 @@ const settingsJson = JSON.stringify({ baseRate, domMulti, intMulti, domCities, d
         return;
       }
 
-      // Calculate weights
       const volumetricWeight = (length * width * height) / 5000;
       const chargeableWeight = Math.max(weight, volumetricWeight);
 
-      // Get Coordinates
       let originCoords = locations[origin] || locations['kano'];
       let destCoords = locations[dest];
 
       if (!destCoords) {
-        alert(`We could not find coordinates for "${dest}". Please try a major city like Lagos, London, or Dubai.`);
+        alert(`We could not find coordinates for "${dest}". Please check spelling.`);
         return;
       }
 
-      // Calculate Distance
       const distance = getDistanceFromLatLonInKm(originCoords[0], originCoords[1], destCoords[0], destCoords[1]);
 
-      // Determine Multiplier
       let isDomestic = settings.domCities.includes(dest) || (destCoords[0] > 4 && destCoords[0] < 14 && destCoords[1] > 2 && destCoords[1] < 15);
-      let multiplier = isDomestic ? settings.domMulti : settings.intMulti;
+      let regionalMultiplier = isDomestic ? Number(settings.domMulti) : Number(settings.intMulti);
 
-      // Calculate Costs
-      const baseWeightCost = chargeableWeight * settings.baseRate;
-      const distanceCost = distance * settings.distRate;
-      const finalCost = Math.round((baseWeightCost + distanceCost) * multiplier);
+      // NEW: Freight Type Multipliers
+      let freightMultiplier = 1.0;
+      if (freightType.includes('Air')) freightMultiplier = 3.5; // Air is 3.5x more expensive
+      else if (freightType.includes('Sea')) freightMultiplier = 0.8; // Sea is 20% cheaper (but slow)
+
+      // Math (ensure all Numbers)
+      const baseWeightCost = chargeableWeight * Number(settings.baseRate);
+      const distanceCost = distance * Number(settings.distRate);
+      
+      // Final Formula: (Weight Cost + Distance Cost) * Regional * Freight Type
+      const finalCost = Math.round((baseWeightCost + distanceCost) * regionalMultiplier * freightMultiplier);
 
       // Update UI
       document.getElementById('res-route').innerHTML = `${origin} &rarr; ${dest}`;
@@ -191,8 +189,8 @@ const settingsJson = JSON.stringify({ baseRate, domMulti, intMulti, domCities, d
       document.getElementById('res-chargeable').textContent = chargeableWeight.toFixed(2) + ' kg';
       
       document.getElementById('res-distance').textContent = Math.round(distance).toLocaleString() + ' km';
-      document.getElementById('res-base-rate').textContent = '₦' + baseWeightCost.toLocaleString();
-      document.getElementById('res-dist-charge').textContent = '₦' + distanceCost.toLocaleString();
+      document.getElementById('res-base-rate').textContent = '₦' + Math.round(baseWeightCost).toLocaleString();
+      document.getElementById('res-dist-charge').textContent = '₦' + Math.round(distanceCost).toLocaleString();
       document.getElementById('res-total').textContent = '₦' + finalCost.toLocaleString();
     });
   </script>
