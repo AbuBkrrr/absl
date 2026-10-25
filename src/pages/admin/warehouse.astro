@@ -1,164 +1,125 @@
----
+﻿---
 import Layout from '../../layouts/Layout.astro';
-const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+import AdminGuard from '../../components/AdminGuard.astro';
+import { supabase } from '../../lib/supabase';
+
+const { data: requests } = await supabase.from('absl_warehouse_requests').select('*').order('created_at', { ascending: false });
+const { data: inventory } = await supabase.from('absl_inventory').select('*').order('created_at', { ascending: false });
+const { data: profiles } = await supabase.from('absl_profiles').select('id, email');
+
+const reqRows = requests || [];
+const invRows = inventory || [];
+const userMap = {};
+profiles?.forEach(p => userMap[p.id] = p.email);
 ---
 
 <Layout title="Warehouse Admin - ABSL">
-  <div style="background: var(--bg-surface); padding: 60px 0; border-bottom: 1px solid var(--line-light);">
-    <div class="container" style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:16px;">
+  <AdminGuard />
+  <div class="container" style="padding: 80px 24px;">
+    <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:32px;">
       <div>
-        <h1 style="font-size:2.5rem; margin:0;">Warehouse Management</h1>
-        <p style="color:var(--text-muted); margin-top:8px;">Add inbound stock and process customer fulfillments.</p>
+        <h1 style="font-size:2.5rem; color:var(--white); margin:0;">Warehouse Manager</h1>
+        <p style="color:var(--text-muted); margin-top:8px;">Manage client requests and assign stored inventory.</p>
       </div>
       <a href="/admin" class="btn btn-outline" style="padding:10px 24px;">&larr; Back to Admin</a>
     </div>
-  </div>
 
-  <div class="container" style="padding: 40px 24px 80px;">
-    
-    <!-- Add Inventory Form -->
+    <!-- Assign Inventory Form -->
     <div style="background:var(--bg-surface); border:1px solid var(--line-light); border-radius:var(--r-md); padding:32px; margin-bottom:32px;">
-      <h2 style="font-size:1.2rem; color:var(--gold); margin-bottom:20px;">Add Inbound Stock</h2>
-      <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr; gap:16px;">
-        <input id="f-client" type="text" placeholder="Client Name" style="padding:12px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
-        <input id="f-sku" type="text" placeholder="SKU (e.g. SKU-001)" style="padding:12px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
-        <input id="f-name" type="text" placeholder="Product Name" style="padding:12px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
-        <input id="f-qty" type="number" placeholder="Quantity" style="padding:12px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
-        <button id="add-btn" class="btn btn-primary">Add Stock</button>
+      <h2 style="font-size:1.2rem; color:var(--gold); margin-bottom:16px;">Assign New Inventory</h2>
+      <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:16px; margin-bottom:16px;">
+        <div>
+          <label style="font-size:11px; color:var(--text-muted);">CLIENT EMAIL</label>
+          <select id="f-user" style="width:100%; padding:10px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;">
+            <option value="">Select Client...</option>
+            {profiles?.map(p => <option value={p.id}>{p.email}</option>)}
+          </select>
+        </div>
+        <div>
+          <label style="font-size:11px; color:var(--text-muted);">SKU / ITEM</label>
+          <input id="f-sku" type="text" placeholder="e.g. Cement Bags" style="width:100%; padding:10px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
+        </div>
+        <div>
+          <label style="font-size:11px; color:var(--text-muted);">QUANTITY</label>
+          <input id="f-qty" type="number" placeholder="e.g. 500" style="width:100%; padding:10px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
+        </div>
+        <div>
+          <label style="font-size:11px; color:var(--text-muted);">LOCATION</label>
+          <input id="f-loc" type="text" placeholder="e.g. Warehouse A" style="width:100%; padding:10px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
+        </div>
       </div>
+      <button id="assign-btn" class="btn btn-primary">Assign Inventory</button>
     </div>
 
-    <!-- Inventory Table -->
+    <!-- Warehouse Requests Table -->
+    <h2 style="font-size:1.5rem; color:var(--white); margin-bottom:16px;">Client Space Requests</h2>
+    <div style="background:var(--bg-card); border:1px solid var(--line-light); border-radius:var(--r-md); overflow:hidden; margin-bottom:40px;">
+      <table style="width:100%; border-collapse:collapse; font-family:var(--mono); font-size:12.5px;">
+        <thead>
+          <tr style="background:var(--bg-surface); text-align:left;">
+            <th style="padding:16px; color:var(--gold);">Client</th>
+            <th style="padding:16px; color:var(--gold);">SQM</th>
+            <th style="padding:16px; color:var(--gold);">Duration</th>
+            <th style="padding:16px; color:var(--gold);">Notes</th>
+            <th style="padding:16px; color:var(--gold);">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {reqRows.map(r => (
+            <tr style="border-top:1px solid var(--line-light);">
+              <td style="padding:16px; color:var(--white);">{r.customer_email}</td>
+              <td style="padding:16px; color:var(--white); font-weight:700;">{r.requested_sqm}</td>
+              <td style="padding:16px; color:var(--text-muted);">{r.duration}</td>
+              <td style="padding:16px; color:var(--text-muted);">{r.description}</td>
+              <td style="padding:16px;"><span style="color:#F59E0B; text-transform:uppercase; font-weight:700;">{r.status}</span></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Current Inventory Table -->
+    <h2 style="font-size:1.5rem; color:var(--white); margin-bottom:16px;">Current Stored Inventory</h2>
     <div style="background:var(--bg-card); border:1px solid var(--line-light); border-radius:var(--r-md); overflow:hidden;">
       <table style="width:100%; border-collapse:collapse; font-family:var(--mono); font-size:12.5px;">
         <thead>
           <tr style="background:var(--bg-surface); text-align:left;">
-            <th style="padding:16px; color:var(--gold);">SKU</th>
-            <th style="padding:16px; color:var(--gold);">Product</th>
             <th style="padding:16px; color:var(--gold);">Client</th>
-            <th style="padding:16px; color:var(--gold); text-align:center;">Stock Level</th>
-            <th style="padding:16px; color:var(--gold); text-align:right;">Actions</th>
+            <th style="padding:16px; color:var(--gold);">SKU</th>
+            <th style="padding:16px; color:var(--gold);">Qty</th>
+            <th style="padding:16px; color:var(--gold);">Location</th>
           </tr>
         </thead>
-        <tbody id="inventory-body">
-          <tr><td colspan="5" style="padding:32px; text-align:center; color:var(--text-muted);">Loading inventory...</td></tr>
+        <tbody>
+          {invRows.map(i => (
+            <tr style="border-top:1px solid var(--line-light);">
+              <td style="padding:16px; color:var(--white);">{userMap[i.user_id] || 'Unknown'}</td>
+              <td style="padding:16px; color:var(--white); font-weight:700;">{i.sku}</td>
+              <td style="padding:16px; color:var(--white);">{i.quantity}</td>
+              <td style="padding:16px; color:var(--text-muted);">{i.location}</td>
+            </tr>
+          ))}
         </tbody>
       </table>
     </div>
   </div>
 
-  <div id="toast-container" style="position:fixed; bottom:24px; right:24px; z-index:9999; display:flex; flex-direction:column; gap:10px;"></div>
+  <script>
+    import { supabase } from '../../lib/supabase';
+    document.getElementById('assign-btn').addEventListener('click', async () => {
+      const btn = document.getElementById('assign-btn');
+      const user_id = document.getElementById('f-user').value;
+      const sku = document.getElementById('f-sku').value;
+      const quantity = Number(document.getElementById('f-qty').value);
+      const location = document.getElementById('f-loc').value;
 
-  <script is:inline define:vars={{ supabaseUrl, supabaseAnonKey }}>
-    let supabaseClient = null;
-    async function getSupabase() {
-      if (supabaseClient) return supabaseClient;
-      const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
-      supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
-      return supabaseClient;
-    }
-
-    function showToast(message, type = 'success') {
-      const container = document.getElementById('toast-container');
-      const toast = document.createElement('div');
-      const bgColor = type === 'success' ? 'var(--green)' : (type === 'error' ? '#ef4444' : 'var(--gold)');
-      const icon = type === 'success' ? '✓' : (type === 'error' ? '✕' : 'ℹ');
-      toast.style.cssText = `background: var(--bg-card); border: 1px solid ${bgColor}; color: var(--white); padding: 16px 24px; border-radius: var(--r-md); font-family: var(--font-body); font-weight: 600; box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 12px; transform: translateY(100%); opacity: 0; transition: all 0.3s ease;`;
-      toast.innerHTML = `<span style="color:${bgColor}; font-size:1.2rem;">${icon}</span> ${message}`;
-      container.appendChild(toast);
-      setTimeout(() => { toast.style.transform = 'translateY(0)'; toast.style.opacity = '1'; }, 10);
-      setTimeout(() => { toast.style.transform = 'translateY(100%)'; toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
-    }
-
-    async function loadInventory() {
-      const tbody = document.getElementById('inventory-body');
-      const supabase = await getSupabase();
-      const { data, error } = await supabase.from('absl_warehouse_inventory').select('*').order('created_at', { ascending: false });
-
-      if (error) {
-        tbody.innerHTML = `<tr><td colspan="5" style="padding:32px; text-align:center; color:#ef4444;">Error loading inventory.</td></tr>`;
-        return;
-      }
-
-      if (data.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" style="padding:32px; text-align:center; color:var(--text-muted);">No inventory found. Add some stock above.</td></tr>`;
-        return;
-      }
-
-      tbody.innerHTML = data.map(item => {
-        const isLowStock = item.quantity <= item.reorder_level;
-        const stockBadge = isLowStock 
-          ? `<span style="background:#ef4444; color:white; padding:4px 8px; border-radius:4px; font-size:10px;">LOW: ${item.quantity}</span>`
-          : `<span style="background:var(--bg-surface); color:var(--white); padding:4px 8px; border-radius:4px;">${item.quantity}</span>`;
-
-        return `
-          <tr style="border-top:1px solid var(--line-light);">
-            <td style="padding:16px; color:var(--gold); font-weight:600;">${item.sku}</td>
-            <td style="padding:16px; color:var(--white);">${item.product_name}</td>
-            <td style="padding:16px; color:var(--text-muted);">${item.client_name}</td>
-            <td style="padding:16px; text-align:center;">
-              ${stockBadge}
-              ${isLowStock ? '<div style="font-size:10px; color:#ef4444; margin-top:4px;">Reorder Alert</div>' : ''}
-            </td>
-            <td style="padding:16px; text-align:right;">
-              <button data-id="${item.id}" data-qty="${item.quantity}" class="fulfill-btn" style="background:transparent; border:1px solid var(--gold); color:var(--gold); padding:4px 12px; border-radius:4px; cursor:pointer; font-size:11px;">Fulfill 5 Units</button>
-            </td>
-          </tr>
-        `;
-      }).join('');
-
-      document.querySelectorAll('.fulfill-btn').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-          const id = e.target.dataset.id;
-          const currentQty = Number(e.target.dataset.qty);
-          if (currentQty < 5) return showToast('Not enough stock to fulfill 5 units.', 'error');
-
-          e.target.textContent = 'Processing...'; e.target.disabled = true;
-          const supabase = await getSupabase();
-          const { error } = await supabase.from('absl_warehouse_inventory').update({ quantity: currentQty - 5 }).eq('id', id);
-
-          if (error) {
-            showToast('Failed to fulfill order.', 'error');
-            e.target.textContent = 'Fulfill 5 Units'; e.target.disabled = false;
-          } else {
-            showToast('Order fulfilled! Stock updated.', 'success');
-            loadInventory();
-          }
-        });
-      });
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-      loadInventory();
-      document.getElementById('add-btn').addEventListener('click', async () => {
-        const client = document.getElementById('f-client').value.trim();
-        const sku = document.getElementById('f-sku').value.trim();
-        const name = document.getElementById('f-name').value.trim();
-        const qty = Number(document.getElementById('f-qty').value);
-
-        if (!client || !sku || !name || !qty) return showToast('Please fill all fields.', 'error');
-        const btn = document.getElementById('add-btn');
-        btn.textContent = 'Adding...'; btn.disabled = true;
-
-        const supabase = await getSupabase();
-        const { error } = await supabase.from('absl_warehouse_inventory').insert({
-          client_name: client, sku: sku, product_name: name, quantity: qty, reorder_level: 10
-        });
-
-        if (error) {
-          showToast(error.message, 'error');
-          btn.textContent = 'Add Stock'; btn.disabled = false;
-        } else {
-          showToast('Stock added successfully!', 'success');
-          document.getElementById('f-client').value = '';
-          document.getElementById('f-sku').value = '';
-          document.getElementById('f-name').value = '';
-          document.getElementById('f-qty').value = '';
-          btn.textContent = 'Add Stock'; btn.disabled = false;
-          loadInventory();
-        }
-      });
+      if (!user_id || !sku || !quantity) return alert('Please fill all fields');
+      
+      btn.textContent = 'Assigning...'; btn.disabled = true;
+      const { error } = await supabase.from('absl_inventory').insert({ user_id, sku, quantity, location });
+      
+      if (error) { alert(error.message); btn.textContent = 'Assign Inventory'; btn.disabled = false; }
+      else { window.location.reload(); }
     });
   </script>
 </Layout>

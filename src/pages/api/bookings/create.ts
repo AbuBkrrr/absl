@@ -1,30 +1,19 @@
-import type { APIRoute } from 'astro';
+﻿import type { APIRoute } from 'astro';
 import { supabase } from '../../../lib/supabase';
+import { Resend } from 'resend';
+
+const resend = new Resend(import.meta.env.RESEND_API_KEY);
 
 export const POST: APIRoute = async ({ request }) => {
   try {
-    const authHeader = request.headers.get('Authorization') || '';
-    const token = authHeader.replace(/^Bearer\s+/i, '').trim();
-    
-    // Get user if logged in (optional for checkout)
-    let user = null;
-    if (token) {
-      const { data } = await supabase.auth.getUser(token);
-      user = data.user;
-    }
-
     const body = await request.json();
-    if (!body.cart || !Array.isArray(body.cart) || body.cart.length === 0) {
-      return new Response('Empty cart', { status: 400 });
-    }
-    if (!body.name || !body.phone) {
-      return new Response('Missing name or phone', { status: 400 });
-    }
+    if (!body.cart || body.cart.length === 0) return new Response('Empty cart', { status: 400 });
+    if (!body.name || !body.phone) return new Response('Missing details', { status: 400 });
 
-    const total = body.cart.reduce((s: number, i: any) => s + Number(i.qty) * Number(i.price), 0);
+    const total = body.cart.reduce((s: number, i: any) => s + (Number(i.qty) * Number(i.price)), 0);
 
+    // 1. Save to DB
     const { error } = await supabase.from('absl_bookings').insert({
-      user_id: user?.id || null, // Associate booking with logged-in user
       customer_name: body.name,
       customer_phone: body.phone,
       customer_email: body.email || null,
@@ -36,7 +25,27 @@ export const POST: APIRoute = async ({ request }) => {
       booking_status: 'pending'
     });
 
-    if (error) return new Response(error.message, { status: 400 });
+    if (error) throw error;
+
+    // 2. Send Email to Customer (If they provided an email)
+    if (body.email && import.meta.env.RESEND_API_KEY) {
+      await resend.emails.send({
+        from: 'ABSL Bookings <bookings@absl.com.ng>',
+        to: [body.email],
+        subject: 'Booking Received - ABSL',
+        html: `
+          <div style="font-family: sans-serif; color: #333;">
+            <h2>Hi ${body.name},</h2>
+            <p>Thank you for booking with ABSL. We have received your order.</p>
+            <p><strong>Total Amount:</strong> ₦${total.toLocaleString()}</p>
+            <p>Our team will contact you shortly on ${body.phone} to finalize payment and delivery.</p>
+            <br>
+            <p><em>Allstates Business Solutions & Logistics Ltd</em></p>
+          </div>
+        `
+      });
+    }
+
     return new Response('ok');
   } catch (err: any) {
     return new Response('Server error: ' + err.message, { status: 500 });
