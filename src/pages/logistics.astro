@@ -79,7 +79,7 @@ const settingsJson = JSON.stringify({ baseRate, domMulti, intMulti, domCities, d
           <div id="res-route" style="color:var(--text-muted); font-size:0.9rem; margin-bottom:8px;">kano &rarr; lagos</div>
           <div style="font-family:var(--mono); font-size:11px; color:var(--gold); text-transform:uppercase; letter-spacing:1px;">Estimated Cost</div>
           <div id="res-total" style="font-family:var(--font-display); font-size:2.5rem; font-weight:700; color:var(--white); margin:12px 0;">₦0</div>
-          <div style="font-size:0.85rem; color:var(--text-muted);">2 - 4 Business Days (Domestic)</div>
+          <div id="delivery-label" style="font-size:0.85rem; color:var(--text-muted);">2 - 4 Business Days (Domestic)</div>
         </div>
 
         <div style="border-top:1px solid var(--line-light); padding-top:24px; display:flex; flex-direction:column; gap:12px; font-size:0.95rem;">
@@ -158,7 +158,47 @@ const settingsJson = JSON.stringify({ baseRate, domMulti, intMulti, domCities, d
       const chargeableWeight = Math.max(weight, volumetricWeight);
 
       let originCoords = locations[origin] || locations['kano'];
-      let destCoords = locations[dest];
+      const extraLocations = {
+  'burkina faso': [12.3714, -1.5197], ouagadougou: [12.3714, -1.5197],
+  'gambia': [13.4549, -16.5790], banjul: [13.4549, -16.5790],
+  'morocco': [34.0209, -6.8416], rabat: [34.0209, -6.8416], casablanca: [33.5731, -7.5898], marrakech: [31.6295, -7.9811],
+  'senegal': [14.7167, -17.4677], dakar: [14.7167, -17.4677],
+  'mali': [12.6392, -8.0029], bamako: [12.6392, -8.0029],
+  'niger': [13.5116, 2.1254], niamey: [13.5116, 2.1254],
+  'chad': [12.1348, 15.0557], ndjamena: [12.1348, 15.0557],
+  'cameroon': [3.8480, 11.5021], yaounde: [3.8480, 11.5021], douala: [4.0511, 9.7679],
+  'ivory coast': [5.3600, -4.0083], "cote d'ivoire": [5.3600, -4.0083], abidjan: [5.3600, -4.0083],
+  'togo': [6.1256, 1.2254], lome: [6.1256, 1.2254],
+  'benin': [6.4969, 2.6289], cotonou: [6.4969, 2.6289],
+  'liberia': [6.3156, -10.8074], monrovia: [6.3156, -10.8074],
+  'sierra leone': [8.4657, -13.2317], freetown: [8.4657, -13.2317],
+  'guinea': [9.6412, -13.5784], conakry: [9.6412, -13.5784],
+  'guinea bissau': [11.8037, -15.1804], bissau: [11.8037, -15.1804],
+  'mauritania': [18.0735, -15.9582], nouakchott: [18.0735, -15.9582],
+  'cape verde': [14.9330, -23.5133], praia: [14.9330, -23.5133],
+  'algeria': [36.7538, 3.0588], algiers: [36.7538, 3.0588],
+  'tunisia': [36.8065, 10.1815], tunis: [36.8065, 10.1815],
+  'libya': [32.8872, 13.1913], tripoli: [32.8872, 13.1913],
+  'sudan': [15.5007, 32.5599], khartoum: [15.5007, 32.5599],
+  'ethiopia': [9.0320, 38.7469], 'addis ababa': [9.0320, 38.7469],
+  'somalia': [2.0469, 45.3182], mogadishu: [2.0469, 45.3182],
+  'uganda': [0.3476, 32.5825], kampala: [0.3476, 32.5825],
+  'tanzania': [-6.7924, 39.2083], 'dar es salaam': [-6.7924, 39.2083], dodoma: [-6.1630, 35.7516],
+  'rwanda': [-1.9441, 30.0619], kigali: [-1.9441, 30.0619],
+  'burundi': [-3.3614, 29.3599], bujumbura: [-3.3614, 29.3599],
+  'dr congo': [-4.4419, 15.2663], kinshasa: [-4.4419, 15.2663],
+  'congo': [-4.2634, 15.2429], brazzaville: [-4.2634, 15.2429],
+  'gabon': [0.4162, 9.4673], libreville: [0.4162, 9.4673],
+  'angola': [-8.8390, 13.2894], luanda: [-8.8390, 13.2894],
+  'zambia': [-15.3875, 28.3228], lusaka: [-15.3875, 28.3228],
+  'zimbabwe': [-17.8252, 31.0335], harare: [-17.8252, 31.0335],
+  'mozambique': [-25.9692, 32.5732], maputo: [-25.9692, 32.5732],
+  'madagascar': [-18.8792, 47.5079], antananarivo: [-18.8792, 47.5079],
+  'botswana': [-24.6282, 25.9231], gaborone: [-24.6282, 25.9231],
+  'namibia': [-22.5609, 17.0658], windhoek: [-22.5609, 17.0658],
+  'malawi': [-13.9626, 33.7741], lilongwe: [-13.9626, 33.7741]
+};
+let destCoords = locations[dest] || extraLocations[dest];
 
       if (!destCoords) {
         alert(`We could not find coordinates for "${dest}". Please check spelling.`);
@@ -169,6 +209,8 @@ const settingsJson = JSON.stringify({ baseRate, domMulti, intMulti, domCities, d
 
       let isDomestic = settings.domCities.includes(dest) || (destCoords[0] > 4 && destCoords[0] < 14 && destCoords[1] > 2 && destCoords[1] < 15);
       let regionalMultiplier = isDomestic ? Number(settings.domMulti) : Number(settings.intMulti);
+    const delLabel = document.getElementById('delivery-label');
+    if (delLabel) delLabel.textContent = isDomestic ? '2 - 4 Business Days (Domestic)' : '5 - 14 Business Days (International)';
 
       // NEW: Freight Type Multipliers
       let freightMultiplier = 1.0;
