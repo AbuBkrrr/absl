@@ -1,4 +1,4 @@
-﻿---
+---
 import Layout from '../layouts/Layout.astro';
 ---
 <Layout title="Client Login - ABSL">
@@ -83,7 +83,7 @@ import Layout from '../layouts/Layout.astro';
     if(googleBtn) {
         googleBtn.addEventListener('click', async () => {
           try {
-            console.log("Initiating Google OAuth...");
+
             // Hard reset: clear any stale local session to prevent redirect loops
             await supabase.auth.signOut({ scope: 'local' });
             
@@ -95,7 +95,7 @@ import Layout from '../layouts/Layout.astro';
               }
             });
             if (error) throw error;
-            console.log("Redirecting to Google...", data);
+
           } catch (err) {
             console.error("Google Auth Error:", err);
             alert("Google Login Failed: " + err.message + "\n\nCheck browser console (F12) for details.");

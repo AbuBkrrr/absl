@@ -80,7 +80,7 @@ export const POST: APIRoute = async ({ request }) => {
     if (adminError) {
       console.error('Admin Email Failed:', adminError);
     } else {
-      console.log('Admin Email Sent:', adminData);
+
     }
 
     return new Response('OK', { status: 200 });
