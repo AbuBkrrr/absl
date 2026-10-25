@@ -2,7 +2,6 @@
 import Layout from '../../layouts/Layout.astro';
 import { createClient } from '../../lib/supabase';
 
-// Initialize SSR client with cookies
 const supabase = createClient({ request: Astro.request, cookies: Astro.cookies });
 const { data: { user } } = await supabase.auth.getUser();
 
@@ -10,13 +9,13 @@ if (!user) {
   return Astro.redirect('/login');
 }
 
-// Check if admin
+// Fetch Profile
 const { data: profile } = await supabase.from('absl_profiles').select('*').eq('id', user.id).single();
 if (profile && (profile.role !== 'customer' || profile.is_admin)) {
   return Astro.redirect('/admin');
 }
 
-// Fetch Customer Bookings
+// Fetch Bookings
 const { data: bookings } = await supabase
   .from('absl_bookings')
   .select('*')
@@ -26,7 +25,7 @@ const { data: bookings } = await supabase
 const rows = bookings || [];
 ---
 
-<Layout title="My Account - ABSL">
+<Layout title="Client Dashboard - ABSL">
   <div style="background: var(--bg-surface); padding: 60px 0; border-bottom: 1px solid var(--line-light);">
     <div class="container" style="display: flex; justify-content: space-between; align-items: flex-end;">
       <div>
@@ -38,21 +37,49 @@ const rows = bookings || [];
   </div>
 
   <div class="container" style="padding: 60px 24px;">
-    <h2 style="font-size:1.8rem; color:var(--white); margin-bottom:24px;">My Bookings</h2>
+    <h2 style="font-size:1.8rem; color:var(--white); margin-bottom:24px;">My Bookings & Orders</h2>
+    
     {rows.length === 0 ? (
       <div style="background:var(--bg-card); border:1px dashed var(--line); padding:40px; text-align:center; border-radius:var(--r-md);">
         <p style="color:var(--text-muted); margin-bottom:16px;">You have no active bookings yet.</p>
         <a href="/travel" class="btn btn-primary">Start Booking</a>
       </div>
     ) : (
-      <div style="display:flex; flex-direction:column; gap:16px;">
+      <div style="display:flex; flex-direction:column; gap:24px;">
         {rows.map(b => (
-          <div style="background:var(--bg-card); border:1px solid var(--line-light); border-radius:var(--r-md); padding:24px;">
-            <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
-              <div style="color:var(--gold); font-family:var(--mono);">ORDER #{b.id.slice(0, 8).toUpperCase()}</div>
-              <div style="color:var(--white); font-weight:700;">₦{Number(b.total_amount).toLocaleString()}</div>
+          <div style="background:var(--bg-card); border:1px solid var(--line-light); border-radius:var(--r-md); overflow:hidden;">
+            
+            <!-- Order Header -->
+            <div style="background:var(--bg-surface); padding:16px 24px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--line-light);">
+              <div>
+                <div style="color:var(--gold); font-family:var(--mono); font-size:0.85rem;">ORDER #{b.id.slice(0, 8).toUpperCase()}</div>
+                <div style="color:var(--text-muted); font-size:0.8rem; margin-top:4px;">{new Date(b.created_at).toLocaleDateString()}</div>
+              </div>
+              <div style="display:flex; align-items:center; gap:16px;">
+                <span style={`font-size:10px; padding:4px 10px; border-radius:4px; font-weight:700; text-transform:uppercase; background:${b.booking_status === 'completed' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)'}; color:${b.booking_status === 'completed' ? '#10B981' : '#F59E0B'};`}>
+                  {b.booking_status}
+                </span>
+                <div style="color:var(--white); font-weight:700; font-size:1.1rem;">₦{Number(b.total_amount).toLocaleString()}</div>
+              </div>
             </div>
-            <div style="color:var(--text-muted); font-size:0.9rem;">Status: {b.booking_status}</div>
+
+            <!-- Order Items -->
+            <div style="padding:24px;">
+              <h4 style="font-size:0.9rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:16px;">Items Purchased</h4>
+              <div style="display:flex; flex-direction:column; gap:12px;">
+                {Array.isArray(b.items) && b.items.map((item: any) => (
+                  <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--line-light); padding-bottom:12px;">
+                    <div>
+                      <div style="color:var(--white); font-weight:600;">{item.title}</div>
+                      <div style="color:var(--text-muted); font-size:0.85rem;">Qty: {item.qty} × ₦{Number(item.price).toLocaleString()}</div>
+                    </div>
+                    <div style="color:var(--gold); font-family:var(--mono);">
+                      ₦{(Number(item.qty) * Number(item.price)).toLocaleString()}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         ))}
       </div>
