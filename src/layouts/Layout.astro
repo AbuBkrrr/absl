@@ -1,4 +1,4 @@
----
+﻿---
 import Analytics from '@vercel/analytics/astro';
 
 interface Props {
@@ -199,7 +199,7 @@ const year = new Date().getFullYear();
                 <a href="/account" style="color: var(--green);">Client Area</a>
             </div>
             
-            <a href="/checkout" class="cart-icon">
+            <a id="nav-auth-btn" href="/login" style="font-weight:600; font-size:0.9rem; color:var(--gold); white-space:nowrap; margin-right: 16px;">Login</a>`n            <a href="/checkout" class="cart-icon">
                 🛒 My Cart
                 <span id="cart-badge" class="cart-badge" style="display:none;">0</span>
             </a>
@@ -265,5 +265,27 @@ const year = new Date().getFullYear();
         window.addEventListener('absl-cart-updated', updateBadge);
     </script>
     <Analytics />
+    <script>
+      import { supabase } from '../lib/supabase';
+      async function updateAuthUI() {
+        const { data: { session } } = await supabase.auth.getSession();
+        const btn = document.getElementById('nav-auth-btn');
+        if (!btn) return;
+        if (session) {
+          btn.textContent = 'Logout';
+          btn.href = '#';
+          btn.onclick = async (e) => {
+            e.preventDefault();
+            await supabase.auth.signOut();
+            window.location.href = '/';
+          };
+        } else {
+          btn.textContent = 'Login';
+          btn.href = '/login';
+          btn.onclick = null;
+        }
+      }
+      updateAuthUI();
+    </script>
 </body>
 </html>
