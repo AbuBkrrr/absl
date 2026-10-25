@@ -1,0 +1,93 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import AdminGuard from '../../components/AdminGuard.astro';
+import { supabase } from '../../lib/supabase';
+
+const { data: settings } = await supabase.from('absl_settings').select('*');
+const getVal = (key, defaultVal) => settings?.find(s => s.key === key)?.value || defaultVal;
+
+const baseRate = getVal('logistics_base_rate', '8500');
+const domMulti = getVal('logistics_domestic_multiplier', '1.2');
+const intMulti = getVal('logistics_international_multiplier', '2.5');
+const domCities = getVal('logistics_domestic_cities', 'lagos, abuja, kano');
+---
+
+<Layout title="Platform Settings - ABSL Admin">
+  <AdminGuard />
+  <div class="container" style="padding: 80px 24px; max-width: 800px;">
+    <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:32px;">
+      <div>
+        <h1 style="font-size:2.5rem; color:var(--white); margin:0;">Platform Settings</h1>
+        <p style="color:var(--text-muted); margin-top:8px;">Manage live pricing for the Shipment Calculator and other tools.</p>
+      </div>
+      <a href="/admin" class="btn btn-outline" style="padding:10px 24px;">&larr; Back to Admin</a>
+    </div>
+
+    <div style="background:var(--bg-card); border:1px solid var(--line-light); border-radius:var(--r-md); padding:32px;">
+      <h2 style="font-size:1.2rem; color:var(--gold); margin-bottom:24px;">Logistics Calculator Rates</h2>
+      
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:24px;">
+        <div>
+          <label style="display:block; font-family:var(--mono); font-size:11px; color:var(--text-muted); margin-bottom:6px;">BASE RATE (₦ per KG)</label>
+          <input id="s-base-rate" type="number" value={baseRate} style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
+        </div>
+        <div>
+          <label style="display:block; font-family:var(--mono); font-size:11px; color:var(--text-muted); margin-bottom:6px;">DOMESTIC MULTIPLIER</label>
+          <input id="s-dom-multi" type="number" step="0.1" value={domMulti} style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
+        </div>
+        <div>
+          <label style="display:block; font-family:var(--mono); font-size:11px; color:var(--text-muted); margin-bottom:6px;">INTERNATIONAL MULTIPLIER</label>
+          <input id="s-int-multi" type="number" step="0.1" value={intMulti} style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
+        </div>
+        <div>
+          <label style="display:block; font-family:var(--mono); font-size:11px; color:var(--text-muted); margin-bottom:6px;">DOMESTIC CITIES (Comma separated)</label>
+          <input id="s-dom-cities" type="text" value={domCities} style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
+        </div>
+      </div>
+
+      <button id="save-settings-btn" class="btn btn-primary">Save Settings</button>
+      <div id="settings-msg" style="display:none; margin-top:16px; padding:12px; text-align:center; border-radius:4px; font-size:0.9rem;"></div>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('save-settings-btn').addEventListener('click', async () => {
+      const btn = document.getElementById('save-settings-btn');
+      const msg = document.getElementById('settings-msg');
+      
+      btn.textContent = 'Saving...';
+      btn.disabled = true;
+
+      const updates = [
+        { key: 'logistics_base_rate', value: document.getElementById('s-base-rate').value },
+        { key: 'logistics_domestic_multiplier', value: document.getElementById('s-dom-multi').value },
+        { key: 'logistics_international_multiplier', value: document.getElementById('s-int-multi').value },
+        { key: 'logistics_domestic_cities', value: document.getElementById('s-dom-cities').value }
+      ];
+
+      const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+      const supabase = createClient(import.meta.env.PUBLIC_SUPABASE_URL, import.meta.env.PUBLIC_SUPABASE_ANON_KEY);
+
+      // Upsert each setting
+      const { error } = await supabase.from('absl_settings').upsert(updates);
+
+      if (error) {
+        msg.style.display = 'block';
+        msg.style.background = 'rgba(239, 68, 68, 0.1)';
+        msg.style.color = '#EF4444';
+        msg.style.border = '1px solid #EF4444';
+        msg.textContent = 'Error: ' + error.message;
+        btn.textContent = 'Save Settings';
+        btn.disabled = false;
+      } else {
+        msg.style.display = 'block';
+        msg.style.background = 'rgba(16, 185, 129, 0.1)';
+        msg.style.color = '#10B981';
+        msg.style.border = '1px solid #10B981';
+        msg.textContent = 'Settings updated successfully!';
+        btn.textContent = 'Save Settings';
+        btn.disabled = false;
+      }
+    });
+  </script>
+</Layout>

@@ -85,6 +85,13 @@ import AdminGuard from '../../components/AdminGuard.astro';
         <h2 style="font-size: 1.5rem; color: var(--white); margin-bottom: 8px;">Estimator Rates</h2>
         <p style="color: var(--text-muted); font-size: 0.95rem;">Update base material prices, labor multipliers, and utility rates for the calculator.</p>
       </a>
+      {allowedTabs.includes('settings') && (
+        <a href="/admin/settings" style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 32px; text-decoration: none; transition: 0.2s;">
+          <div style="font-size: 32px; margin-bottom: 16px;">⚙️</div>
+          <h2 style="font-size: 1.3rem; color: var(--white); margin-bottom: 8px;">Platform Settings</h2>
+          <p style="color: var(--text-muted); font-size: 0.9rem;">Manage calculator rates, shipping multipliers, and global variables.</p>
+        </a>
+      )}
 </div>
   </div>
 </Layout>
