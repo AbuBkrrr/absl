@@ -1,5 +1,4 @@
-﻿import { createServerClient, parseCookieHeader } from "@supabase/ssr";
-import { createClient as createBrowserClient } from '@supabase/supabase-js';
+﻿import { createBrowserClient, createServerClient, parseCookieHeader } from "@supabase/ssr";
 import type { AstroCookies } from "astro";
 
 const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
@@ -9,7 +8,8 @@ if (!supabaseUrl || !supabaseAnonKey) {
   console.error("⚠️ SUPABASE ERROR: Missing environment variables in .env file.");
 }
 
-// 1. Standard Browser Client (For existing pages and scripts)
+// 1. Browser Client (For client-side OAuth and scripts)
+// createBrowserClient from @supabase/ssr defaults to PKCE flow
 export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey);
 
 // 2. SSR Server Client (For API routes and OAuth Callback)
