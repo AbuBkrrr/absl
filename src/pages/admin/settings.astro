@@ -10,6 +10,7 @@ const baseRate = getVal('logistics_base_rate', '8500');
 const domMulti = getVal('logistics_domestic_multiplier', '1.2');
 const intMulti = getVal('logistics_international_multiplier', '2.5');
 const domCities = getVal('logistics_domestic_cities', 'lagos, abuja, kano');
+const distRate = getVal('logistics_distance_rate', '5');
 ---
 
 <Layout title="Platform Settings - ABSL Admin">
@@ -39,6 +40,10 @@ const domCities = getVal('logistics_domestic_cities', 'lagos, abuja, kano');
           <label style="display:block; font-family:var(--mono); font-size:11px; color:var(--text-muted); margin-bottom:6px;">INTERNATIONAL MULTIPLIER</label>
           <input id="s-int-multi" type="number" step="0.1" value={intMulti} style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
         </div>
+                <div>
+          <label style="display:block; font-family:var(--mono); font-size:11px; color:var(--text-muted); margin-bottom:6px;">DISTANCE RATE (₦ per KM)</label>
+          <input id="s-dist-rate" type="number" step="0.1" value={distRate} style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
+        </div>
         <div>
           <label style="display:block; font-family:var(--mono); font-size:11px; color:var(--text-muted); margin-bottom:6px;">DOMESTIC CITIES (Comma separated)</label>
           <input id="s-dom-cities" type="text" value={domCities} style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
@@ -61,6 +66,7 @@ const domCities = getVal('logistics_domestic_cities', 'lagos, abuja, kano');
       const updates = [
         { key: 'logistics_base_rate', value: document.getElementById('s-base-rate').value },
         { key: 'logistics_domestic_multiplier', value: document.getElementById('s-dom-multi').value },
+        { key: 'logistics_distance_rate', value: document.getElementById('s-dist-rate').value },
         { key: 'logistics_international_multiplier', value: document.getElementById('s-int-multi').value },
         { key: 'logistics_domestic_cities', value: document.getElementById('s-dom-cities').value }
       ];
