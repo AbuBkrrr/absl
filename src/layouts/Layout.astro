@@ -1,4 +1,4 @@
-﻿---
+---
 import Analytics from '@vercel/analytics/astro';
 
 interface Props {
@@ -245,6 +245,12 @@ const year = new Date().getFullYear();
         </div>
             </div>
             <div class="footer-bottom">
+            <div style="margin-bottom: 16px; display: flex; gap: 24px; justify-content: center; flex-wrap: wrap;">
+                <a href="/about" style="color: var(--text-muted); font-size: 0.8rem;">About</a>
+                <a href="/track" style="color: var(--text-muted); font-size: 0.8rem;">Track Shipment</a>
+                <a href="/privacy" style="color: var(--text-muted); font-size: 0.8rem;">Privacy</a>
+                <a href="/terms" style="color: var(--text-muted); font-size: 0.8rem;">Terms</a>
+            </div>
                 &copy; {year} Allstates Business Solutions and Logistics Ltd. RC 768315. All rights reserved.
             </div>
         </div>
