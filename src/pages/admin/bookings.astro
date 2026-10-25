@@ -1,4 +1,4 @@
----
+﻿---
 import Layout from '../../layouts/Layout.astro';
 import AdminGuard from '../../components/AdminGuard.astro';
 import { createClient } from '../../lib/supabase';
@@ -31,6 +31,7 @@ const rows = bookings || [];
             <th style="padding:16px; color:var(--gold);">Date</th>
             <th style="padding:16px; color:var(--gold);">Client</th>
             <th style="padding:16px; color:var(--gold);">Contact</th>
+            <th style="padding:16px; color:var(--gold);">Items</th>
             <th style="padding:16px; color:var(--gold); text-align:right;">Total (₦)</th>
             <th style="padding:16px; color:var(--gold);">Booking</th>
             <th style="padding:16px; color:var(--gold);">Payment</th>
@@ -45,6 +46,7 @@ const rows = bookings || [];
                 <td style="padding:16px; color:var(--text-muted);">{new Date(b.created_at).toLocaleDateString()}</td>
                 <td style="padding:16px; color:var(--white); font-weight:600;">{b.customer_name}</td>
                 <td style="padding:16px; color:var(--text-muted);">{b.customer_phone}</td>
+              <td style="padding:16px; color:var(--text-light); font-size:12px;">{b.items && Array.isArray(b.items) ? b.items.map((item: any) => <div>• {item.title} (x{item.qty})</div>) : "-"}</td>
                 <td style="padding:16px; text-align:right; color:var(--gold); font-weight:700;">{Number(b.total_amount).toLocaleString()}</td>
                 <td style="padding:16px;">
                   <select data-id={b.id} class="status-select" style="padding:6px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;">

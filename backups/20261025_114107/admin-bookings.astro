@@ -1,0 +1,107 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import AdminGuard from '../../components/AdminGuard.astro';
+import { createClient } from '../../lib/supabase';
+const supabase = createClient({ request: Astro.request, cookies: Astro.cookies });
+
+const { data: bookings } = await supabase
+  .from('absl_bookings')
+  .select('*')
+  .order('created_at', { ascending: false });
+const rows = bookings || [];
+---
+
+<Layout title="Bookings - ABSL Admin">
+  <AdminGuard />
+  <div style="background: var(--bg-surface); padding: 60px 0; border-bottom: 1px solid var(--line-light);">
+    <div class="container" style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:16px;">
+      <div>
+        <h1 style="font-size:2.5rem; margin:0;">Client Bookings</h1>
+        <p style="color:var(--text-muted); margin-top:8px;">Manage booking status and confirm payments.</p>
+      </div>
+      <a href="/admin" class="btn btn-outline" style="padding:10px 24px;">&larr; Back to Admin</a>
+    </div>
+  </div>
+
+  <div class="container" style="padding: 40px 24px 80px;">
+    <div style="background:var(--bg-card); border:1px solid var(--line-light); border-radius:var(--r-md); overflow-x:auto;">
+      <table style="width:100%; border-collapse:collapse; font-family:var(--mono); font-size:12.5px; min-width:900px;">
+        <thead>
+          <tr style="background:var(--bg-surface); text-align:left;">
+            <th style="padding:16px; color:var(--gold);">Date</th>
+            <th style="padding:16px; color:var(--gold);">Client</th>
+            <th style="padding:16px; color:var(--gold);">Contact</th>
+            <th style="padding:16px; color:var(--gold); text-align:right;">Total (₦)</th>
+            <th style="padding:16px; color:var(--gold);">Booking</th>
+            <th style="padding:16px; color:var(--gold);">Payment</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.length === 0 ? (
+            <tr><td colspan="6" style="padding:32px; text-align:center; color:var(--text-muted);">No bookings yet.</td></tr>
+          ) : (
+            rows.map(b => (
+              <tr style="border-top:1px solid var(--line-light);">
+                <td style="padding:16px; color:var(--text-muted);">{new Date(b.created_at).toLocaleDateString()}</td>
+                <td style="padding:16px; color:var(--white); font-weight:600;">{b.customer_name}</td>
+                <td style="padding:16px; color:var(--text-muted);">{b.customer_phone}</td>
+                <td style="padding:16px; text-align:right; color:var(--gold); font-weight:700;">{Number(b.total_amount).toLocaleString()}</td>
+                <td style="padding:16px;">
+                  <select data-id={b.id} class="status-select" style="padding:6px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;">
+                    <option value="pending" selected={b.booking_status === 'pending'}>Pending</option>
+                    <option value="confirmed" selected={b.booking_status === 'confirmed'}>Confirmed</option>
+                    <option value="completed" selected={b.booking_status === 'completed'}>Completed</option>
+                    <option value="cancelled" selected={b.booking_status === 'cancelled'}>Cancelled</option>
+                  </select>
+                </td>
+                <td style="padding:16px;">
+                  <select data-id={b.id} class="payment-select" style="padding:6px; background:var(--bg-surface); border:1px solid {(b as any).payment_status === 'paid' ? 'var(--green)' : 'var(--line-light)'}; color:{(b as any).payment_status === 'paid' ? 'var(--green)' : 'var(--white)'}; border-radius:4px; font-weight:600;">
+                    <option value="pending" selected={(b as any).payment_status !== 'paid'}>Pending</option>
+                    <option value="paid" selected={(b as any).payment_status === 'paid'}>✓ Paid</option>
+                  </select>
+                </td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    document.querySelectorAll('.status-select').forEach(select => {
+      select.addEventListener('change', async (e) => {
+        const el = e.target as HTMLSelectElement;
+        const res = await fetch('/api/bookings/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: el.dataset.id, status: el.value })
+        });
+        if (res.ok) {
+          el.style.borderColor = 'var(--green)';
+          setTimeout(() => el.style.borderColor = 'var(--line-light)', 1000);
+        } else {
+          alert('Failed to update booking status.');
+        }
+      });
+    });
+
+    document.querySelectorAll('.payment-select').forEach(select => {
+      select.addEventListener('change', async (e) => {
+        const el = e.target as HTMLSelectElement;
+        const isPaid = el.value === 'paid';
+        const res = await fetch('/api/bookings/update-payment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: el.dataset.id, payment_status: el.value })
+        });
+        if (res.ok) {
+          el.style.borderColor = isPaid ? 'var(--green)' : 'var(--line-light)';
+          el.style.color = isPaid ? 'var(--green)' : 'var(--white)';
+        } else {
+          alert('Failed to update payment status.');
+        }
+      });
+    });
+  </script>
+</Layout>
