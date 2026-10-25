@@ -172,4 +172,91 @@ const { data: packages } = await supabase
       }
     });
   </script>
+  <script>
+    import { globalLocations } from '../../scripts/globalLocations.js';
+
+    // 1. Load settings from the JSON tag
+    const settingsData = document.getElementById('calc-settings');
+    const settings = JSON.parse(settingsData.textContent);
+
+    // 2. Haversine Formula
+    function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
+      var R = 6371; // Earth radius in km
+      var dLat = (lat2-lat1) * (Math.PI/180);
+      var dLon = (lon2-lon1) * (Math.PI/180); 
+      var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * (Math.PI/180)) * Math.cos(lat2 * (Math.PI/180)) * 
+              Math.sin(dLon/2) * Math.sin(dLon/2); 
+      var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+      return R * c;
+    }
+
+    // 3. Calculation Logic
+    const calculateBtn = document.getElementById('calc-btn');
+    if (calculateBtn) {
+      calculateBtn.addEventListener('click', () => {
+        // Get Values
+        const weight = Number(document.getElementById('weight')?.value || 0);
+        const length = Number(document.getElementById('length')?.value || 0);
+        const width = Number(document.getElementById('width')?.value || 0);
+        const height = Number(document.getElementById('height')?.value || 0);
+        let origin = (document.getElementById('origin')?.value || 'kano').toLowerCase().trim();
+        let dest = (document.getElementById('dest')?.value || '').toLowerCase().trim();
+
+        if (!weight || !length || !width || !height || !dest) {
+          alert('Please fill in destination, weight, and dimensions.');
+          return;
+        }
+
+        // Calculate Weights
+        const volumetricWeight = (length * width * height) / 5000;
+        const chargeableWeight = Math.max(weight, volumetricWeight);
+
+        // Lookup Coordinates
+        let originCoords = globalLocations[origin] || globalLocations['kano']; // default to Kano if unknown
+        let destCoords = globalLocations[dest];
+
+        // Fallback if destination not found
+        if (!destCoords) {
+            alert(`We could not find coordinates for "${dest}". Please check the spelling or contact support.`);
+            return;
+        }
+
+        // Calculate Distance
+        let distance = getDistanceFromLatLonInKm(originCoords[0], originCoords[1], destCoords[0], destCoords[1]);
+        
+        // Determine Multiplier (Domestic vs International)
+        let isDomestic = settings.domCities.some(city => dest.includes(city)) || (destCoords[0] > 4 && destCoords[0] < 14 && destCoords[1] > 2 && destCoords[1] < 15);
+        let multiplier = isDomestic ? settings.domMulti : settings.intMulti;
+
+        // Calculate Costs
+        const baseWeightCost = chargeableWeight * settings.baseRate;
+        const distanceCost = distance * settings.distRate;
+        const finalCost = Math.round((baseWeightCost + distanceCost) * multiplier);
+
+        // Update UI Elements
+        const resActual = document.getElementById('res-actual');
+        const resVolume = document.getElementById('res-volume');
+        const resChargeable = document.getElementById('res-chargeable');
+        const resTotal = document.getElementById('res-total');
+        
+        // Dynamically inject Distance breakdown
+        let resDistanceContainer = document.getElementById('res-distance-container');
+        if (!resDistanceContainer && resTotal) {
+            resDistanceContainer = document.createElement('div');
+            resDistanceContainer.id = 'res-distance-container';
+            resDistanceContainer.style = "display:flex; justify-content:space-between; margin-bottom:8px; color:var(--text-muted); font-size:0.9rem; border-top: 1px dashed var(--line-light); padding-top: 8px; margin-top: 8px;";
+            resDistanceContainer.innerHTML = `<span>Distance (<span id="res-dest-label"></span>):</span> <span id="res-distance" style="color:var(--white); font-weight:600;"></span>`;
+            resTotal.parentElement.parentElement.insertBefore(resDistanceContainer, resTotal.parentElement);
+        }
+
+        if (resActual) resActual.textContent = weight + ' kg';
+        if (resVolume) resVolume.textContent = volumetricWeight.toFixed(2) + ' kg';
+        if (resChargeable) resChargeable.textContent = chargeableWeight.toFixed(2) + ' kg';
+        if (document.getElementById('res-distance')) document.getElementById('res-distance').textContent = Math.round(distance).toLocaleString() + ' km';
+        if (document.getElementById('res-dest-label')) document.getElementById('res-dest-label').textContent = `${origin} to ${dest}`;
+        if (resTotal) resTotal.textContent = '₦' + finalCost.toLocaleString();
+      });
+    }
+  </script>
 </Layout>
