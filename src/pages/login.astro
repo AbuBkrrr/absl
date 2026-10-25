@@ -1,4 +1,4 @@
----
+﻿---
 import Layout from '../layouts/Layout.astro';
 ---
 <Layout title="Client Login - ABSL">
@@ -6,8 +6,8 @@ import Layout from '../layouts/Layout.astro';
     <div style="background: var(--bg-card); border: 1px solid var(--line-light); border-radius: var(--r-md); padding: 48px; width: 100%; max-width: 450px;">
       
       <div style="text-align: center; margin-bottom: 32px;">
-        <h1 id="page-title" style="font-family: var(--font-display); font-size: 2rem; color: var(--gold); margin-bottom: 8px;">Client Portal</h1>
-        <p id="page-sub" style="color: var(--text-muted); font-size: 0.9rem;">Sign in to manage your bookings and rewards.</p>
+        <h1 style="font-family: var(--font-display); font-size: 2rem; color: var(--gold); margin-bottom: 8px;">Client Portal</h1>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Sign in to manage your bookings and rewards.</p>
       </div>
 
       <!-- GOOGLE SIGN IN BUTTON -->
@@ -71,114 +71,132 @@ import Layout from '../layouts/Layout.astro';
     const googleBtn = document.getElementById('google-btn');
     const divider = document.getElementById('divider');
 
-    let mode = 'login'; // 'login', 'signup', 'forgot'
+    let mode = 'login';
 
     function resetUI() {
-      errorMsg.style.display = 'none';
-      successMsg.style.display = 'none';
-      authBtn.disabled = false;
+      if(errorMsg) errorMsg.style.display = 'none';
+      if(successMsg) successMsg.style.display = 'none';
+      if(authBtn) authBtn.disabled = false;
     }
 
-    // 1. Google Sign In
-    googleBtn.addEventListener('click', async () => {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: { redirectTo: window.location.origin + '/account' }
-      });
-      if (error) alert(error.message);
-    });
+    // 1. Google Sign In with Error Logging
+    if(googleBtn) {
+        googleBtn.addEventListener('click', async () => {
+          try {
+            console.log("Initiating Google OAuth...");
+            const { data, error } = await supabase.auth.signInWithOAuth({
+              provider: 'google',
+              options: { redirectTo: window.location.origin + '/account' }
+            });
+            if (error) throw error;
+            console.log("Redirecting to Google...", data);
+          } catch (err) {
+            console.error("Google Auth Error:", err);
+            alert("Google Login Failed: " + err.message + "\n\nCheck browser console (F12) for details.");
+          }
+        });
+    }
 
     // 2. Toggle Sign Up / Login
-    toggleBtn.addEventListener('click', () => {
-      mode = mode === 'login' ? 'signup' : 'login';
-      resetUI();
-      
-      if (mode === 'signup') {
-        title.textContent = 'Create Account';
-        sub.textContent = 'Join ABSL to track your corporate travel.';
-        nameGroup.style.display = 'block';
-        passwordGroup.style.display = 'block';
-        forgotBtn.style.display = 'none';
-        authBtn.textContent = 'Create Account';
-        toggleBtn.textContent = "Already have an account? Sign In";
-        googleBtn.style.display = 'flex';
-        divider.style.display = 'flex';
-        document.getElementById('f-password').required = true;
-      } else {
-        title.textContent = 'Client Portal';
-        sub.textContent = 'Sign in to manage your bookings and rewards.';
-        nameGroup.style.display = 'none';
-        passwordGroup.style.display = 'block';
-        forgotBtn.style.display = 'block';
-        authBtn.textContent = 'Sign In';
-        toggleBtn.textContent = "Don't have an account? Sign Up";
-        googleBtn.style.display = 'flex';
-        divider.style.display = 'flex';
-        document.getElementById('f-password').required = true;
-      }
-    });
+    if(toggleBtn) {
+        toggleBtn.addEventListener('click', () => {
+          mode = mode === 'login' ? 'signup' : 'login';
+          resetUI();
+          
+          if (mode === 'signup') {
+            if(title) title.textContent = 'Create Account';
+            if(sub) sub.textContent = 'Join ABSL to track your corporate travel.';
+            if(nameGroup) nameGroup.style.display = 'block';
+            if(passwordGroup) passwordGroup.style.display = 'block';
+            if(forgotBtn) forgotBtn.style.display = 'none';
+            if(authBtn) authBtn.textContent = 'Create Account';
+            if(toggleBtn) toggleBtn.textContent = "Already have an account? Sign In";
+            if(googleBtn) googleBtn.style.display = 'flex';
+            if(divider) divider.style.display = 'flex';
+            if(document.getElementById('f-password')) document.getElementById('f-password').required = true;
+          } else {
+            if(title) title.textContent = 'Client Portal';
+            if(sub) sub.textContent = 'Sign in to manage your bookings and rewards.';
+            if(nameGroup) nameGroup.style.display = 'none';
+            if(passwordGroup) passwordGroup.style.display = 'block';
+            if(forgotBtn) forgotBtn.style.display = 'block';
+            if(authBtn) authBtn.textContent = 'Sign In';
+            if(toggleBtn) toggleBtn.textContent = "Don't have an account? Sign Up";
+            if(googleBtn) googleBtn.style.display = 'flex';
+            if(divider) divider.style.display = 'flex';
+            if(document.getElementById('f-password')) document.getElementById('f-password').required = true;
+          }
+        });
+    }
 
     // 3. Forgot Password Flow
-    forgotBtn.addEventListener('click', () => {
-      mode = 'forgot';
-      resetUI();
-      title.textContent = 'Reset Password';
-      sub.textContent = 'Enter your email and we will send you a reset link.';
-      nameGroup.style.display = 'none';
-      passwordGroup.style.display = 'none';
-      authBtn.textContent = 'Send Reset Link';
-      toggleBtn.textContent = "Back to Sign In";
-      googleBtn.style.display = 'none';
-      divider.style.display = 'none';
-      document.getElementById('f-password').required = false;
-    });
+    if(forgotBtn) {
+        forgotBtn.addEventListener('click', () => {
+          mode = 'forgot';
+          resetUI();
+          if(title) title.textContent = 'Reset Password';
+          if(sub) sub.textContent = 'Enter your email and we will send you a reset link.';
+          if(nameGroup) nameGroup.style.display = 'none';
+          if(passwordGroup) passwordGroup.style.display = 'none';
+          if(authBtn) authBtn.textContent = 'Send Reset Link';
+          if(toggleBtn) toggleBtn.textContent = "Back to Sign In";
+          if(googleBtn) googleBtn.style.display = 'none';
+          if(divider) divider.style.display = 'none';
+          if(document.getElementById('f-password')) document.getElementById('f-password').required = false;
+        });
+    }
 
     // 4. Form Submit
-    authForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      resetUI();
-      
-      const email = document.getElementById('f-email').value.trim();
-      const password = document.getElementById('f-password').value;
-      const name = document.getElementById('f-name').value.trim();
+    if(authForm) {
+        authForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          resetUI();
+          
+          const email = document.getElementById('f-email').value.trim();
+          const password = document.getElementById('f-password').value;
+          const name = document.getElementById('f-name').value.trim();
 
-      authBtn.textContent = 'Processing...';
-      authBtn.disabled = true;
+          if(authBtn) { authBtn.textContent = 'Processing...'; authBtn.disabled = true; }
 
-      try {
-        if (mode === 'login') {
-          const { error } = await supabase.auth.signInWithPassword({ email, password });
-          if (error) throw error;
-          window.location.href = '/account';
-        } 
-        else if (mode === 'signup') {
-          const { error } = await supabase.auth.signUp({
-            email,
-            password,
-            options: { data: { full_name: name } }
-          });
-          if (error) throw error;
-          successMsg.style.display = 'block';
-          successMsg.textContent = 'Account created! Check your email to verify, then sign in.';
-          authBtn.textContent = 'Create Account';
-          authBtn.disabled = false;
-        }
-        else if (mode === 'forgot') {
-          const { error } = await supabase.auth.resetPasswordForEmail(email, {
-            redirectTo: window.location.origin + '/reset-password',
-          });
-          if (error) throw error;
-          successMsg.style.display = 'block';
-          successMsg.textContent = 'Password reset link sent! Check your email inbox.';
-          authBtn.textContent = 'Send Reset Link';
-          authBtn.disabled = false;
-        }
-      } catch (err) {
-        errorMsg.style.display = 'block';
-        errorMsg.textContent = err.message;
-        authBtn.textContent = mode === 'login' ? 'Sign In' : mode === 'signup' ? 'Create Account' : 'Send Reset Link';
-        authBtn.disabled = false;
-      }
-    });
+          try {
+            if (mode === 'login') {
+              const { error } = await supabase.auth.signInWithPassword({ email, password });
+              if (error) throw error;
+              window.location.href = '/account';
+            } 
+            else if (mode === 'signup') {
+              const { error } = await supabase.auth.signUp({
+                email, password, options: { data: { full_name: name } }
+              });
+              if (error) throw error;
+              if(successMsg) {
+                  successMsg.style.display = 'block';
+                  successMsg.textContent = 'Account created! Check your email to verify, then sign in.';
+              }
+              if(authBtn) { authBtn.textContent = 'Create Account'; authBtn.disabled = false; }
+            }
+            else if (mode === 'forgot') {
+              const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                redirectTo: window.location.origin + '/reset-password',
+              });
+              if (error) throw error;
+              if(successMsg) {
+                  successMsg.style.display = 'block';
+                  successMsg.textContent = 'Password reset link sent! Check your email inbox.';
+              }
+              if(authBtn) { authBtn.textContent = 'Send Reset Link'; authBtn.disabled = false; }
+            }
+          } catch (err) {
+            if(errorMsg) {
+                errorMsg.style.display = 'block';
+                errorMsg.textContent = err.message;
+            }
+            if(authBtn) {
+                authBtn.textContent = mode === 'login' ? 'Sign In' : mode === 'signup' ? 'Create Account' : 'Send Reset Link';
+                authBtn.disabled = false;
+            }
+          }
+        });
+    }
   </script>
 </Layout>
