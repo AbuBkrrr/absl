@@ -12,8 +12,22 @@ export const POST: APIRoute = async ({ request }) => {
 
     const total = body.cart.reduce((s: number, i: any) => s + (Number(i.qty) * Number(i.price)), 0);
 
-    // 1. Save to DB
+    // Extract user_id from Bearer token (guests allowed)
+    let userId: string | null = null;
+    try {
+      const authHeader = request.headers.get('Authorization') || '';
+      const token = authHeader.replace(/^Bearer\s+/i, '').trim();
+      if (token) {
+        const { data } = await supabase.auth.getUser(token);
+        userId = data?.user?.id || null;
+      }
+    } catch {
+      // Guest checkout — proceed without user_id
+    }
+
+    // 1. Save booking
     const { error } = await supabase.from('absl_bookings').insert({
+      user_id: userId,
       customer_name: body.name,
       customer_phone: body.phone,
       customer_email: body.email || null,
@@ -27,23 +41,50 @@ export const POST: APIRoute = async ({ request }) => {
 
     if (error) throw error;
 
-    // 2. Send Email to Customer (If they provided an email)
+    // 2. Auto-accrue loyalty miles (1 mile per ₦1,000 spent)
+    let milesEarned = 0;
+    if (userId && total > 0) {
+      milesEarned = Math.floor(total / 1000);
+      if (milesEarned > 0) {
+        const expiryDate = new Date();
+        expiryDate.setFullYear(expiryDate.getFullYear() + 2);
+        try {
+          await supabase.from('absl_rewards_loyalty').insert({
+            user_id: userId,
+            airline: 'ABSL Booking Rewards',
+            points: milesEarned,
+            tier: 'Bronze',
+            expiry: expiryDate.toISOString().slice(0, 10)
+          });
+        } catch (e) {
+          // Non-fatal: booking still succeeded even if miles failed
+          console.error('Auto-miles insert failed:', e);
+        }
+      }
+    }
+
+    // 3. Send confirmation email (with miles info if earned)
     if (body.email && import.meta.env.RESEND_API_KEY) {
-      await resend.emails.send({
-        from: 'ABSL Bookings <bookings@absl.com.ng>',
-        to: [body.email],
-        subject: 'Booking Received - ABSL',
-        html: `
-          <div style="font-family: sans-serif; color: #333;">
-            <h2>Hi ${body.name},</h2>
-            <p>Thank you for booking with ABSL. We have received your order.</p>
-            <p><strong>Total Amount:</strong> ₦${total.toLocaleString()}</p>
-            <p>Our team will contact you shortly on ${body.phone} to finalize payment and delivery.</p>
-            <br>
-            <p><em>Allstates Business Solutions & Logistics Ltd</em></p>
-          </div>
-        `
-      });
+      try {
+        await resend.emails.send({
+          from: 'ABSL Bookings <bookings@absl.com.ng>',
+          to: [body.email],
+          subject: 'Booking Received - ABSL',
+          html: `
+            <div style="font-family: sans-serif; color: #333;">
+              <h2>Hi ${body.name},</h2>
+              <p>Thank you for booking with ABSL. We have received your order.</p>
+              <p><strong>Total Amount:</strong> ₦${total.toLocaleString()}</p>
+              ${milesEarned > 0 ? `<p>🎉 You have earned <strong>${milesEarned.toLocaleString()} loyalty miles</strong> on this booking.</p>` : ''}
+              <p>Our team will contact you shortly on ${body.phone} to finalize payment and delivery.</p>
+              <br>
+              <p><em>Allstates Business Solutions & Logistics Ltd</em></p>
+            </div>
+          `
+        });
+      } catch (e) {
+        console.error('Booking email send failed:', e);
+      }
     }
 
     return new Response('ok');
