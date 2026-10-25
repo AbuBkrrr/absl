@@ -1,4 +1,4 @@
----
+﻿---
 import Layout from '../layouts/Layout.astro';
 const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
@@ -285,9 +285,16 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
         submitBtn.textContent = 'Submitting...'; submitBtn.disabled = true;
 
         try {
+          const sbClient = await getSupabase();
+          const { data: { session } } = await sbClient.auth.getSession();
+          const authHeader = session?.access_token ? `Bearer ${session.access_token}` : '';
+
           const response = await fetch('/api/travel-book', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+              'Content-Type': 'application/json',
+              'Authorization': authHeader
+            },
             body: JSON.stringify({
               service_type: currentService,
               customer_name: name,

@@ -1,4 +1,4 @@
-import type { APIRoute } from 'astro';
+﻿import type { APIRoute } from 'astro';
 import { supabase } from '../../lib/supabase';
 import { Resend } from 'resend';
 
@@ -13,8 +13,20 @@ export const POST: APIRoute = async ({ request }) => {
       return new Response('Missing required fields', { status: 400 });
     }
 
-    // 1. Save to Database
+    // 1. Extract user_id from Bearer token
+    let userId: string | null = null;
+    try {
+      const authHeader = request.headers.get('Authorization') || '';
+      const token = authHeader.replace(/^Bearer\s+/i, '').trim();
+      if (token) {
+        const { data } = await supabase.auth.getUser(token);
+        userId = data?.user?.id || null;
+      }
+    } catch { /* Guest checkout */ }
+
+    // 2. Save to Database
     const { error: dbError } = await supabase.from('absl_travel_bookings').insert({
+      user_id: userId, // Link to account
       service_type,
       customer_name,
       customer_email,
@@ -24,12 +36,32 @@ export const POST: APIRoute = async ({ request }) => {
 
     if (dbError) throw dbError;
 
-    // 2. Format Details for Email
+    // 3. Award Flat Miles (50 miles for submitting a travel request)
+    let milesEarned = 0;
+    if (userId) {
+      milesEarned = 50;
+      const expiryDate = new Date();
+      expiryDate.setFullYear(expiryDate.getFullYear() + 2);
+      
+      try {
+        await supabase.from('absl_rewards_loyalty').insert({
+          user_id: userId,
+          airline: 'ABSL Booking Rewards',
+          points: milesEarned,
+          tier: 'Bronze',
+          expiry: expiryDate.toISOString().slice(0, 10)
+        });
+      } catch (e) {
+        console.error('Auto-miles insert failed:', e);
+      }
+    }
+
+    // 4. Format Details for Email
     const detailsHtml = Object.entries(details)
       .map(([key, val]) => `<tr><td style="padding:8px; border-bottom:1px solid #eee; color:#555;">${key}</td><td style="padding:8px; border-bottom:1px solid #eee; font-weight:bold; color:#111;">${val}</td></tr>`)
       .join('');
 
-    // 3. Send Email to Customer via Resend
+    // 5. Send Email to Customer
     const { error: emailError } = await resend.emails.send({
       from: 'ABSL Travel <noreply@absl.com.ng>',
       to: [customer_email],
@@ -41,6 +73,8 @@ export const POST: APIRoute = async ({ request }) => {
           <p>Thank you for choosing ABSL. We have received your request for a <strong>${service_type}</strong>.</p>
           <p>Our travel desk is currently reviewing your details and will contact you shortly at <strong>${customer_phone}</strong> to finalize your booking.</p>
           
+          ${milesEarned > 0 ? `<div style="background: #eef2f6; border-left: 4px solid #C5A059; padding: 12px; margin: 20px 0;"><strong>🎉 Reward:</strong> You have earned ${milesEarned} loyalty miles for this request!</div>` : ''}
+
           <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
             <h3 style="margin-top: 0; color: #0A1128;">Your Request Details:</h3>
             <table style="width: 100%; border-collapse: collapse;">
@@ -55,15 +89,12 @@ export const POST: APIRoute = async ({ request }) => {
       `
     });
 
-    if (emailError) {
-      console.error('Resend Error:', emailError);
-      // We don't throw here, because the DB save succeeded. The user just didn't get an email.
-    }
+    if (emailError) console.error('Resend Error:', emailError);
 
-    // 4. Send Email to Admin (You)
-    const { data: adminData, error: adminError } = await resend.emails.send({
+    // 6. Send Email to Admin
+    await resend.emails.send({
       from: 'ABSL System <system@absl.com.ng>',
-      to: ['info@absl.com.ng'], // Change this to your actual admin email
+      to: ['info@absl.com.ng'],
       subject: `NEW BOOKING: ${service_type} - ${customer_name}`,
       html: `
         <h2>New Booking Request</h2>
@@ -71,20 +102,14 @@ export const POST: APIRoute = async ({ request }) => {
         <p><strong>Email:</strong> ${customer_email}</p>
         <p><strong>Phone:</strong> ${customer_phone}</p>
         <p><strong>Service:</strong> ${service_type}</p>
+        <p><strong>Account Linked:</strong> ${userId ? 'Yes' : 'No (Guest)'}</p>
         <h3>Details:</h3>
         <pre>${JSON.stringify(details, null, 2)}</pre>
         <p><a href="https://absl.com.ng/admin/travel">Go to Admin Dashboard</a></p>
       `
     });
 
-    if (adminError) {
-      console.error('Admin Email Failed:', adminError);
-    } else {
-
-    }
-
     return new Response('OK', { status: 200 });
-
   } catch (err: any) {
     return new Response(err.message, { status: 500 });
   }
