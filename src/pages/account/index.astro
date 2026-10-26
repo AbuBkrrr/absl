@@ -1,4 +1,4 @@
----
+﻿---
 import Layout from '../../layouts/Layout.astro';
 import { createClient } from '../../lib/supabase';
 
@@ -10,7 +10,7 @@ if (!user) {
 }
 
 // Check if admin
-const { data: profile } = await supabase.from('absl_profiles').select('is_admin, role, full_name').eq('id', user.id).single();
+const { data: profile } = await supabase.from('absl_profiles').select('is_admin, role, full_name, org_id, org_role').eq('id', user.id).single();
 const isAdmin = profile?.is_admin === true || profile?.role === 'admin' || user.email === 'admin@absl.com.ng';
 if (isAdmin) {
   return Astro.redirect('/admin');
@@ -22,6 +22,22 @@ const { data: bookings } = await supabase
   .select('*')
   .eq('customer_email', user.email)
   .order('created_at', { ascending: false });
+
+let orgBookings = [];
+let orgName = null;
+const isOrgManager = profile?.org_role === 'manager' && profile?.org_id;
+
+if (isOrgManager) {
+  const { data: org } = await supabase.from('absl_organizations').select('name').eq('id', profile.org_id).single();
+  if (org) orgName = org.name;
+
+  const { data: allOrgBookings } = await supabase
+    .from('absl_bookings')
+    .select('*')
+    .eq('org_id', profile.org_id)
+    .order('created_at', { ascending: false });
+  orgBookings = allOrgBookings || [];
+}
 
 const rows = bookings || [];
 ---
@@ -43,6 +59,38 @@ const rows = bookings || [];
 
       <!-- Bookings List -->
       <div>
+                {isOrgManager && (
+          <div style="margin-bottom: 48px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 24px;">
+              <h2 style="font-size:1.8rem; color:var(--gold); margin:0;">Corporate Bookings: {orgName}</h2>
+              <span style="background:var(--bg-surface); color:var(--gold); padding:4px 12px; border-radius:20px; font-size:0.8rem; font-weight:600;">TRAVEL MANAGER VIEW</span>
+            </div>
+            
+            {orgBookings.length === 0 ? (
+              <div style="background:var(--bg-card); border:1px dashed var(--line); padding:40px; text-align:center; border-radius:var(--r-md);">
+                <p style="color:var(--text-muted);">No bookings made by your team yet.</p>
+              </div>
+            ) : (
+              <div style="display:flex; flex-direction:column; gap:16px;">
+                {orgBookings.map(b => (
+                  <div style="background:var(--bg-card); border:1px solid var(--line-light); border-radius:var(--r-md); padding:24px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
+                    <div>
+                      <div style="font-family:var(--mono); font-size:11px; color:var(--gold); margin-bottom:4px;">BOOKING #{b.id.slice(0,8)}</div>
+                      <div style="font-size:0.9rem; color:var(--text-light); font-weight:600;">Booked by: {b.customer_name}</div>
+                      <div style="font-size:0.85rem; color:var(--text-muted); margin-top:4px;">{new Date(b.created_at).toLocaleDateString()}</div>
+                    </div>
+                    <div style="text-align:right;">
+                      <div style="font-size:1.2rem; font-weight:700; color:var(--white); margin-bottom:4px;">₦{Number(b.total_amount).toLocaleString()}</div>
+                      <span style="font-size:10px; padding:4px 10px; border-radius:4px; background:var(--bg-surface); color:var(--gold); text-transform:uppercase; font-weight:700;">{b.booking_status}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            <hr style="border:0; border-top:1px solid var(--line-light); margin:48px 0;" />
+          </div>
+        )}
+
         <h2 style="font-size:1.8rem; color:var(--white); margin-bottom:24px;">My Bookings & Orders</h2>
 
         {rows.length === 0 ? (
