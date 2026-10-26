@@ -1,0 +1,120 @@
+﻿---
+import Layout from '../../layouts/Layout.astro';
+import AdminGuard from '../../components/AdminGuard.astro';
+import { createClient } from '../../lib/supabase';
+
+const supabase = createClient({ request: Astro.request, cookies: Astro.cookies });
+
+const { data: orgs } = await supabase.from('absl_organizations').select('*').order('created_at', { ascending: false });
+const { data: profiles } = await supabase.from('absl_profiles').select('id, email, full_name, org_id, org_role').order('created_at', { ascending: false });
+---
+
+<Layout title="Organizations - ABSL Admin">
+  <AdminGuard />
+  <div class="container" style="padding: 80px 24px;">
+    <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:32px;">
+      <div>
+        <h1 style="font-size:2.5rem; color:var(--white); margin:0;">Corporate Accounts</h1>
+        <p style="color:var(--text-muted); margin-top:8px;">Manage B2B organizations and assign travel managers.</p>
+      </div>
+      <a href="/admin" class="btn btn-outline" style="padding:10px 24px;">&larr; Back to Admin</a>
+    </div>
+
+    <!-- Create Organization Form -->
+    <div style="background:var(--bg-surface); border:1px solid var(--line-light); border-radius:var(--r-md); padding:32px; margin-bottom:32px;">
+      <h2 style="font-size:1.2rem; color:var(--gold); margin-bottom:16px;">Create New Organization</h2>
+      <div style="display:grid; grid-template-columns: 2fr 2fr 1fr; gap:16px;">
+        <input id="org-name" type="text" placeholder="Company Name (e.g. ACME Ltd)" style="padding:10px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
+        <input id="org-email" type="email" placeholder="Billing Email (optional)" style="padding:10px; background:var(--bg-card); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
+        <button id="create-org-btn" class="btn btn-primary">Create Company</button>
+      </div>
+    </div>
+
+    <!-- Assign User to Org Form -->
+    <div style="background:var(--bg-card); border:1px solid var(--gold); border-radius:var(--r-md); padding:32px; margin-bottom:32px;">
+      <h2 style="font-size:1.2rem; color:var(--gold); margin-bottom:16px;">Assign User to Organization</h2>
+      <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:16px;">The user must already have an account on the website.</p>
+      <div style="display:grid; grid-template-columns: 2fr 2fr 1fr 1fr; gap:16px;">
+        <input id="user-email" type="email" placeholder="User Email..." style="padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;" />
+        <select id="assign-org" style="padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;">
+          <option value="">Select Organization...</option>
+          {orgs?.map(o => <option value={o.id}>{o.name}</option>)}
+        </select>
+        <select id="assign-role" style="padding:10px; background:var(--bg-surface); border:1px solid var(--line-light); color:var(--white); border-radius:4px;">
+          <option value="traveler">Traveler</option>
+          <option value="manager">Travel Manager</option>
+        </select>
+        <button id="assign-btn" class="btn btn-primary">Assign User</button>
+      </div>
+    </div>
+
+    <!-- List of Orgs -->
+    <div style="background:var(--bg-card); border:1px solid var(--line-light); border-radius:var(--r-md); overflow:hidden;">
+      <table style="width:100%; border-collapse:collapse; font-family:var(--mono); font-size:12.5px;">
+        <thead>
+          <tr style="background:var(--bg-surface); text-align:left;">
+            <th style="padding:16px; color:var(--gold);">Company Name</th>
+            <th style="padding:16px; color:var(--gold);">Billing Email</th>
+            <th style="padding:16px; color:var(--gold);">Assigned Users</th>
+          </tr>
+        </thead>
+        <tbody>
+          {orgs?.length === 0 ? (
+            <tr><td colspan="3" style="padding:32px; text-align:center; color:var(--text-muted);">No organizations found.</td></tr>
+          ) : (
+            orgs?.map(org => {
+              const orgUsers = profiles?.filter(p => p.org_id === org.id) || [];
+              return (
+                <tr style="border-top:1px solid var(--line-light);">
+                  <td style="padding:16px; color:var(--white); font-weight:600;">{org.name}</td>
+                  <td style="padding:16px; color:var(--text-muted);">{org.billing_email || '-'}</td>
+                  <td style="padding:16px; color:var(--text-light);">
+                    {orgUsers.length === 0 ? 'No users yet' : orgUsers.map(u => (
+                      <div style="margin-bottom:4px;">
+                        {u.email} <span style="font-size:10px; padding:2px 6px; border-radius:4px; background:var(--bg-surface); color:var(--gold); margin-left:8px;">{u.org_role}</span>
+                      </div>
+                    ))}
+                  </td>
+                </tr>
+              )
+            })
+          )}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    import { supabase } from '../../lib/supabase';
+
+    // 1. Create Organization
+    document.getElementById('create-org-btn').addEventListener('click', async () => {
+      const name = document.getElementById('org-name').value;
+      const billing_email = document.getElementById('org-email').value;
+      if (!name) return alert('Company name is required');
+
+      const { error } = await supabase.from('absl_organizations').insert({ name, billing_email });
+      if (error) alert(error.message);
+      else window.location.reload();
+    });
+
+    // 2. Assign User to Organization
+    document.getElementById('assign-btn').addEventListener('click', async () => {
+      const email = document.getElementById('user-email').value;
+      const org_id = document.getElementById('assign-org').value;
+      const org_role = document.getElementById('assign-role').value;
+      
+      if (!email || !org_id) return alert('Please provide email and select an organization');
+
+      // Find user by email
+      const { data: profile, error: findError } = await supabase.from('absl_profiles').select('id').eq('email', email).single();
+      
+      if (findError || !profile) return alert('User not found. They must create an account on the website first.');
+
+      const { error } = await supabase.from('absl_profiles').update({ org_id, org_role }).eq('id', profile.id);
+      
+      if (error) alert(error.message);
+      else window.location.reload();
+    });
+  </script>
+</Layout>

@@ -14,20 +14,29 @@ export const POST: APIRoute = async ({ request }) => {
 
     // Extract user_id from Bearer token (guests allowed)
     let userId: string | null = null;
+    let orgId: string | null = null;
+    
     try {
       const authHeader = request.headers.get('Authorization') || '';
       const token = authHeader.replace(/^Bearer\s+/i, '').trim();
       if (token) {
         const { data } = await supabase.auth.getUser(token);
         userId = data?.user?.id || null;
+        
+        // Fetch the user's org_id if they are logged in
+        if (userId) {
+          const { data: profile } = await supabase.from('absl_profiles').select('org_id').eq('id', userId).single();
+          if (profile?.org_id) orgId = profile.org_id;
+        }
       }
     } catch {
-      // Guest checkout — proceed without user_id
+      // Guest checkout
     }
 
     // 1. Save booking
     const { error } = await supabase.from('absl_bookings').insert({
       user_id: userId,
+      org_id: orgId,
       customer_name: body.name,
       customer_phone: body.phone,
       customer_email: body.email || null,
@@ -55,6 +64,7 @@ export const POST: APIRoute = async ({ request }) => {
         try {
           await supabase.from('absl_rewards_loyalty').insert({
             user_id: userId,
+      org_id: orgId,
             airline: 'ABSL Booking Rewards',
             points: milesEarned,
             tier: 'Bronze',
