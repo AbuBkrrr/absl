@@ -10,6 +10,15 @@ export const POST: APIRoute = async ({ request }) => {
     if (!body.cart || body.cart.length === 0) return new Response('Empty cart', { status: 400 });
     if (!body.name || !body.phone) return new Response('Missing details', { status: 400 });
 
+    // Determine if this is a "book for employee" case
+    const isEmployeeBooking = body.booking_for === 'employee' && body.employee_name && String(body.employee_name).trim().length > 0;
+    const finalName = isEmployeeBooking ? String(body.employee_name).trim() : body.name;
+    const finalEmail = isEmployeeBooking ? (body.employee_email || body.email) : body.email;
+    const bookingNotes = isEmployeeBooking 
+      ? `[Booked by ${body.name} for ${body.employee_name}] ${body.notes || ''}`.trim()
+      : (body.notes || null);
+    const emailRecipient = isEmployeeBooking ? (body.employee_email || body.email) : body.email;
+
     const total = body.cart.reduce((s: number, i: any) => s + (Number(i.qty) * Number(i.price)), 0);
 
     // Extract user_id from Bearer token (guests allowed)
@@ -37,11 +46,11 @@ export const POST: APIRoute = async ({ request }) => {
     const { error } = await supabase.from('absl_bookings').insert({
       user_id: userId,
       org_id: orgId,
-      customer_name: body.name,
+      customer_name: finalName,
       customer_phone: body.phone,
-      customer_email: body.email || null,
+      customer_email: finalEmail || null,
       delivery_location: body.location || null,
-      notes: body.notes || null,
+      notes: bookingNotes,
       items: body.cart,
       total_amount: total,
       payment_status: 'pending',
@@ -85,15 +94,15 @@ export const POST: APIRoute = async ({ request }) => {
     `).join('');
 
     // 3. Send confirmation email (with miles info if earned)
-    if (body.email && import.meta.env.RESEND_API_KEY) {
+    if (emailRecipient && import.meta.env.RESEND_API_KEY) {
       try {
         await resend.emails.send({
           from: 'ABSL Bookings <bookings@absl.com.ng>',
-          to: [body.email],
+          to: [emailRecipient],
           subject: 'Booking Received - ABSL',
           html: `
             <div style="font-family: sans-serif; color: #333; max-width: 600px;">
-              <h2>Hi ${body.name},</h2>
+              <h2>Hi ${finalName},</h2>
               <p>Thank you for booking with ABSL. We have received your order.</p>
               
               <div style="background: #f8f9fa; padding: 16px; border-radius: 8px; margin: 20px 0;">

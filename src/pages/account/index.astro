@@ -63,7 +63,10 @@ const rows = bookings || [];
           <div style="margin-bottom: 48px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 24px;">
               <h2 style="font-size:1.8rem; color:var(--gold); margin:0;">Corporate Bookings: {orgName}</h2>
+              <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
               <span style="background:var(--bg-surface); color:var(--gold); padding:4px 12px; border-radius:20px; font-size:0.8rem; font-weight:600;">TRAVEL MANAGER VIEW</span>
+              <button id="book-for-employee-btn" class="btn btn-primary" style="padding: 8px 20px; font-size: 0.85rem;">✈️ Book for Employee</button>
+            </div>
             </div>
             
             {orgBookings.length === 0 ? (
@@ -158,4 +161,10 @@ const rows = bookings || [];
 
     </div>
   </div>
+  <script>
+    document.getElementById('book-for-employee-btn')?.addEventListener('click', () => {
+      localStorage.setItem('absl_booking_for_employee', 'true');
+      window.location.href = '/services';
+    });
+  </script>
 </Layout>

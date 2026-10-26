@@ -112,6 +112,35 @@ import Layout from '../../layouts/Layout.astro';
 
       totalEl.textContent = '₦' + total.toLocaleString();
 
+      // === BOOKING FOR EMPLOYEE ===
+      const bookingForEmployee = localStorage.getItem('absl_booking_for_employee') === 'true';
+      const checkoutFormEl = document.getElementById('checkout-form');
+      if (bookingForEmployee && checkoutFormEl && !document.getElementById('employee-booking-section')) {
+        checkoutFormEl.insertAdjacentHTML('afterbegin', `
+          <div id="employee-booking-section" style="background: rgba(30, 95, 158, 0.15); border: 1px solid var(--gold); border-radius: var(--r-md); padding: 20px; margin-bottom: 24px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 14px;">
+              <div style="font-weight: 700; color: var(--gold); font-size: 0.95rem;">📝 Booking on behalf of an employee</div>
+              <button id="cancel-employee-btn" style="background:none; border:none; color: var(--text-muted); cursor:pointer; font-size: 0.8rem; text-decoration: underline;">Cancel</button>
+            </div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+              <div>
+                <label style="display:block; font-family: var(--mono); font-size: 10px; color: var(--gold); margin-bottom: 4px;">EMPLOYEE FULL NAME *</label>
+                <input id="f-employee-name" type="text" placeholder="John Doe" style="width:100%; padding:10px; background: var(--bg-surface); border: 1px solid var(--line-light); color: var(--white); border-radius: 4px;" />
+              </div>
+              <div>
+                <label style="display:block; font-family: var(--mono); font-size: 10px; color: var(--gold); margin-bottom: 4px;">EMPLOYEE EMAIL (confirmation goes here)</label>
+                <input id="f-employee-email" type="email" placeholder="john@company.com" style="width:100%; padding:10px; background: var(--bg-surface); border: 1px solid var(--line-light); color: var(--white); border-radius: 4px;" />
+              </div>
+            </div>
+            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 10px;">The booking will be billed to your corporate account. The traveler above will receive the confirmation.</div>
+          </div>
+        `);
+        document.getElementById('cancel-employee-btn').addEventListener('click', () => {
+          localStorage.removeItem('absl_booking_for_employee');
+          window.location.reload();
+        });
+      }
+
       // Submit handler
       document.getElementById('submit-btn').addEventListener('click', async () => {
         const name = document.getElementById('f-name').value.trim();
@@ -119,6 +148,23 @@ import Layout from '../../layouts/Layout.astro';
         const email = document.getElementById('f-email').value.trim();
         const location = document.getElementById('f-location').value.trim();
         const notes = document.getElementById('f-notes').value.trim();
+
+        // Employee booking data
+        let booking_for = 'self';
+        let employee_name = null;
+        let employee_email = null;
+        if (bookingForEmployee) {
+          const empNameEl = document.getElementById('f-employee-name');
+          const empEmailEl = document.getElementById('f-employee-email');
+          if (!empNameEl || !empNameEl.value.trim()) {
+            alert('Please enter the employee name.');
+            if (empNameEl) empNameEl.focus();
+            return;
+          }
+          booking_for = 'employee';
+          employee_name = empNameEl.value.trim();
+          employee_email = empEmailEl ? empEmailEl.value.trim() : null;
+        }
 
         if (!name || !phone) {
           alert('Please fill in your name and phone number.');
@@ -141,7 +187,7 @@ import Layout from '../../layouts/Layout.astro';
               'Content-Type': 'application/json',
               'Authorization': authHeader
             },
-            body: JSON.stringify({ name, phone, email, location, notes, cart })
+            body: JSON.stringify({ name, phone, email, location, notes, cart, booking_for, employee_name, employee_email })
           });
 
           if (!res.ok) {
@@ -150,9 +196,10 @@ import Layout from '../../layouts/Layout.astro';
           }
 
           localStorage.removeItem('absl_cart');
+          localStorage.removeItem('absl_booking_for_employee');
           window.dispatchEvent(new Event('absl-cart-updated'));
           alert('Booking submitted successfully! We will contact you shortly.');
-          window.location.href = '/';
+          window.location.href = bookingForEmployee ? '/account' : '/';
         } catch (err) {
           alert('Failed to submit: ' + err.message);
           btn.textContent = 'Submit Booking';
