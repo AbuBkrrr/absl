@@ -1,4 +1,4 @@
----
+﻿---
 import Layout from '../../layouts/Layout.astro';
 import { supabase } from '../../lib/supabase';
 
@@ -35,6 +35,13 @@ const { data: allLoyalty } = await supabase.from('absl_rewards_loyalty').select(
         <div>
           <div style="font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; color:#8ba0b9; margin-bottom:8px;">Total Portfolio Value</div>
           <div id="total-miles" style="font-size:3rem; font-weight:700; line-height:1;">0</div>
+          <div id="tier-badge" style="margin-top:10px; font-weight:700; letter-spacing:1px; font-size:1rem;">🥉 BRONZE MEMBER</div>
+          <div id="tier-progress-wrap" style="margin-top:14px; max-width:280px;">
+            <div style="background:rgba(255,255,255,0.1); height:6px; border-radius:3px; overflow:hidden;">
+              <div id="tier-progress-bar" style="height:100%; width:0%; background:#CD7F32; transition: width 0.6s ease;"></div>
+            </div>
+            <div id="tier-progress-text" style="font-size:0.75rem; color:#8ba0b9; margin-top:6px;">Loading progress...</div>
+          </div>
           <div id="total-airlines" style="font-size:0.85rem; color:#8ba0b9; margin-top:8px;">miles across 0 airlines</div>
         </div>
         <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:flex-end; max-width:500px;" id="loyalty-accounts"></div>
@@ -135,6 +142,34 @@ const { data: allLoyalty } = await supabase.from('absl_rewards_loyalty').select(
       const totalMiles = data.allLoyalty.reduce((s, r) => s + (r.points || 0), 0);
       document.getElementById('total-miles').textContent = totalMiles.toLocaleString();
       document.getElementById('total-airlines').textContent = `miles across ${data.allLoyalty.length} airlines`;
+
+      // === TIER COMPUTATION ===
+      function computeTier(miles) {
+        if (miles >= 500000) return { name: 'Platinum', badge: '💎', color: '#E5E4E2', min: 500000, next: null, nextName: null };
+        if (miles >= 100000) return { name: 'Gold', badge: '🥇', color: '#FFD700', min: 100000, next: 500000, nextName: 'Platinum' };
+        if (miles >= 25000) return { name: 'Silver', badge: '🥈', color: '#C0C0C0', min: 25000, next: 100000, nextName: 'Gold' };
+        return { name: 'Bronze', badge: '🥉', color: '#CD7F32', min: 0, next: 25000, nextName: 'Silver' };
+      }
+      const tier = computeTier(totalMiles);
+      const tierBadgeEl = document.getElementById('tier-badge');
+      if (tierBadgeEl) {
+        tierBadgeEl.innerHTML = `<span style="color:${tier.color};">${tier.badge} ${tier.name.toUpperCase()} MEMBER</span>`;
+      }
+      const progressBarEl = document.getElementById('tier-progress-bar');
+      const progressTextEl = document.getElementById('tier-progress-text');
+      if (progressBarEl && progressTextEl) {
+        if (tier.next) {
+          const span = tier.next - tier.min;
+          const progress = Math.min(100, Math.max(0, ((totalMiles - tier.min) / span) * 100));
+          progressBarEl.style.width = progress + '%';
+          progressBarEl.style.background = tier.color;
+          progressTextEl.textContent = `${(tier.next - totalMiles).toLocaleString()} miles to ${tier.nextName}`;
+        } else {
+          progressBarEl.style.width = '100%';
+          progressBarEl.style.background = tier.color;
+          progressTextEl.textContent = 'Maximum tier reached — thank you!';
+        }
+      }
 
       document.getElementById('loyalty-accounts').innerHTML = data.allLoyalty.map(acc => `
         <div style="background:rgba(255,255,255,0.1); padding:8px 16px; border-radius:12px; font-size:0.8rem; font-weight:500; display:flex; flex-direction:column; gap:2px;">
