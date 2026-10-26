@@ -26,7 +26,7 @@ export function getCart(): CartItem[] {
 export function saveCart(items: CartItem[]) {
   if (typeof localStorage === 'undefined') return;
   localStorage.setItem(KEY, JSON.stringify(items));
-  window.dispatchEvent(new CustomEvent('qm-cart-updated', { detail: items }));
+  window.dispatchEvent(new CustomEvent('absl-cart-updated', { detail: items }));
 }
 
 export function addToCart(item: Omit<CartItem, 'qty' | 'maxQty'>, qty = 1, maxQty = 999999) {

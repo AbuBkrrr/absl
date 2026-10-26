@@ -1,4 +1,4 @@
-﻿---
+---
 import Layout from '../../layouts/Layout.astro';
 ---
 
@@ -64,7 +64,7 @@ import Layout from '../../layouts/Layout.astro';
       window.dispatchEvent(new Event('absl-cart-updated'));
       window.location.reload();
     };
-    document.addEventListener('DOMContentLoaded', () => {
+    (() => {
       let cart = [];
       try {
         const rawCart = localStorage.getItem('absl_cart');
@@ -206,7 +206,7 @@ import Layout from '../../layouts/Layout.astro';
           btn.disabled = false;
         }
       });
-    });
+    })();
   </script>
   <script is:inline define:vars={{ supabaseUrl: import.meta.env.PUBLIC_SUPABASE_URL, supabaseAnonKey: import.meta.env.PUBLIC_SUPABASE_ANON_KEY }}>
     // Clean up old floating point issues in localStorage
