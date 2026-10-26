@@ -148,6 +148,11 @@ try {
           <span style="color:var(--gold); font-weight:700; font-size:1.2rem;">Grand Total</span>
           <span style="color:var(--gold); font-weight:700; font-size:1.4rem; font-family:var(--mono);">${fmt(grandTotal)}</span>
         </div>
+        
+        <div style="display:flex; flex-direction:column; gap:12px; margin-top:24px;">
+          <button id="checkout-estimate-btn" class="btn btn-primary" style="width:100%; padding:14px; font-size:1rem;">Add to Cart & Checkout</button>
+          <a href="/contact" class="btn btn-outline" style="width:100%; padding:14px; font-size:0.9rem;">Contact Us for a More Professional BOQ</a>
+        </div>
       `;
       document.getElementById('results-list').innerHTML = html;
 const checkBtn = document.getElementById('checkout-estimate-btn');
@@ -167,10 +172,7 @@ if (checkBtn) {
     window.location.href = '/checkout';
   });
 }
-      const ctaBtn = document.createElement('div');
-      ctaBtn.style.cssText = 'margin-top:24px; text-align:center;';
-      ctaBtn.innerHTML = '<a href="/contact" class="btn btn-outline" style="width:100%;padding:14px;font-size:0.9rem;">Contact Us for a More Professional BOQ</a>';
-      document.getElementById('results-list').appendChild(ctaBtn);
+
     });
   </script>
 </Layout>
