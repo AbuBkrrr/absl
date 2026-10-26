@@ -1,4 +1,4 @@
----
+﻿---
 import Layout from '../layouts/Layout.astro';
 import { supabase } from '../lib/supabase';
 
@@ -17,9 +17,23 @@ const settingsJson = JSON.stringify({ baseRate, domMulti, intMulti, domCities, d
 
 <Layout title="Global Logistics - ABSL">
   <div style="background: var(--bg-surface); padding: 80px 0; border-bottom: 1px solid var(--line-light);">
-    <div class="container">
-      <h1 style="font-size:3rem; margin-bottom:16px;">Global Logistics</h1>
-      <p style="color:var(--text-muted); font-size:1.1rem; max-width:600px;">End-to-end freight forwarding, customs clearance, and secure delivery with real-time tracking and global coverage.</p>
+    <div class="container" style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 40px;">
+      
+      <div style="flex: 1; min-width: 300px;">
+        <h1 style="font-size:3rem; margin-bottom:16px;">Global Logistics</h1>
+        <p style="color:var(--text-muted); font-size:1.1rem; max-width:600px;">End-to-end freight forwarding, customs clearance, and secure delivery with real-time tracking and global coverage.</p>
+      </div>
+
+      <!-- TRACKING WIDGET -->
+      <div style="background: var(--bg-card); border: 1px solid var(--gold); border-radius: var(--r-md); padding: 24px; width: 100%; max-width: 450px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+        <h3 style="color: var(--gold); font-size: 1.2rem; margin-bottom: 16px; font-family: var(--font-display);">Track Your Shipment</h3>
+        <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+          <input type="text" id="tracking-input" placeholder="Enter Tracking Number..." style="flex: 1; padding: 12px; background: var(--bg-surface); border: 1px solid var(--line-light); color: var(--white); border-radius: 4px; outline: none;">
+          <button id="track-btn" class="btn btn-primary" style="padding: 0 24px; border-radius: 4px;">Track</button>
+        </div>
+        <div id="tracking-results" style="display: none;"></div>
+      </div>
+
     </div>
   </div>
 
@@ -256,4 +270,52 @@ let destCoords = locations[dest] || extraLocations[dest];
         </div>
     </div>
 </section>
+  <script>
+    document.getElementById('track-btn')?.addEventListener('click', async () => {
+      const input = document.getElementById('tracking-input').value.trim();
+      const resultsDiv = document.getElementById('tracking-results');
+      if (!input) return alert('Please enter a tracking number.');
+
+      resultsDiv.style.display = 'block';
+      resultsDiv.innerHTML = '<p style="color: var(--text-muted); font-size: 0.9rem;">Searching database...</p>';
+
+      try {
+        const res = await fetch('/api/shipments/track', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tracking_number: input })
+        });
+
+        if (!res.ok) throw new Error('Shipment not found. Please check the number and try again.');
+
+        const data = await res.json();
+        
+        let historyHtml = '';
+        if (data.history && Array.isArray(data.history)) {
+          historyHtml = data.history.slice().reverse().map((h: any) => `
+            <div style="margin-bottom: 8px; font-size: 0.85rem; color: var(--text-light); border-left: 2px solid var(--gold); padding-left: 8px;">
+              <div style="color: var(--white); font-weight: 600;">${h.status}</div>
+              <div>${new Date(h.timestamp).toLocaleDateString()} ${h.location ? `• ${h.location}` : ''}</div>
+            </div>
+          `).join('');
+        }
+
+        resultsDiv.innerHTML = `
+          <div style="background: var(--bg-surface); padding: 16px; border-radius: 4px; border-left: 4px solid var(--green);">
+            <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Current Status</div>
+            <div style="font-size: 1.2rem; color: var(--green); font-weight: 700; margin-bottom: 8px;">${data.status.toUpperCase()}</div>
+            ${data.current_location ? `<div style="font-size: 0.85rem; color: var(--text-light); margin-bottom: 4px;">📍 ${data.current_location}</div>` : ''}
+            ${data.estimated_delivery ? `<div style="font-size: 0.85rem; color: var(--text-light); margin-bottom: 12px;">📅 Est. Delivery: ${data.estimated_delivery}</div>` : ''}
+            
+            <div style="margin-top: 16px; border-top: 1px solid var(--line-light); padding-top: 12px;">
+              <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px;">Shipment Timeline</div>
+              ${historyHtml || '<div style="font-size: 0.85rem; color: var(--text-muted);">No updates yet.</div>'}
+            </div>
+          </div>
+        `;
+      } catch (err: any) {
+        resultsDiv.innerHTML = `<p style="color: #ef4444; font-size: 0.9rem;">${err.message}</p>`;
+      }
+    });
+  </script>
 </Layout>
