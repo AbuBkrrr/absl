@@ -1,4 +1,4 @@
----
+﻿---
 import Layout from '../../layouts/Layout.astro';
 import AdminGuard from '../../components/AdminGuard.astro';
 import { createClient } from '../../lib/supabase';
@@ -65,14 +65,20 @@ const { data: loyalty } = await supabase.from('absl_rewards_loyalty').select('*'
       const email = document.getElementById('f-user').value;
       const airline = document.getElementById('f-airline').value;
       const points = Number(document.getElementById('f-points').value);
-      const tier = document.getElementById('f-tier').value;
+      const tier = document.getElementById('f-tier').value || 'Bronze';
 
       if (!email || !airline || !points) return alert('Fill all fields');
 
-      const { data: profile } = await supabase.from('absl_profiles').select('id').eq('email', email).single();
-      if (!profile) return alert('User not found. They must sign up on /login first.');
+      // 1. Find the User ID
+      const { data: profile, error: pErr } = await supabase.from('absl_profiles').select('id').eq('email', email).single();
+      
+      if (!profile) {
+        console.error("Profile lookup failed:", pErr);
+        return alert('User not found. They must sign up on /login first.');
+      }
 
-      const { error } = await supabase.from('absl_rewards_loyalty').insert({
+      // 2. Insert the Miles
+      const { error: insertErr } = await supabase.from('absl_rewards_loyalty').insert({
         user_id: profile.id,
         airline,
         points,
@@ -80,8 +86,23 @@ const { data: loyalty } = await supabase.from('absl_rewards_loyalty').select('*'
         expiry: '2027-12-31'
       });
 
-      if (error) alert(error.message);
-      else window.location.reload();
+      if (insertErr) {
+        console.error("Insert failed:", insertErr);
+        return alert("Database Error: " + insertErr.message);
+      }
+
+      // 3. Calculate Total and Update Tier
+      try {
+        const { data: allMiles } = await supabase.from('absl_rewards_loyalty').select('points').eq('user_id', profile.id);
+        const total = (allMiles || []).reduce((s, r) => s + (Number(r.points) || 0), 0);
+        const newTier = total >= 500000 ? 'Platinum' : total >= 100000 ? 'Gold' : total >= 25000 ? 'Silver' : 'Bronze';
+        
+        await supabase.from('absl_profiles').update({ loyalty_tier: newTier }).eq('id', profile.id);
+      } catch (err) {
+        console.error("Tier update failed:", err);
+      }
+
+      window.location.reload();
     });
-  </script>
+</script>
 </Layout>
